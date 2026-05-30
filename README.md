@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mist & Haven Living
+
+Premium B2B marketing website for **Mist & Haven Living** by Deepam Textiles — a lead-generation site targeting USA and Canada buyers.
+
+## Tech Stack
+
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS v4 with Atelier design tokens
+- shadcn/ui-style components (Button, Input, Dialog, Accordion)
+- Fraunces + Inter via `next/font`
+- Framer Motion (fade-up on scroll)
+- react-hook-form + Zod
+- Resend (inquiry API route)
+- SSG/ISR-friendly for Vercel
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
+cp .env.example .env.local
+# Add your Resend API key, leads email, and WhatsApp number
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+|---|---|
+| `RESEND_API_KEY` | Resend API key for sending inquiry emails |
+| `LEADS_TO_EMAIL` | Destination inbox for B2B leads |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | WhatsApp number with country code (e.g. `+919876543210`) |
 
-## Learn More
+## Routes
 
-To learn more about Next.js, take a look at the following resources:
+- `/` — Home
+- `/about` — Company story
+- `/products` — Product catalogue
+- `/products/[slug]` — 12 category detail pages
+- `/manufacturing` — Production process
+- `/certifications` — Compliance & certifications
+- `/private-label` — Private label programs
+- `/contact` — Contact form + map
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Build & Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npm start
+```
 
-## Deploy on Vercel
+Deploy to Vercel with env vars configured. Pages use ISR with 24-hour revalidation.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/                  # Pages, API routes, sitemap, robots
+components/           # UI, layout, sections
+data/products.ts      # Typed product/category content
+lib/                  # Utils, SEO, validation, rate limiting
+```
