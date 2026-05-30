@@ -25,12 +25,12 @@ export function FadeUp({
   const Component = motion[as] as typeof motion.div;
 
   if (shouldReduceMotion) {
-    return <div className={className}>{children}</div>;
+    return <div className={cn("w-full", className)}>{children}</div>;
   }
 
   return (
     <Component
-      className={cn(className)}
+      className={cn("w-full", className)}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: FADE_UP_VIEWPORT_AMOUNT }}
