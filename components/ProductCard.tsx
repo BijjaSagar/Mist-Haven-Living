@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { HoverScaleImage } from "@/components/motion/HoverScaleImage";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import type { ProductCategory } from "@/data/products";
@@ -19,16 +19,14 @@ export function ProductCard({ category, className, priority }: ProductCardProps)
         className,
       )}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-oat">
-        <Image
-          src={category.cardImage}
-          alt={category.name}
-          fill
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority={priority}
-        />
-      </div>
+      <HoverScaleImage
+        src={category.cardImage}
+        alt={category.name}
+        fill
+        containerClassName="aspect-[4/3] bg-oat"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        priority={priority}
+      />
       <div className="flex flex-1 flex-col p-6 md:p-8">
         <p className="mb-2 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
           {category.eyebrow}

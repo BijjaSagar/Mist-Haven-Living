@@ -2,6 +2,11 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import {
+  FADE_UP_DURATION,
+  FADE_UP_EASE,
+  FADE_UP_VIEWPORT_AMOUNT,
+} from "@/components/motion/constants";
 
 type FadeUpProps = {
   children: React.ReactNode;
@@ -28,8 +33,8 @@ export function FadeUp({
       className={cn(className)}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: true, amount: FADE_UP_VIEWPORT_AMOUNT }}
+      transition={{ duration: FADE_UP_DURATION, delay, ease: FADE_UP_EASE }}
     >
       {children}
     </Component>

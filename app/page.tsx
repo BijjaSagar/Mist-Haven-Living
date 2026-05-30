@@ -18,6 +18,7 @@ import { SocialComplianceSection } from "@/components/SocialComplianceSection";
 import { CatalogCTA } from "@/components/CatalogGateModal";
 import { ScheduleDiscussion } from "@/components/ScheduleDiscussion";
 import { FadeUp } from "@/components/motion/FadeUp";
+import { HoverScaleImage } from "@/components/motion/HoverScaleImage";
 import {
   productCategories,
   certifications,
@@ -101,12 +102,12 @@ export default function HomePage() {
               />
             </FadeUp>
             <FadeUp delay={0.1}>
-              <div className="relative aspect-[4/3] overflow-hidden bg-pearl">
-                <Image
+              <div className="group relative aspect-[4/3] bg-pearl">
+                <HoverScaleImage
                   src="https://picsum.photos/seed/deepam-factory/900/675"
                   alt="Deepam Textiles manufacturing facility"
                   fill
-                  className="object-cover"
+                  containerClassName="absolute inset-0"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
               </div>

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import {
   createMetadata,
@@ -10,6 +9,8 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SectionHeading } from "@/components/SectionHeading";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
+import { StaggerChildren } from "@/components/motion/StaggerChildren";
+import { HoverScaleImage } from "@/components/motion/HoverScaleImage";
 import {
   getCategoryBySlug,
   getAllCategorySlugs,
@@ -66,45 +67,47 @@ export default async function ProductCategoryPage({ params }: PageProps) {
       />
 
       <section className="pt-28">
-        <div className="relative h-[50vh] min-h-[400px] overflow-hidden bg-oat">
-          <Image
-            src={category.heroImage}
-            alt={category.name}
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-taupe/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0">
-            <div className="mx-auto max-w-container px-6 pb-12 md:px-8">
-              <Breadcrumbs
-                items={[
-                  { label: "Home", href: "/" },
-                  { label: "Products", href: "/products" },
-                  { label: category.name },
-                ]}
-                className="mb-4 [&_a]:text-white/70 [&_a:hover]:text-white [&_span]:text-white [&_svg]:text-white/40"
-              />
-              <p className="mb-2 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
-                {category.eyebrow}
-              </p>
-              <h1 className="font-display text-4xl text-white md:text-5xl">
-                {category.name}
-              </h1>
+        <FadeUp>
+          <div className="group relative h-[50vh] min-h-[400px] overflow-hidden bg-oat">
+            <HoverScaleImage
+              src={category.heroImage}
+              alt={category.name}
+              fill
+              priority
+              sizes="100vw"
+              containerClassName="absolute inset-0"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-taupe/60 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0">
+              <div className="mx-auto max-w-container px-6 pb-12 md:px-8">
+                <Breadcrumbs
+                  items={[
+                    { label: "Home", href: "/" },
+                    { label: "Products", href: "/products" },
+                    { label: category.name },
+                  ]}
+                  className="mb-4 [&_a]:text-white/70 [&_a:hover]:text-white [&_span]:text-white [&_svg]:text-white/40"
+                />
+                <p className="mb-2 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
+                  {category.eyebrow}
+                </p>
+                <h1 className="font-display text-4xl text-white md:text-5xl">
+                  {category.name}
+                </h1>
+              </div>
             </div>
           </div>
-        </div>
+        </FadeUp>
       </section>
 
       <section className="py-section-mobile md:py-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">
-          <div className="grid gap-12 lg:grid-cols-12">
-            <FadeUp className="lg:col-span-7">
+          <StaggerChildren className="grid gap-12 lg:grid-cols-12">
+            <div className="lg:col-span-7">
               <p className="font-body text-lg leading-relaxed text-muted">
                 {category.description}
               </p>
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <StaggerChildren className="mt-8 grid gap-4 sm:grid-cols-2">
                 <div className="border border-hairline bg-oat p-6">
                   <p className="font-body text-xs uppercase tracking-[0.12em] text-muted">
                     GSM Range
@@ -129,7 +132,7 @@ export default async function ProductCategoryPage({ params }: PageProps) {
                     {category.leadTime}
                   </p>
                 </div>
-                <div className="border border-hairline bg-oat p-6">
+                <div className="border border-hairline bg-oat p-6 sm:col-span-2">
                   <p className="font-body text-xs uppercase tracking-[0.12em] text-muted">
                     Ideal For
                   </p>
@@ -137,9 +140,9 @@ export default async function ProductCategoryPage({ params }: PageProps) {
                     {category.idealFor.join(" · ")}
                   </p>
                 </div>
-              </div>
-            </FadeUp>
-            <FadeUp delay={0.1} className="lg:col-span-5">
+              </StaggerChildren>
+            </div>
+            <div className="lg:col-span-5">
               <SectionHeading title="Key Features" className="mb-6" />
               <ul className="space-y-3">
                 {category.features.map((f) => (
@@ -152,21 +155,21 @@ export default async function ProductCategoryPage({ params }: PageProps) {
                   </li>
                 ))}
               </ul>
-            </FadeUp>
-          </div>
+            </div>
+          </StaggerChildren>
         </div>
       </section>
 
       <section className="border-y border-hairline bg-white py-section-mobile md:py-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">
-          <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+          <StaggerChildren className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
             {[
               { title: "Materials", items: category.materials },
               { title: "Sizes", items: category.sizes.map((s) => `${s.label}: ${s.cm} (${s.inches})`) },
               { title: "Customization", items: category.customization },
               { title: "Packaging", items: category.packaging },
-            ].map((block, i) => (
-              <FadeUp key={block.title} delay={i * 0.05}>
+            ].map((block) => (
+              <div key={block.title}>
                 <h2 className="font-display text-xl text-taupe">{block.title}</h2>
                 <ul className="mt-4 space-y-2">
                   {block.items.map((item) => (
@@ -178,9 +181,9 @@ export default async function ProductCategoryPage({ params }: PageProps) {
                     </li>
                   ))}
                 </ul>
-              </FadeUp>
+              </div>
             ))}
-          </div>
+          </StaggerChildren>
         </div>
       </section>
 
