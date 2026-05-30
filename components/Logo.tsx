@@ -8,8 +8,8 @@ const LOGO_ALT = "Mist & Haven Living — Luxury in Every Thread";
 
 type LogoProps = {
   className?: string;
-  /** default: header / light surfaces; card: pearl pill for dark backgrounds */
-  variant?: "default" | "card";
+  /** default: transparent logo for light surfaces; light: pearl logo for dark backgrounds */
+  variant?: "default" | "light";
   priority?: boolean;
   onNavigate?: () => void;
 };
@@ -20,20 +20,6 @@ export function Logo({
   priority = false,
   onNavigate,
 }: LogoProps) {
-  const image = (
-    <Image
-      src="/logo.png"
-      alt={LOGO_ALT}
-      width={LOGO_WIDTH}
-      height={LOGO_HEIGHT}
-      priority={priority}
-      className={cn(
-        "h-auto w-[118px] sm:w-[140px] md:w-[160px] lg:w-[175px]",
-        variant === "card" && "w-[150px] md:w-[175px]",
-      )}
-    />
-  );
-
   return (
     <Link
       href="/"
@@ -43,13 +29,14 @@ export function Logo({
         className,
       )}
     >
-      {variant === "card" ? (
-        <span className="inline-flex rounded-sm bg-pearl px-4 py-3 shadow-lg ring-1 ring-pearl/30">
-          {image}
-        </span>
-      ) : (
-        image
-      )}
+      <Image
+        src={variant === "light" ? "/logo-light.png" : "/logo.png"}
+        alt={LOGO_ALT}
+        width={LOGO_WIDTH}
+        height={LOGO_HEIGHT}
+        priority={priority}
+        className="h-auto w-[96px] sm:w-[108px] md:w-[118px]"
+      />
     </Link>
   );
 }

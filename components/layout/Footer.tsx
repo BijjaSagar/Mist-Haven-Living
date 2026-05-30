@@ -26,7 +26,7 @@ export function Footer() {
       <div className="mx-auto max-w-container px-6 py-section-mobile md:px-8 md:py-20">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <Logo variant="card" />
+            <Logo variant="light" />
             <p className="mt-1 font-body text-xs uppercase tracking-[0.22em] text-pearl/50">
               by {siteConfig.legalName}
             </p>

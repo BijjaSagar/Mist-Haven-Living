@@ -51,12 +51,12 @@ export function Header() {
           : "bg-transparent",
       )}
     >
-      <div className="mx-auto flex h-24 max-w-container items-center justify-between px-6 md:h-28 md:px-8">
+      <div className="mx-auto flex h-20 max-w-container items-center justify-between px-6 md:h-[4.75rem] md:px-8">
         <Logo priority />
 
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Main">
           <div
-            className="relative"
+            className="group relative"
             onMouseEnter={() => setProductsOpen(true)}
             onMouseLeave={() => setProductsOpen(false)}
           >
@@ -72,8 +72,15 @@ export function Header() {
                 )}
               />
             </Link>
-            {productsOpen && (
-              <div className="absolute left-1/2 top-full z-50 mt-2 w-[640px] -translate-x-1/2 border border-hairline bg-pearl p-6 shadow-xl">
+            <div
+              className={cn(
+                "absolute left-1/2 top-full z-50 -translate-x-1/2 pt-1",
+                productsOpen
+                  ? "pointer-events-auto visible opacity-100"
+                  : "pointer-events-none invisible opacity-0",
+              )}
+            >
+              <div className="w-[640px] border border-hairline bg-pearl p-6 shadow-xl">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   {productCategories.map((cat) => (
                     <Link
@@ -92,7 +99,7 @@ export function Header() {
                   View all products →
                 </Link>
               </div>
-            )}
+            </div>
           </div>
           {navLinks.map((link) => (
             <Link
