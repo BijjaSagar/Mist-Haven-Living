@@ -84,12 +84,68 @@ Session cookie: `mist_admin_session` (httpOnly, `SameSite=Lax`, `Secure` on HTTP
 
 ## 4. Build and start commands
 
-Configure in the Hostinger Node.js app panel:
+### Recommended: build locally or via GitHub Actions
+
+Hostinger **shared** hosting often **cannot** run `next build` at all — even with `next build --webpack` and throttled settings. CloudLinux LVE limits process/thread spawns and you may see:
+
+```
+thread panicked: The global thread pool has not been initialized: Resource temporarily unavailable (EAGAIN)
+Next.js build worker exited with code: null and signal: SIGABRT
+```
+
+**Do not rely on building on the server.** Build elsewhere, upload the output, then only run `npm start` (or `start:standalone`) on Hostinger.
+
+#### Option A: Build on your Mac (fastest today)
+
+```bash
+cd Mist-website
+npm install
+npm run build
+# postbuild copies public/ and .next/static into standalone — verify:
+ls .next/standalone/server.js
+
+# Upload to server (adjust user@host and path):
+rsync -avz .next/standalone/ user@host:~/domains/mistandhaven.com/app/.next/standalone/
+rsync -avz .next/static/ user@host:~/domains/mistandhaven.com/app/.next/standalone/.next/static/
+rsync -avz public/ user@host:~/domains/mistandhaven.com/app/.next/standalone/public/
+```
+
+On the server, set **Start command** to `npm run start:standalone` or `node .next/standalone/server.js`. Skip the Hostinger **Build command** (or set it to `echo "pre-built"`).
+
+#### Option B: Download artifact from GitHub Actions
+
+Every push to `main` runs [.github/workflows/build.yml](./.github/workflows/build.yml):
+
+1. Open the repo on GitHub → **Actions** → latest **Build** workflow run
+2. Download the **`next-build`** artifact (`next-build.zip`)
+3. On the server, from the app root:
+
+```bash
+cd ~/domains/mistandhaven.com/app
+unzip -o next-build.zip -d .next/standalone/
+```
+
+Ensure `.env` and `node_modules` exist on the server (`npm ci --omit=dev` if needed). Start with `npm run start:standalone`.
+
+#### Option C: Try `build:hostinger` on the server (may still fail)
+
+Only for plans where SSH build sometimes works. Uses single-thread env vars and webpack:
+
+```bash
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+npm run build:hostinger
+```
+
+If you still get `EAGAIN` / `SIGABRT`, use Option A or B.
+
+---
+
+Configure in the Hostinger Node.js app panel when you **must** build on Hostinger:
 
 | Setting | Value |
 |---|---|
-| **Build command** | `npm run build:hostinger` |
-| **Start command** | `npm start` |
+| **Build command** | `npm run build:hostinger` (prefer Option A/B instead) |
+| **Start command** | `npm start` or `npm run start:standalone` |
 
 ### What the build does
 
@@ -99,7 +155,7 @@ npm run build
 # → postbuild copies public/ and .next/static into .next/standalone/
 ```
 
-**Why `--webpack`?** Next.js 16 uses Turbopack by default for `next build`. On Hostinger shared hosting, Turbopack can panic with `EAGAIN` / "global thread pool has not been initialized" because shared plans enforce strict process and thread limits (CloudLinux LVE). The `--webpack` flag forces the classic webpack bundler, which respects `experimental.cpus: 1` in `next.config.ts` and stays within those limits.
+**Why `--webpack`?** Next.js 16 uses Turbopack by default for `next build`. On Hostinger shared hosting, Turbopack can panic with `EAGAIN` / "global thread pool has not been initialized" because shared plans enforce strict process and thread limits (CloudLinux LVE). The `--webpack` flag forces the classic webpack bundler. `next.config.ts` sets `experimental.cpus: 1`, `workerThreads: false`, `webpackBuildWorker: false`, and `webpack.parallelism: 1` to minimize child processes.
 
 ### Start options
 
@@ -208,12 +264,9 @@ This sets `NODE_OPTIONS='--max-old-space-size=512'`, disables telemetry, and run
 npm run build:hostinger
 ```
 
-**Config fix (already in repo):** `next.config.ts` sets `experimental.cpus: 1` and `workerThreads: false` so Next.js uses a single build worker instead of spawning many child processes.
+**Config fix (already in repo):** `next.config.ts` throttles builds (`cpus: 1`, `workerThreads: false`, `webpackBuildWorker: false`, `webpack.parallelism: 1`). `build:hostinger` sets `RAYON_NUM_THREADS=1`, `UV_THREADPOOL_SIZE=1`, and a 768MB heap cap.
 
-**Alternatives if SSH build still fails:**
-
-1. **Build in hPanel** — trigger a redeploy from **Websites → Node.js Web Apps**; the panel may have slightly higher limits than an interactive SSH session.
-2. **Build locally and upload** — on your Mac run `npm run build`, then upload `.next/standalone/` (and ensure `public/` and `.next/static` are copied per the `postbuild` script).
+**If SSH build still fails (common on shared plans):** use **Option A** (Mac build + rsync) or **Option B** (GitHub Actions `next-build` artifact) in section 4 above — do not keep retrying on-server builds.
 
 | Issue | Fix |
 |---|---|
