@@ -95,9 +95,11 @@ Configure in the Hostinger Node.js app panel:
 
 ```bash
 npm run build
-# → prisma generate && next build
+# → prisma generate && next build --webpack
 # → postbuild copies public/ and .next/static into .next/standalone/
 ```
+
+**Why `--webpack`?** Next.js 16 uses Turbopack by default for `next build`. On Hostinger shared hosting, Turbopack can panic with `EAGAIN` / "global thread pool has not been initialized" because shared plans enforce strict process and thread limits (CloudLinux LVE). The `--webpack` flag forces the classic webpack bundler, which respects `experimental.cpus: 1` in `next.config.ts` and stays within those limits.
 
 ### Start options
 
@@ -174,14 +176,21 @@ The included `ecosystem.config.js` runs `next start -p 3000`. Adjust `PORT` in t
 
 ### Build fails with EAGAIN on SSH
 
-If `npm run build` fails near the end with:
+If `npm run build` fails with Turbopack errors such as:
+
+```
+thread panicked: The global thread pool has not been initialized: Resource temporarily unavailable (EAGAIN)
+TurbopackInternalError: Failed to write app endpoint ...
+```
+
+or webpack worker errors:
 
 ```
 uncaughtException Error: spawn .../node EAGAIN
 spawnargs: [.../jest-worker/processChild.js]
 ```
 
-Hostinger shared hosting hit its **process/thread limit** (CloudLinux LVE). Next.js spawns many worker processes during the build; the fix is to limit parallelism.
+Hostinger shared hosting hit its **process/thread limit** (CloudLinux LVE). Next.js 16 defaults to Turbopack for production builds, which spawns many threads; the repo forces **webpack** via `--webpack` in the build scripts and limits parallelism in `next.config.ts`.
 
 **Recommended — use the Hostinger build script:**
 
@@ -191,7 +200,7 @@ export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
 npm run build:hostinger
 ```
 
-This sets `NODE_OPTIONS='--max-old-space-size=512'`, disables telemetry, and runs `prisma generate && next build`.
+This sets `NODE_OPTIONS='--max-old-space-size=512'`, disables telemetry, and runs `prisma generate && next build --webpack` (webpack avoids Turbopack thread-pool panics on shared hosting).
 
 **hPanel build command:** set the Node.js app **Build command** to:
 

@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
-    "build:hostinger": "NODE_OPTIONS='--max-old-space-size=512' NEXT_TELEMETRY_DISABLED=1 prisma generate && next build",
+    "build": "prisma generate && next build --webpack",
+    "build:hostinger": "NODE_OPTIONS='--max-old-space-size=512' NEXT_TELEMETRY_DISABLED=1 prisma generate && next build --webpack",
     "postbuild": "cp -r public .next/standalone/public && cp -r .next/static .next/standalone/.next/static",
     "start": "next start -p ${PORT:-3000}",
     "start:standalone": "node .next/standalone/server.js",
