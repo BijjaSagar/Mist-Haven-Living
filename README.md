@@ -12,7 +12,7 @@ Premium B2B marketing website for **Mist & Haven Living** by Deepam Textiles —
 - Framer Motion (fade-up on scroll)
 - react-hook-form + Zod
 - Resend (inquiry API route)
-- SSG/ISR-friendly for Vercel
+- SSG/ISR-friendly for Node.js hosting (Hostinger) or Vercel
 
 ## Getting Started
 
@@ -104,21 +104,25 @@ npm run build
 npm start
 ```
 
-### Vercel deployment
+### Hostinger Node.js (primary)
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the full step-by-step guide. Summary:
+
+1. Create a MySQL database in hPanel (host is usually `mysql.hostinger.com` or `srvXXX.hstgr.io`, not `localhost`)
+2. Connect the GitHub repo in hPanel → Node.js Web Apps
+3. Set environment variables from `.env.example`
+4. Build command: `npm run build` — Start command: `npm start`
+5. Run migrations once via SSH/terminal: `npx prisma migrate deploy && npx prisma db seed`
+
+Logo uploads in `public/uploads/` persist on Hostinger's persistent server filesystem.
+
+### Vercel (alternative)
 
 1. Connect the repo to Vercel
 2. Add all environment variables from `.env.example`
-3. Use an external MySQL host — Vercel serverless does not include MySQL:
-   - **PlanetScale** — serverless MySQL, good Vercel integration
-   - **Railway** — simple MySQL provisioning
-   - **Aiven** — managed MySQL with SSL
-   - **DigitalOcean / AWS RDS** — traditional hosted MySQL
-4. Set `DATABASE_URL` in Vercel project settings
-5. Run migrations against production DB: `npx prisma migrate deploy`
-6. Seed production: `npx prisma db seed`
-7. Deploy — `npm run build` runs `prisma generate` automatically
-
-For file uploads on Vercel, note that `public/uploads` is ephemeral on serverless. For production logo uploads, consider Vercel Blob or S3. Default logos in `/public/logo.png` work without uploads.
+3. Use an external MySQL host — Vercel serverless does not include MySQL (PlanetScale, Railway, Aiven, etc.)
+4. Run migrations against production DB: `npx prisma migrate deploy`
+5. Note: `public/uploads` is ephemeral on Vercel serverless — use Vercel Blob or S3 for production logo uploads
 
 ## Database Schema
 

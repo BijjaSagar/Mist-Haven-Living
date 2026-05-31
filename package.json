@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "postbuild": "cp -r public .next/standalone/public && cp -r .next/static .next/standalone/.next/static",
+    "start": "next start -p ${PORT:-3000}",
+    "start:standalone": "node .next/standalone/server.js",
+    "postinstall": "prisma generate",
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
