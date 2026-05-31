@@ -192,6 +192,7 @@ async function main() {
     });
   }
 
+  // Default admin: admin@mistandhaven.com / changeme123 — see DEPLOYMENT.md
   const adminEmail = (
     process.env.ADMIN_EMAIL ?? "admin@mistandhaven.com"
   ).toLowerCase();
@@ -212,6 +213,13 @@ async function main() {
       },
     });
     console.log(`Created default admin user: ${adminEmail}`);
+  } else if (process.env.ADMIN_PASSWORD) {
+    const hashedPassword = await bcrypt.hash(adminPassword, 12);
+    await prisma.adminUser.update({
+      where: { email: adminEmail },
+      data: { password: hashedPassword, active: true },
+    });
+    console.log(`Updated admin password for: ${adminEmail}`);
   } else {
     console.log(`Admin user already exists: ${adminEmail}`);
   }

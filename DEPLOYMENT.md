@@ -53,9 +53,34 @@ Set these in the Hostinger Node.js app panel **Environment variables**, or in a 
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | Yes | WhatsApp number with country code |
 | `NEXT_PUBLIC_CALENDLY_URL` | Yes | Calendly scheduling URL |
 | `PORT` | Optional | Hostinger may set this automatically; defaults to `3000` |
-| `ADMIN_SECRET` | Optional | JWT signing secret (defaults to `ADMIN_PASSWORD`) |
+| `ADMIN_SECRET` | Recommended | JWT signing secret (falls back to `ADMIN_PASSWORD`; required in production if `ADMIN_PASSWORD` is unset) |
 
 Copy from `.env.example` as a starting point.
+
+### Admin login (CMS)
+
+After the first deploy, create the database admin user:
+
+```bash
+npm run db:seed
+```
+
+**Default credentials** (when `ADMIN_EMAIL` / `ADMIN_PASSWORD` are not set in env at seed time):
+
+| Field | Value |
+|---|---|
+| Email | `admin@mistandhaven.com` |
+| Password | `changeme123` |
+
+Change the password immediately after first login (Admin → Users), or set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in hPanel **before** running seed so the hashed password in MySQL matches your env vars.
+
+**How login works:**
+
+1. **Database user** — email/password checked against the `AdminUser` table (bcrypt).
+2. **Env recovery** — if `ADMIN_EMAIL` and `ADMIN_PASSWORD` are both set in the server environment, matching credentials also work when the DB password is out of sync (e.g. env updated after seed).
+3. **Env-only bootstrap** — if there are zero rows in `AdminUser`, login uses `ADMIN_EMAIL` / `ADMIN_PASSWORD` (defaults: `admin@example.com` / `admin` in development only).
+
+Session cookie: `mist_admin_session` (httpOnly, `SameSite=Lax`, `Secure` on HTTPS production).
 
 ## 4. Build and start commands
 
@@ -186,8 +211,37 @@ npm run build:hostinger
 | Build fails on Prisma | Ensure `postinstall` runs (`prisma generate`) — Hostinger runs `npm install` before build |
 | Database connection refused | Verify `DATABASE_URL` host is the hPanel MySQL host, not `localhost` |
 | Images or CSS missing | Re-run build; `postbuild` copies `public/` and `.next/static` into standalone |
-| Admin login fails | Check `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars are set in production |
+| Admin login fails | Run `npm run db:seed`; use seeded email/password or set matching `ADMIN_EMAIL` / `ADMIN_PASSWORD`; ensure `ADMIN_SECRET` or `ADMIN_PASSWORD` is set for JWT; cookie requires HTTPS in production |
+| Admin login shows "Login failed" (500) | Cookie or DB error — see **Admin login troubleshooting** below |
 | Uploads fail | Ensure `public/uploads` exists and is writable |
+
+### Admin login troubleshooting
+
+If login returns **"Login failed"** (HTTP 500), the server hit an unexpected error — often cookie handling on Hostinger or a database connection issue. After deploying the latest code, wrong credentials should return **"Invalid email or password"** (401) instead.
+
+**Reset or create the admin user** (SSH into Hostinger, from the app root):
+
+```bash
+cd ~/domains/mistandhaven.com/app
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+ADMIN_EMAIL=your-admin@example.com ADMIN_PASSWORD='YourPassword' npm run admin:reset
+```
+
+Replace `YourPassword` with the desired password. This upserts the admin in MySQL with a bcrypt hash — use the same values in hPanel **Environment variables** for `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
+
+**Default seed credentials** (when `ADMIN_EMAIL` / `ADMIN_PASSWORD` are not set during seed):
+
+- Email: `admin@mistandhaven.com`
+- Password: `changeme123`
+
+**First-time database setup:**
+
+```bash
+npx prisma migrate deploy
+npx prisma db seed
+```
+
+**Verify env vars** in hPanel include `DATABASE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and optionally `ADMIN_SECRET` (JWT signing; defaults to `ADMIN_PASSWORD`).
 
 ## Alternative: Vercel
 
