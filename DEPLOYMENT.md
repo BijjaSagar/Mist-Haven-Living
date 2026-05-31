@@ -267,6 +267,40 @@ curl -sSI -o /dev/null -w "webpack HTTP %{http_code}\n" "https://mistandhaven.co
 
 If homepage HTML references a **different** CSS hash than `ls` shows on disk, redeploy the zip, restart the Node app, purge CDN cache, and hard-refresh the browser.
 
+**If HTML hash matches disk but CSS still returns 404** (your current case — routing, not build):
+
+Hostinger’s web server often serves `/_next/static/*` from **`public_html/_next/static/`** before the Node proxy. Files under `app/.next/standalone/.next/static/` are ignored → HTTP 404 even though `ls` shows the CSS and HTML references the same hash.
+
+**Fix now (SSH, from app root):**
+
+```bash
+cd ~/domains/mistandhaven.com/app
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+
+# Confirm files exist (hash should match live HTML)
+CSS=$(basename .next/standalone/.next/static/css/*.css)
+echo "Disk CSS: $CSS"
+curl -sS https://mistandhaven.com/ | grep -oE '/_next/static/css/[a-f0-9]+\.css' | head -1
+
+# Symlink document root → standalone static (required on many Hostinger plans)
+mkdir -p ../public_html/_next
+rm -rf ../public_html/_next/static
+ln -sfn "$(pwd)/.next/standalone/.next/static" ../public_html/_next/static
+ls -la ../public_html/_next/static/css/
+
+# Or use the repo script (after git pull):
+bash scripts/setup-hostinger-static.sh
+
+# Restart Node app in hPanel, then verify
+curl -sSI -o /dev/null -w "CSS HTTP %{http_code}\n" "https://mistandhaven.com/_next/static/css/$CSS"
+```
+
+Also confirm hPanel **Application root** is `~/domains/mistandhaven.com/app` (not `nodejs/`), **Start command** is `npm run start:standalone`, and restart after every server-side `npm run build:hostinger`.
+
+Check for a bad **`public_html/.htaccess`** rule that intercepts `/_next/` (see **public_html and .htaccess** below).
+
+**Does `build:hostinger` change the CSS hash?** Yes — every full rebuild produces new content hashes. If live HTML and `ls .next/standalone/.next/static/css/` show the **same** filename (e.g. `00c4429d59a52a14.css`) but curl returns 404, the problem is **routing** (public_html / Apache), not a stale hash.
+
 **Re-unzip a fresh bundle:**
 
 ```bash
@@ -471,6 +505,35 @@ https://mistandhaven.com/_next/static/css/HASH.css
 
 `app/layout.tsx` imports `./globals.css` correctly — styling breaks only when static assets are not deployed or the wrong start command is used. No `assetPrefix` is needed for the root domain `mistandhaven.com`.
 
+### CSS 404 but file exists on disk (HTML hash matches)
+
+**Symptoms:** `ls .next/standalone/.next/static/css/` shows e.g. `00c4429d59a52a14.css`, live homepage HTML references the **same** `/_next/static/css/00c4429d59a52a14.css`, but `curl` returns **HTTP 404**. Chunk JS may 404 too. Site is unstyled.
+
+**Cause:** **Routing**, not a missing postbuild or hash mismatch. Hostinger’s Apache/LiteSpeed serves `/_next/static/*` from **`public_html/_next/static/`** instead of proxying to Node. Your files live under `app/.next/standalone/.next/static/` only.
+
+**Fix (SSH — run exactly this from app root):**
+
+```bash
+cd ~/domains/mistandhaven.com/app
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+
+CSS=$(basename .next/standalone/.next/static/css/*.css)
+
+mkdir -p ../public_html/_next
+rm -rf ../public_html/_next/static
+ln -sfn "$(pwd)/.next/standalone/.next/static" ../public_html/_next/static
+
+# Optional: repo script (same as above)
+# bash scripts/setup-hostinger-static.sh
+
+# hPanel → Node.js Web Apps → Restart (required after build/deploy)
+curl -sSI -o /dev/null -w "CSS HTTP %{http_code}\n" "https://mistandhaven.com/_next/static/css/$CSS"
+```
+
+Expect **HTTP 200**. If still 404, check `public_html/.htaccess` for conflicting `_next` rules and confirm hPanel application root is `app/` not `nodejs/`.
+
+After every deploy or server-side `npm run build:hostinger`, re-run the symlink (or `bash scripts/server-deploy.sh`, which runs it automatically) and **restart** the Node app.
+
 ### Hash mismatch (HTML asks for old CSS/JS, server has new files)
 
 **Symptoms:** Browser Network tab shows 404 for `/_next/static/css/09sm9j6sx77q4.css` (or similar short hash) while `ls .next/standalone/.next/static/css/` on the server shows a different file such as `00c4429d59a52a14.css`.
@@ -529,7 +592,18 @@ Remove or ignore the unused folder after confirming which path hPanel uses.
 
 ### public_html and .htaccess
 
-For Node.js Web Apps, Hostinger proxies requests to your Node process. You usually **do not** need rewrite rules for `/_next/static` in `public_html`.
+For Node.js Web Apps, Hostinger proxies most requests to your Node process, but **`/_next/static/*` is often resolved from `public_html/_next/static/` first**. If that folder is missing or stale, you get **404 even when files exist under `app/.next/standalone/.next/static/`**.
+
+**Required after every build/deploy:**
+
+```bash
+cd ~/domains/mistandhaven.com/app
+bash scripts/setup-hostinger-static.sh
+# Or manually:
+# ln -sfn "$(pwd)/.next/standalone/.next/static" ../public_html/_next/static
+```
+
+`scripts/server-deploy.sh` runs this symlink step automatically after unzip.
 
 If you previously hosted a static site or WordPress under `public_html`, check for an `.htaccess` that intercepts `/_next/*` or serves stale files. Either remove conflicting rules or ensure the domain is attached to the **Node.js app**, not an old document root.
 

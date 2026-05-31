@@ -49,6 +49,14 @@ CHUNKS="$(find "$STANDALONE/.next/static/chunks" -name '*.js' 2>/dev/null | wc -
 echo "→ OK server.js"
 echo "→ OK CSS: $(basename "$CSS")"
 echo "→ OK chunks: $CHUNKS JS files"
+
+echo ""
+echo "→ Linking public_html/_next/static (Apache serves /_next/static from document root)..."
+bash "$ROOT/scripts/setup-hostinger-static.sh" || {
+  echo "WARN: public_html symlink skipped — run manually if CSS still 404s:" >&2
+  echo "  bash scripts/setup-hostinger-static.sh" >&2
+}
+
 echo ""
 echo "Next steps:"
 echo "  1. hPanel → Websites → Node.js Web Apps → your app → Restart"
