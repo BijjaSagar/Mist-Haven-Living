@@ -1,6 +1,6 @@
 # Mist & Haven Living
 
-Premium B2B marketing website for **Mist & Haven Living** by Deepam Textiles — a lead-generation site targeting USA and Canada buyers, with a MySQL-backed admin CMS.
+Premium B2B marketing website for **Mist & Haven Living** — a lead-generation site targeting USA and Canada buyers, with a MySQL-backed admin CMS.
 
 ## Tech Stack
 

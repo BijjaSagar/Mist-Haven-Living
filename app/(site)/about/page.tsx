@@ -15,7 +15,7 @@ export async function generateMetadata() {
     title: page?.metaTitle ?? "About Us",
     description:
       page?.metaDescription ??
-      "Learn about Deepam Textiles and Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India, exporting to USA and Canada.",
+      "Learn about Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India, exporting to USA and Canada.",
     path: "/about",
   });
 }
@@ -59,7 +59,7 @@ export default async function AboutPage() {
               <div className="relative aspect-[3/4] overflow-hidden bg-oat">
                 <Image
                   src="https://picsum.photos/seed/about-factory/800/1067"
-                  alt="Deepam Textiles team"
+                  alt="Mist & Haven Living team"
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 40vw"
@@ -68,10 +68,10 @@ export default async function AboutPage() {
             </FadeUp>
             <FadeUp delay={0.1} className="lg:col-span-7 lg:pl-8">
               <SectionHeading
-                title={intro.title ?? "Deepam Textiles — Est. 1982, Solapur"}
+                title={intro.title ?? "Mist & Haven Living — Est. 1982, Solapur"}
                 description={
                   intro.body ??
-                  "Solapur has been India's terry towel capital for over a century. Deepam Textiles was founded here in 1982 with a singular focus: produce textiles that meet the exacting standards of international hospitality and retail buyers."
+                  "Solapur has been India's terry towel capital for over a century. Mist & Haven Living was founded here in 1982 with a singular focus: produce textiles that meet the exacting standards of international hospitality and retail buyers."
                 }
               />
               <div className="mt-8 space-y-4 font-body text-base leading-relaxed text-muted">

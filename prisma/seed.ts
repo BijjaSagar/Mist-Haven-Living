@@ -140,7 +140,7 @@ async function main() {
       slug: "about",
       metaTitle: "About Us",
       metaDescription:
-        "Learn about Deepam Textiles and Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India, exporting to USA and Canada.",
+        "Learn about Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India, exporting to USA and Canada.",
       sections: DEFAULT_ABOUT_SECTIONS,
     },
     {

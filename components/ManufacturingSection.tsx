@@ -17,7 +17,7 @@ type ManufacturingSectionProps = {
 
 export function ManufacturingSection({
   steps,
-  imageUrl = "https://picsum.photos/seed/deepam-factory/900/720",
+  imageUrl = "https://picsum.photos/seed/mist-factory/900/720",
 }: ManufacturingSectionProps) {
   return (
     <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-14">
@@ -25,7 +25,7 @@ export function ManufacturingSection({
         <div className="relative aspect-[5/4] overflow-hidden border border-hairline bg-oat">
           <Image
             src={imageUrl}
-            alt="Deepam Textiles manufacturing facility in Solapur"
+            alt="Mist & Haven Living manufacturing facility in Solapur"
             fill
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 50vw"

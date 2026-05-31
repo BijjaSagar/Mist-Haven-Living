@@ -10,7 +10,7 @@ datasource db {
 model SiteSettings {
   id                String   @id @default("default")
   siteName          String   @default("Mist & Haven Living")
-  legalName         String   @default("Deepam Textiles")
+  legalName         String   @default("Mist & Haven Living")
   tagline           String   @default("Luxury In Every Thread.")
   description       String   @db.Text
   logoUrl           String   @default("/logo.png")

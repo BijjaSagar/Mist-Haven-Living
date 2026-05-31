@@ -436,7 +436,7 @@ export const productCategories: ProductCategory[] = [
     shortDescription:
       "Full private label programs—from product development to packaging and export logistics.",
     description:
-      "Partner with Deepam Textiles to launch or scale your towel and linen brand. We offer end-to-end private label services: product development, sampling, custom weaving, branding, packaging, and FOB/CIF export to USA and Canada.",
+      "Partner with Mist & Haven Living to launch or scale your towel and linen brand. We offer end-to-end private label services: product development, sampling, custom weaving, branding, packaging, and FOB/CIF export to USA and Canada.",
     heroImage: "https://picsum.photos/seed/private-label/1400/900",
     cardImage: "https://picsum.photos/seed/private-label-card/800/600",
     features: [
@@ -565,7 +565,7 @@ export const whyChooseUsFeatures = [
   {
     title: "40+ Years Manufacturing",
     description:
-      "Deepam Textiles heritage in Solapur—India's premier terry towel manufacturing hub since 1982.",
+      "Mist & Haven Living heritage in Solapur—India's premier terry towel manufacturing hub since 1982.",
   },
 ];
 
@@ -785,7 +785,7 @@ export const tradeShows = [
 export const caseStudySnippet = {
   title: "North American Resort Group",
   summary:
-    "An anonymised five-property resort group replaced their bath linen program with Deepam-manufactured 550 GSM towels—achieving ±3% GSM consistency across 24,000 units and reducing replenishment lead time by 18 days.",
+    "An anonymised five-property resort group replaced their bath linen program with Mist & Haven Living 550 GSM towels—achieving ±3% GSM consistency across 24,000 units and reducing replenishment lead time by 18 days.",
 };
 
 export const fabricTextures = [

@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const siteConfig = {
   name: "Mist & Haven Living",
-  legalName: "Deepam Textiles",
+  legalName: "Mist & Haven Living",
   tagline: "Luxury In Every Thread.",
   description:
     "Premium B2B textile manufacturing for hospitality, retail, and private label buyers across the USA and Canada.",

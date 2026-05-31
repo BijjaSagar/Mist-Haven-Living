@@ -80,12 +80,8 @@ export default async function HomePage() {
               <div className="font-body text-base leading-relaxed text-muted md:text-[16.5px]">
                 <p>
                   Mist & Haven Living is a premium textile manufacturing and export
-                  company backed by{" "}
-                  <strong className="font-medium text-taupe">
-                    Deepam Textiles
-                  </strong>
-                  , headquartered in Solapur, Maharashtra — one of the world&apos;s
-                  renowned towel-manufacturing hubs.
+                  company headquartered in Solapur, Maharashtra — one of the
+                  world&apos;s renowned towel-manufacturing hubs.
                 </p>
                 <p className="mt-4">
                   {heritage.description ??

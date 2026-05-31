@@ -2,7 +2,7 @@
 CREATE TABLE `SiteSettings` (
     `id` VARCHAR(191) NOT NULL DEFAULT 'default',
     `siteName` VARCHAR(191) NOT NULL DEFAULT 'Mist & Haven Living',
-    `legalName` VARCHAR(191) NOT NULL DEFAULT 'Deepam Textiles',
+    `legalName` VARCHAR(191) NOT NULL DEFAULT 'Mist & Haven Living',
     `tagline` VARCHAR(191) NOT NULL DEFAULT 'Luxury In Every Thread.',
     `description` TEXT NOT NULL,
     `logoUrl` VARCHAR(191) NOT NULL DEFAULT '/logo.png',

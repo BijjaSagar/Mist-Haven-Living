@@ -129,7 +129,7 @@ export default async function PrivateLabelPage() {
               Your brand. Our manufacturing excellence.
             </h1>
             <p className="mt-6 font-body text-lg leading-relaxed text-muted">
-              Partner with Deepam Textiles to launch, scale, or refresh your towel
+              Partner with Mist & Haven Living to launch, scale, or refresh your towel
               and linen brand. End-to-end private label—from first sample to
               retail-ready cartons shipped to USA and Canada.
             </p>

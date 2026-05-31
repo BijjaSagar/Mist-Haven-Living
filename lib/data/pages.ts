@@ -4,7 +4,7 @@ import { siteConfig } from "@/lib/utils";
 
 const DEFAULT_HOME_SECTIONS = {
   hero: {
-    eyebrow: "Deepam Textiles · Solapur, India",
+    eyebrow: "Mist & Haven Living · Solapur, India",
     title: "Luxury In Every Thread.",
     subtitle:
       "Premium B2B textile manufacturing for hospitality, retail, and private label buyers across the USA and Canada.",
@@ -12,10 +12,10 @@ const DEFAULT_HOME_SECTIONS = {
   },
   heritage: {
     eyebrow: "Our Heritage",
-    title: "Crafted by Deepam Textiles, Solapur",
+    title: "Crafted in Solapur, India",
     description:
-      "For over four decades, Deepam Textiles has been at the heart of India's premier terry towel manufacturing region. Mist & Haven Living is our export-facing brand—bringing institutional-grade quality and boutique-level finishing to North American buyers.",
-    imageUrl: "https://picsum.photos/seed/deepam-factory/900/675",
+      "For over four decades, Mist & Haven Living has been at the heart of India's premier terry towel manufacturing region—bringing institutional-grade quality and boutique-level finishing to North American buyers.",
+    imageUrl: "https://picsum.photos/seed/mist-factory/900/675",
   },
 };
 
@@ -26,7 +26,7 @@ const DEFAULT_ABOUT_SECTIONS = {
   },
   intro: {
     title: "Four decades of textile excellence",
-    body: "Founded in 1982 in Solapur—India's renowned terry towel manufacturing hub—Deepam Textiles has grown from a regional producer to an export powerhouse serving buyers across North America and beyond.",
+    body: "Founded in 1982 in Solapur—India's renowned terry towel manufacturing hub—Mist & Haven Living has grown from a regional producer to an export powerhouse serving buyers across North America and beyond.",
   },
 };
 
@@ -52,7 +52,7 @@ const STATIC_PAGES: Record<string, PageContentData> = {
     slug: "about",
     metaTitle: "About Us",
     metaDescription:
-      "Learn about Deepam Textiles and Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India, exporting to USA and Canada.",
+      "Learn about Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India, exporting to USA and Canada.",
     sections: DEFAULT_ABOUT_SECTIONS,
   },
   manufacturing: {

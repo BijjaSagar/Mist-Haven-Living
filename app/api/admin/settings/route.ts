@@ -64,7 +64,7 @@ export async function PUT(request: NextRequest) {
       create: {
         id: "default",
         siteName: body.siteName ?? "Mist & Haven Living",
-        legalName: body.legalName ?? "Deepam Textiles",
+        legalName: body.legalName ?? "Mist & Haven Living",
         tagline: body.tagline ?? "",
         description: body.description ?? "",
         logoUrl: body.logoUrl ?? "/logo.png",
