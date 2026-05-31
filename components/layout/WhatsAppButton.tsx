@@ -2,9 +2,7 @@
 
 import { MessageCircle } from "lucide-react";
 
-export function WhatsAppButton() {
-  const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
-
+export function WhatsAppButton({ number }: { number?: string | null }) {
   if (!number) return null;
 
   const cleanNumber = number.replace(/\D/g, "");

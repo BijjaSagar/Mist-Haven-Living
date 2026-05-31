@@ -42,6 +42,9 @@ async function main() {
       colorHairline: DEFAULT_COLORS.hairline,
       contactEmail: siteConfig.email,
       contactPhone: siteConfig.phone,
+      leadsToEmail: process.env.LEADS_TO_EMAIL ?? null,
+      resendFromEmail: process.env.RESEND_FROM_EMAIL ?? null,
+      inquiryEnabled: true,
       whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? null,
       calendlyUrl: process.env.NEXT_PUBLIC_CALENDLY_URL ?? null,
       footerBlurb:

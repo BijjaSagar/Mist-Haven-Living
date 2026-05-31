@@ -38,10 +38,19 @@ export async function HomeInquirySection() {
                   {settings.contactEmail}
                 </a>
               </p>
-              <p>
-                <strong className="font-medium text-taupe">WhatsApp:</strong>{" "}
-                Available for fast buyer enquiries
-              </p>
+              {settings.whatsappNumber ? (
+                <p>
+                  <strong className="font-medium text-taupe">WhatsApp:</strong>{" "}
+                  <a
+                    href={`https://wa.me/${settings.whatsappNumber.replace(/\D/g, "")}`}
+                    className="hover:text-sage-deep"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {settings.whatsappNumber}
+                  </a>
+                </p>
+              ) : null}
             </div>
           </FadeUp>
 
@@ -56,6 +65,7 @@ export async function HomeInquirySection() {
               />
               <MultiStepInquiryForm
                 productInterestOptions={productInterestOptions}
+                inquiryEnabled={settings.inquiryEnabled}
               />
             </div>
           </FadeUp>

@@ -4,6 +4,7 @@ import { CatalogCTA } from "@/components/CatalogGateModal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { getProductInterestOptions } from "@/lib/data/products";
+import { getSiteSettings } from "@/lib/data/site-settings";
 import { ArrowRight } from "lucide-react";
 
 type CTABandProps = {
@@ -51,7 +52,10 @@ export async function CTABand({
     );
   }
 
-  const productInterestOptions = await getProductInterestOptions();
+  const [productInterestOptions, settings] = await Promise.all([
+    getProductInterestOptions(),
+    getSiteSettings(),
+  ]);
 
   return (
     <section className="bg-taupe py-section-mobile md:py-section-desktop">
@@ -85,6 +89,7 @@ export async function CTABand({
                 prefilledProduct={prefilledProduct}
                 variant="dark"
                 productInterestOptions={productInterestOptions}
+                inquiryEnabled={settings.inquiryEnabled}
               />
             </div>
           )}

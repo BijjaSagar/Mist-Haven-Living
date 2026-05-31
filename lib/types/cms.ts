@@ -46,6 +46,9 @@ export type SiteSettingsData = {
   colors: SiteColors;
   contactEmail: string;
   contactPhone: string;
+  leadsToEmail: string | null;
+  resendFromEmail: string | null;
+  inquiryEnabled: boolean;
   whatsappNumber: string | null;
   calendlyUrl: string | null;
   footerBlurb: string;

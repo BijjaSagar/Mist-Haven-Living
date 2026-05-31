@@ -25,6 +25,9 @@ model SiteSettings {
   colorHairline     String   @default("#e7e0d3")
   contactEmail      String
   contactPhone      String
+  leadsToEmail      String?
+  resendFromEmail   String?
+  inquiryEnabled    Boolean  @default(true)
   whatsappNumber    String?
   calendlyUrl       String?
   footerBlurb       String   @db.Text

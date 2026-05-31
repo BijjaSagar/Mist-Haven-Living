@@ -45,10 +45,11 @@ Edit `.env.local` with your values:
 | `DATABASE_URL` | MySQL connection string |
 | `ADMIN_EMAIL` | Admin panel login email |
 | `ADMIN_PASSWORD` | Admin panel login password |
-| `RESEND_API_KEY` | Resend API key for inquiry emails |
-| `LEADS_TO_EMAIL` | Destination inbox for B2B leads |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | WhatsApp number with country code |
-| `NEXT_PUBLIC_CALENDLY_URL` | Calendly scheduling URL |
+| `RESEND_API_KEY` | Resend API key for inquiry emails (required; server env only) |
+| `LEADS_TO_EMAIL` | Optional fallback leads inbox (prefer **Admin → Settings**) |
+| `RESEND_FROM_EMAIL` | Optional fallback Resend sender (prefer **Admin → Settings**) |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Optional fallback WhatsApp (prefer **Admin → Settings**) |
+| `NEXT_PUBLIC_CALENDLY_URL` | Optional fallback Calendly (prefer **Admin → Settings**) |
 
 ### 4. Run migrations and seed
 

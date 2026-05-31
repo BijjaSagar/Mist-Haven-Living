@@ -140,14 +140,19 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
         <h2 className="mb-4 font-display text-xl text-taupe">Contact</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <Label>Email</Label>
+            <Label>Public contact email</Label>
             <Input
+              type="email"
               value={data.contactEmail}
               onChange={(e) =>
                 setData({ ...data, contactEmail: e.target.value })
               }
               className="mt-1"
             />
+            <p className="mt-1 font-body text-xs text-muted">
+              Shown on the site and used as fallback for quote inquiries if leads
+              email is empty.
+            </p>
           </div>
           <div>
             <Label>Phone</Label>
@@ -172,12 +177,81 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
           <div>
             <Label>Calendly URL</Label>
             <Input
+              type="url"
               value={data.calendlyUrl ?? ""}
               onChange={(e) =>
                 setData({ ...data, calendlyUrl: e.target.value || null })
               }
               className="mt-1"
             />
+            <p className="mt-1 font-body text-xs text-muted">
+              Embeds on the contact page. Leave empty to show a link to the inquiry
+              form instead.
+            </p>
+          </div>
+        </div>
+      </AdminCard>
+
+      <AdminCard>
+        <h2 className="mb-4 font-display text-xl text-taupe">
+          Request Quote / inquiries
+        </h2>
+        <p className="mb-4 font-body text-sm text-muted">
+          Configure where B2B leads and catalog downloads are sent. The Resend API
+          key must stay in server environment variables (
+          <code className="text-xs">RESEND_API_KEY</code>) — never commit it to the
+          database.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <label className="flex cursor-pointer items-center gap-2 font-body text-sm text-taupe">
+              <input
+                type="checkbox"
+                checked={data.inquiryEnabled}
+                onChange={(e) =>
+                  setData({ ...data, inquiryEnabled: e.target.checked })
+                }
+                className="h-4 w-4 rounded border-hairline"
+              />
+              Enable inquiry &amp; catalog forms
+            </label>
+          </div>
+          <div>
+            <Label>Leads inbox email</Label>
+            <Input
+              type="email"
+              value={data.leadsToEmail ?? ""}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  leadsToEmail: e.target.value.trim() || null,
+                })
+              }
+              className="mt-1"
+              placeholder={data.contactEmail || "export@yourcompany.com"}
+            />
+            <p className="mt-1 font-body text-xs text-muted">
+              Destination for Request Quote submissions. Falls back to public
+              contact email, then <code className="text-xs">LEADS_TO_EMAIL</code> env.
+            </p>
+          </div>
+          <div>
+            <Label>Resend &quot;from&quot; address</Label>
+            <Input
+              value={data.resendFromEmail ?? ""}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  resendFromEmail: e.target.value.trim() || null,
+                })
+              }
+              className="mt-1"
+              placeholder="Mist & Haven <noreply@yourdomain.com>"
+            />
+            <p className="mt-1 font-body text-xs text-muted">
+              Must use a domain verified in Resend. Defaults to onboarding address
+              or <code className="text-xs">RESEND_FROM_EMAIL</code> env.
+            </p>
           </div>
         </div>
       </AdminCard>

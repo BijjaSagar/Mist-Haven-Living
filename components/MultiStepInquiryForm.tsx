@@ -16,12 +16,14 @@ import {
 } from "@/lib/validations/inquiry";
 import { productInterestOptions as staticOptions } from "@/data/products";
 import { cn } from "@/lib/utils";
+import { InquiryUnavailable } from "@/components/InquiryUnavailable";
 
 type MultiStepInquiryFormProps = {
   prefilledProduct?: string;
   variant?: "light" | "dark";
   className?: string;
   productInterestOptions?: { value: string; label: string }[];
+  inquiryEnabled?: boolean;
 };
 
 export function MultiStepInquiryForm({
@@ -29,6 +31,7 @@ export function MultiStepInquiryForm({
   variant = "light",
   className,
   productInterestOptions = staticOptions,
+  inquiryEnabled = true,
 }: MultiStepInquiryFormProps) {
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -80,6 +83,10 @@ export function MultiStepInquiryForm({
     if (valid) setStep(2);
   }
 
+  if (!inquiryEnabled) {
+    return <InquiryUnavailable className={className} variant={variant} />;
+  }
+
   if (submitted) {
     return (
       <div
@@ -105,7 +112,6 @@ export function MultiStepInquiryForm({
 
   return (
     <form
-      id="inquiry"
       onSubmit={handleSubmit(onSubmit)}
       className={cn("space-y-5", className)}
       noValidate

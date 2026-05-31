@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { inquirySchema } from "@/lib/validations/inquiry";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getCategoryBySlug } from "@/lib/data/products";
+import { getInquiryEmailConfig } from "@/lib/data/inquiry-config";
 
 export async function POST(request: Request) {
   try {
@@ -34,11 +35,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    const leadsEmail = process.env.LEADS_TO_EMAIL;
-    const resendKey = process.env.RESEND_API_KEY;
+    const emailConfig = await getInquiryEmailConfig();
 
-    if (!leadsEmail || !resendKey) {
-      console.error("Missing RESEND_API_KEY or LEADS_TO_EMAIL");
+    if (!emailConfig.inquiryEnabled) {
+      return NextResponse.json(
+        { error: "Inquiry form is temporarily unavailable" },
+        { status: 503 },
+      );
+    }
+
+    if (!emailConfig.configured) {
+      console.error(
+        "Inquiry email not configured: set RESEND_API_KEY and leads destination in Admin → Settings (or LEADS_TO_EMAIL env)",
+      );
       return NextResponse.json(
         { error: "Email service not configured" },
         { status: 503 },
@@ -54,11 +63,11 @@ export async function POST(request: Request) {
         ? "Product Catalog Download"
         : (product?.name ?? data.productInterest);
 
-    const resend = new Resend(resendKey);
+    const resend = new Resend(emailConfig.resendKey!);
 
     await resend.emails.send({
-      from: "Mist & Haven Inquiries <onboarding@resend.dev>",
-      to: leadsEmail,
+      from: emailConfig.resendFrom,
+      to: emailConfig.leadsEmail!,
       replyTo: data.email,
       subject: `New B2B Inquiry: ${data.company} — ${productLabel}`,
       html: `

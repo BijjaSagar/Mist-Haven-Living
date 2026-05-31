@@ -15,12 +15,14 @@ import {
 } from "@/lib/validations/inquiry";
 import { productInterestOptions as staticOptions } from "@/data/products";
 import { cn } from "@/lib/utils";
+import { InquiryUnavailable } from "@/components/InquiryUnavailable";
 
 type InquiryFormProps = {
   prefilledProduct?: string;
   variant?: "light" | "dark";
   className?: string;
   productInterestOptions?: { value: string; label: string }[];
+  inquiryEnabled?: boolean;
 };
 
 export function InquiryForm({
@@ -28,6 +30,7 @@ export function InquiryForm({
   variant = "light",
   className,
   productInterestOptions = staticOptions,
+  inquiryEnabled = true,
 }: InquiryFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -72,6 +75,10 @@ export function InquiryForm({
     }
   }
 
+  if (!inquiryEnabled) {
+    return <InquiryUnavailable className={className} variant={variant} />;
+  }
+
   if (submitted) {
     return (
       <div
@@ -97,7 +104,6 @@ export function InquiryForm({
 
   return (
     <form
-      id="inquiry"
       onSubmit={handleSubmit(onSubmit)}
       className={cn("space-y-5", className)}
       noValidate

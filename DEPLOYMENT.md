@@ -269,10 +269,13 @@ Set these in the Hostinger Node.js app panel **Environment variables**, or in a 
 | `DATABASE_URL` | Yes | MySQL connection string (see above) |
 | `ADMIN_EMAIL` | Yes | Admin CMS login email |
 | `ADMIN_PASSWORD` | Yes | Admin CMS login password |
-| `RESEND_API_KEY` | Yes | Resend API key for inquiry emails |
-| `LEADS_TO_EMAIL` | Yes | Destination inbox for B2B leads |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Yes | WhatsApp number with country code |
-| `NEXT_PUBLIC_CALENDLY_URL` | Yes | Calendly scheduling URL |
+| `RESEND_API_KEY` | Yes | Resend API key for inquiry emails (server-only; not stored in CMS) |
+| `LEADS_TO_EMAIL` | No* | Fallback leads inbox if not set in **Admin → Settings** |
+| `RESEND_FROM_EMAIL` | No | Fallback Resend sender if not set in **Admin → Settings** |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | No* | Fallback WhatsApp if not set in **Admin → Settings** |
+| `NEXT_PUBLIC_CALENDLY_URL` | No* | Fallback Calendly URL if not set in **Admin → Settings** |
+
+\* Prefer **Admin → Settings** for leads inbox, WhatsApp, Calendly, and public contact email. After deploy, run `npx prisma migrate deploy`, then open `/admin/settings` and set **Leads inbox email** (or ensure public contact email is set) plus enable inquiries.
 | `PORT` | Optional | Hostinger may set this automatically; defaults to `3000` |
 | `ADMIN_SECRET` | Recommended | JWT signing secret (falls back to `ADMIN_PASSWORD`; required in production if `ADMIN_PASSWORD` is unset) |
 

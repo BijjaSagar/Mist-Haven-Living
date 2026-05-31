@@ -103,7 +103,7 @@ export default async function ContactPage() {
               </div>
 
               <div className="mt-10">
-                <ScheduleDiscussion />
+                <ScheduleDiscussion calendlyUrl={settings.calendlyUrl} />
               </div>
             </FadeUp>
 
@@ -120,6 +120,7 @@ export default async function ContactPage() {
                 />
                 <MultiStepInquiryForm
                   productInterestOptions={productInterestOptions}
+                  inquiryEnabled={settings.inquiryEnabled}
                 />
               </div>
             </FadeUp>
