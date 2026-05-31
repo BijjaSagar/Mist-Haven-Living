@@ -7,7 +7,7 @@ import { ProcessSteps } from "@/components/ProcessSteps";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { Button } from "@/components/ui/button";
-import { getCategoryBySlug } from "@/data/products";
+import { getCategoryBySlug } from "@/lib/data/products";
 
 export const metadata = createMetadata({
   title: "Private Label",
@@ -88,8 +88,8 @@ const privateLabelSteps = [
   },
 ];
 
-export default function PrivateLabelPage() {
-  const category = getCategoryBySlug("private-labeling");
+export default async function PrivateLabelPage() {
+  const category = await getCategoryBySlug("private-labeling");
   const jsonLd = serviceJsonLd(
     "Private Label Textile Manufacturing",
     "Full private label programs for towel and linen brands exporting to USA and Canada.",

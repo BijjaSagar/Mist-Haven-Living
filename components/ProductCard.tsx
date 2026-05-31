@@ -2,10 +2,10 @@ import Link from "next/link";
 import { HoverScaleImage } from "@/components/motion/HoverScaleImage";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
-import type { ProductCategory } from "@/data/products";
+import type { ProductCategoryData } from "@/lib/types/cms";
 
 type ProductCardProps = {
-  category: ProductCategory;
+  category: ProductCategoryData;
   className?: string;
   priority?: boolean;
 };

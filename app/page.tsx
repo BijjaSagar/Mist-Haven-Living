@@ -20,11 +20,8 @@ import { ScheduleDiscussion } from "@/components/ScheduleDiscussion";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { HoverScaleImage } from "@/components/motion/HoverScaleImage";
 import {
-  productCategories,
-  certifications,
   whyChooseUsFeatures,
   manufacturingSteps,
-  companyStats,
   audienceSegments,
   howWeWorkSteps,
   tradeTerms,
@@ -33,17 +30,41 @@ import {
   caseStudySnippet,
   socialCompliancePoints,
 } from "@/data/products";
+import { getProductCategories } from "@/lib/data/products";
+import { getStats } from "@/lib/data/stats";
+import { getCertifications } from "@/lib/data/certifications";
+import { getPageContent } from "@/lib/data/pages";
 
 export const revalidate = 86400;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [productCategories, companyStats, certifications, homePage] =
+    await Promise.all([
+      getProductCategories(),
+      getStats(),
+      getCertifications(),
+      getPageContent("home"),
+    ]);
+
+  const hero = (homePage?.sections.hero ?? {}) as {
+    eyebrow?: string;
+    title?: string;
+    subtitle?: string;
+    imageUrl?: string;
+  };
+  const heritage = (homePage?.sections.heritage ?? {}) as {
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+  };
   return (
     <>
       {/* Hero */}
       <section className="relative min-h-[90vh] overflow-hidden pt-28 md:pt-32">
         <div className="absolute inset-0">
           <Image
-            src="https://picsum.photos/seed/mist-hero/1920/1200"
+            src={hero.imageUrl ?? "https://picsum.photos/seed/mist-hero/1920/1200"}
             alt="Luxury textile manufacturing"
             fill
             className="object-cover"
@@ -59,14 +80,14 @@ export default function HomePage() {
         <div className="relative mx-auto flex min-h-[calc(90vh-6rem)] max-w-container items-center px-6 md:px-8">
           <FadeUp className="max-w-2xl">
             <p className="mb-4 font-body text-xs font-medium uppercase tracking-[0.22em] text-sage-deep">
-              Deepam Textiles · Solapur, India
+              {hero.eyebrow ?? "Deepam Textiles · Solapur, India"}
             </p>
             <h1 className="font-display text-[2.75rem] italic leading-[1.1] tracking-tight text-taupe md:text-[4rem]">
-              Luxury In Every Thread.
+              {hero.title ?? "Luxury In Every Thread."}
             </h1>
             <p className="mt-6 max-w-lg font-body text-[17px] leading-relaxed text-muted md:text-lg">
-              Premium B2B textile manufacturing for hospitality, retail, and
-              private label buyers across the USA and Canada.
+              {hero.subtitle ??
+                "Premium B2B textile manufacturing for hospitality, retail, and private label buyers across the USA and Canada."}
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Button asChild size="lg">
@@ -96,15 +117,18 @@ export default function HomePage() {
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <FadeUp>
               <SectionHeading
-                eyebrow="Our Heritage"
-                title="Crafted by Deepam Textiles, Solapur"
-                description="For over four decades, Deepam Textiles has been at the heart of India's premier terry towel manufacturing region. Mist & Haven Living is our export-facing brand—bringing institutional-grade quality and boutique-level finishing to North American buyers."
+                eyebrow={heritage.eyebrow ?? "Our Heritage"}
+                title={heritage.title ?? "Crafted by Deepam Textiles, Solapur"}
+                description={
+                  heritage.description ??
+                  "For over four decades, Deepam Textiles has been at the heart of India's premier terry towel manufacturing region. Mist & Haven Living is our export-facing brand—bringing institutional-grade quality and boutique-level finishing to North American buyers."
+                }
               />
             </FadeUp>
             <FadeUp delay={0.1}>
               <div className="group relative aspect-[4/3] bg-pearl">
                 <HoverScaleImage
-                  src="https://picsum.photos/seed/deepam-factory/900/675"
+                  src={heritage.imageUrl ?? "https://picsum.photos/seed/deepam-factory/900/675"}
                   alt="Deepam Textiles manufacturing facility"
                   fill
                   containerClassName="absolute inset-0"

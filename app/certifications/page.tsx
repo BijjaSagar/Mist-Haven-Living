@@ -10,7 +10,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { certifications, socialCompliancePoints } from "@/data/products";
+import { socialCompliancePoints } from "@/data/products";
+import { getCertifications } from "@/lib/data/certifications";
 
 export const metadata = createMetadata({
   title: "Certifications",
@@ -21,7 +22,9 @@ export const metadata = createMetadata({
 
 export const revalidate = 86400;
 
-export default function CertificationsPage() {
+export default async function CertificationsPage() {
+  const certifications = await getCertifications();
+
   return (
     <>
       <section className="pt-32 pb-section-mobile md:pb-section-desktop">

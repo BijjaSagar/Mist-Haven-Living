@@ -14,19 +14,21 @@ import {
   buyerTypeOptions,
   type InquiryFormValues,
 } from "@/lib/validations/inquiry";
-import { productInterestOptions } from "@/data/products";
+import { productInterestOptions as staticOptions } from "@/data/products";
 import { cn } from "@/lib/utils";
 
 type MultiStepInquiryFormProps = {
   prefilledProduct?: string;
   variant?: "light" | "dark";
   className?: string;
+  productInterestOptions?: { value: string; label: string }[];
 };
 
 export function MultiStepInquiryForm({
   prefilledProduct,
   variant = "light",
   className,
+  productInterestOptions = staticOptions,
 }: MultiStepInquiryFormProps) {
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);

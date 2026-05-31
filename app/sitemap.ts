@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/utils";
-import { getAllCategorySlugs } from "@/data/products";
+import { getAllCategorySlugs } from "@/lib/data/products";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
   const staticRoutes = [
     "",
@@ -15,9 +15,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/faq",
   ];
 
-  const categoryRoutes = getAllCategorySlugs().map(
-    (slug) => `/products/${slug}`,
-  );
+  const slugs = await getAllCategorySlugs();
+  const categoryRoutes = slugs.map((slug) => `/products/${slug}`);
 
   return [...staticRoutes, ...categoryRoutes].map((route) => ({
     url: `${baseUrl}${route}`,

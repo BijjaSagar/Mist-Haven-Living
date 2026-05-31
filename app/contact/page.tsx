@@ -4,7 +4,8 @@ import { MultiStepInquiryForm } from "@/components/MultiStepInquiryForm";
 import { ScheduleDiscussion } from "@/components/ScheduleDiscussion";
 import { CatalogCTA } from "@/components/CatalogGateModal";
 import { FadeUp } from "@/components/motion/FadeUp";
-import { siteConfig } from "@/lib/utils";
+import { getSiteSettings } from "@/lib/data/site-settings";
+import { getProductInterestOptions } from "@/lib/data/products";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 
 export const metadata = createMetadata({
@@ -16,7 +17,11 @@ export const metadata = createMetadata({
 
 export const revalidate = 86400;
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const [settings, productInterestOptions] = await Promise.all([
+    getSiteSettings(),
+    getProductInterestOptions(),
+  ]);
   return (
     <>
       <section className="pt-32 pb-section-mobile md:pb-section-desktop">
@@ -48,28 +53,28 @@ export default function ContactPage() {
                 <div className="flex gap-4">
                   <MapPin className="h-5 w-5 shrink-0 text-sage-deep" />
                   <address className="not-italic font-body text-sm leading-relaxed text-muted">
-                    <strong className="block text-taupe">{siteConfig.legalName}</strong>
-                    {siteConfig.address.street}
+                    <strong className="block text-taupe">{settings.legalName}</strong>
+                    {settings.address.street}
                     <br />
-                    {siteConfig.address.city}, {siteConfig.address.region}{" "}
-                    {siteConfig.address.postalCode}
+                    {settings.address.city}, {settings.address.region}{" "}
+                    {settings.address.postalCode}
                     <br />
-                    {siteConfig.address.country}
+                    {settings.address.country}
                   </address>
                 </div>
                 <div className="flex gap-4">
                   <Mail className="h-5 w-5 shrink-0 text-sage-deep" />
                   <a
-                    href={`mailto:${siteConfig.email}`}
+                    href={`mailto:${settings.contactEmail}`}
                     className="font-body text-sm text-muted hover:text-sage-deep"
                   >
-                    {siteConfig.email}
+                    {settings.contactEmail}
                   </a>
                 </div>
                 <div className="flex gap-4">
                   <Phone className="h-5 w-5 shrink-0 text-sage-deep" />
                   <span className="font-body text-sm text-muted">
-                    {siteConfig.phone}
+                    {settings.contactPhone}
                   </span>
                 </div>
                 <div className="flex gap-4">
@@ -108,7 +113,9 @@ export default function ContactPage() {
                   description="Complete the two-step form below and our export specialists will respond with pricing, lead times, and sampling options."
                   className="mb-8"
                 />
-                <MultiStepInquiryForm />
+                <MultiStepInquiryForm
+                  productInterestOptions={productInterestOptions}
+                />
               </div>
             </FadeUp>
           </div>

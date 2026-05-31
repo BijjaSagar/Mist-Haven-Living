@@ -5,7 +5,8 @@ import { ProcessSteps } from "@/components/ProcessSteps";
 import { StatStrip } from "@/components/StatStrip";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
-import { manufacturingSteps, companyStats } from "@/data/products";
+import { manufacturingSteps } from "@/data/products";
+import { getStats } from "@/lib/data/stats";
 
 export const metadata = createMetadata({
   title: "Manufacturing",
@@ -16,7 +17,8 @@ export const metadata = createMetadata({
 
 export const revalidate = 86400;
 
-export default function ManufacturingPage() {
+export default async function ManufacturingPage() {
+  const companyStats = await getStats();
   const jsonLd = serviceJsonLd(
     "Textile Manufacturing",
     "End-to-end terry towel and linen manufacturing for B2B export.",

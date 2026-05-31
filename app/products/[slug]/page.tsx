@@ -14,19 +14,20 @@ import { HoverScaleImage } from "@/components/motion/HoverScaleImage";
 import {
   getCategoryBySlug,
   getAllCategorySlugs,
-} from "@/data/products";
+} from "@/lib/data/products";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
 export async function generateStaticParams() {
-  return getAllCategorySlugs().map((slug) => ({ slug }));
+  const slugs = await getAllCategorySlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(slug);
   if (!category) return {};
 
   return createMetadata({
@@ -41,7 +42,7 @@ export const revalidate = 86400;
 
 export default async function ProductCategoryPage({ params }: PageProps) {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(slug);
 
   if (!category) notFound();
 

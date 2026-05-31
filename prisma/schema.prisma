@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model SiteSettings {
+  id                String   @id @default("default")
+  siteName          String   @default("Mist & Haven Living")
+  legalName         String   @default("Deepam Textiles")
+  tagline           String   @default("Luxury In Every Thread.")
+  description       String   @db.Text
+  logoUrl           String   @default("/logo.png")
+  logoLightUrl      String   @default("/logo-light.png")
+  faviconUrl        String?
+  colorPearl        String   @default("#fbfaf6")
+  colorOat          String   @default("#f1ece2")
+  colorTaupe        String   @default("#5e5547")
+  colorMuted        String   @default("#857b6c")
+  colorSage         String   @default("#c8c7ac")
+  colorSageDeep     String   @default("#9a9a7d")
+  colorHairline     String   @default("#e7e0d3")
+  contactEmail      String
+  contactPhone      String
+  whatsappNumber    String?
+  calendlyUrl       String?
+  footerBlurb       String   @db.Text
+  copyrightText     String?
+  exportMarkets     String   @default("USA · Canada")
+  addressStreet     String
+  addressCity       String
+  addressRegion     String
+  addressCountry    String
+  addressPostalCode String
+  updatedAt         DateTime @updatedAt
+}
+
+model NavigationItem {
+  id        String  @id @default(cuid())
+  label     String
+  href      String
+  type      String  @default("link")
+  sortOrder Int     @default(0)
+  visible   Boolean @default(true)
+  location  String
+
+  @@index([location, sortOrder])
+}
+
+model ProductCategory {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  shortDescription String   @db.Text
+  description      String   @db.Text
+  eyebrow          String
+  heroImage        String
+  cardImage        String
+  features         Json
+  materials        Json
+  sizes            Json
+  gsmRange         String
+  customization    Json
+  packaging        Json
+  idealFor         Json
+  leadTime         String
+  moq              String
+  sortOrder        Int      @default(0)
+  visible          Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
+}
+
+model PageContent {
+  slug            String   @id
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  sections        Json
+  updatedAt       DateTime @updatedAt
+}
+
+model Stat {
+  id        String  @id @default(cuid())
+  value     String
+  label     String
+  sortOrder Int     @default(0)
+  visible   Boolean @default(true)
+}
+
+model Certification {
+  id          String  @id @default(cuid())
+  name        String
+  code        String?
+  description String  @db.Text
+  pdfUrl      String?
+  sortOrder   Int     @default(0)
+  visible     Boolean @default(true)
+}

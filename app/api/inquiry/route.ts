@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { inquirySchema } from "@/lib/validations/inquiry";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { getCategoryBySlug } from "@/data/products";
+import { getCategoryBySlug } from "@/lib/data/products";
 
 export async function POST(request: Request) {
   try {
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     const product =
       data.productInterest === "catalog-download"
         ? null
-        : getCategoryBySlug(data.productInterest);
+        : await getCategoryBySlug(data.productInterest);
     const productLabel =
       data.productInterest === "catalog-download"
         ? "Product Catalog Download"

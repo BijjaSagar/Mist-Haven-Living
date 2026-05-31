@@ -1,9 +1,9 @@
 import { ProductCard } from "@/components/ProductCard";
 import { StaggerChildren } from "@/components/motion/StaggerChildren";
-import type { ProductCategory } from "@/data/products";
+import type { ProductCategoryData } from "@/lib/types/cms";
 
 type CategoryGridProps = {
-  categories: ProductCategory[];
+  categories: ProductCategoryData[];
   columns?: 2 | 3 | 4;
 };
 

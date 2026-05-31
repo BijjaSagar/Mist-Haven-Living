@@ -13,19 +13,21 @@ import {
   inquirySchema,
   type InquiryFormValues,
 } from "@/lib/validations/inquiry";
-import { productInterestOptions } from "@/data/products";
+import { productInterestOptions as staticOptions } from "@/data/products";
 import { cn } from "@/lib/utils";
 
 type InquiryFormProps = {
   prefilledProduct?: string;
   variant?: "light" | "dark";
   className?: string;
+  productInterestOptions?: { value: string; label: string }[];
 };
 
 export function InquiryForm({
   prefilledProduct,
   variant = "light",
   className,
+  productInterestOptions = staticOptions,
 }: InquiryFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);

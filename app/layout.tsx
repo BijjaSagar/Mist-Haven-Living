@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import {
+  HeaderWrapper,
+  getThemeStyle,
+} from "@/components/layout/HeaderWrapper";
+import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { createMetadata, organizationJsonLd } from "@/lib/seo";
-import { siteConfig } from "@/lib/utils";
+import { getSiteSettings } from "@/lib/data/site-settings";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -21,17 +24,22 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = createMetadata({
-  title: siteConfig.name,
-  description: siteConfig.description,
-  path: "/",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  return createMetadata({
+    title: settings.siteName,
+    description: settings.description,
+    path: "/",
+  });
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const themeStyle = await getThemeStyle();
+
   return (
     <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
       <head>
@@ -42,10 +50,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen antialiased bg-paper-texture">
-        <Header />
+      <body
+        className="min-h-screen antialiased bg-paper-texture"
+        style={themeStyle}
+      >
+        <HeaderWrapper />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <FooterWrapper />
         <WhatsAppButton />
       </body>
     </html>

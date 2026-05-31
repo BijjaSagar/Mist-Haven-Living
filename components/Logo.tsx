@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 
 const LOGO_WIDTH = 1024;
 const LOGO_HEIGHT = 682;
-const LOGO_ALT = "Mist & Haven Living — Luxury in Every Thread";
 
 type LogoProps = {
   className?: string;
@@ -12,6 +11,9 @@ type LogoProps = {
   variant?: "default" | "light";
   priority?: boolean;
   onNavigate?: () => void;
+  logoUrl?: string;
+  logoLightUrl?: string;
+  siteName?: string;
 };
 
 export function Logo({
@@ -19,7 +21,13 @@ export function Logo({
   variant = "default",
   priority = false,
   onNavigate,
+  logoUrl = "/logo.png",
+  logoLightUrl = "/logo-light.png",
+  siteName = "Mist & Haven Living",
 }: LogoProps) {
+  const src = variant === "light" ? logoLightUrl : logoUrl;
+  const alt = `${siteName} — Luxury in Every Thread`;
+
   return (
     <Link
       href="/"
@@ -30,8 +38,8 @@ export function Logo({
       )}
     >
       <Image
-        src={variant === "light" ? "/logo-light.png" : "/logo.png"}
-        alt={LOGO_ALT}
+        src={src}
+        alt={alt}
         width={LOGO_WIDTH}
         height={LOGO_HEIGHT}
         priority={priority}

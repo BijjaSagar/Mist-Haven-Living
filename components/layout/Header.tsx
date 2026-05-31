@@ -11,19 +11,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Logo } from "@/components/Logo";
-import { productCategories } from "@/data/products";
+import type { NavigationItemData } from "@/lib/types/cms";
+import type { ProductCategoryData } from "@/lib/types/cms";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
-  { href: "/about", label: "About" },
-  { href: "/manufacturing", label: "Manufacturing" },
-  { href: "/certifications", label: "Certifications" },
-  { href: "/private-label", label: "Private Label" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/contact", label: "Contact" },
-];
+type HeaderProps = {
+  navLinks: NavigationItemData[];
+  productCategories: ProductCategoryData[];
+  logoUrl?: string;
+  logoLightUrl?: string;
+  siteName?: string;
+};
 
-export function Header() {
+export function Header({
+  navLinks,
+  productCategories,
+  logoUrl,
+  logoLightUrl,
+  siteName,
+}: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
@@ -59,7 +65,12 @@ export function Header() {
       )}
     >
       <div className="mx-auto flex h-20 max-w-container items-center justify-between px-6 md:h-[4.75rem] md:px-8">
-        <Logo priority />
+        <Logo
+          priority
+          logoUrl={logoUrl}
+          logoLightUrl={logoLightUrl}
+          siteName={siteName}
+        />
 
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Main">
           <div
@@ -141,7 +152,12 @@ export function Header() {
               <DialogHeader className="sr-only">
                 <DialogTitle>Navigation menu</DialogTitle>
               </DialogHeader>
-              <Logo onNavigate={() => setMobileOpen(false)} />
+              <Logo
+                onNavigate={() => setMobileOpen(false)}
+                logoUrl={logoUrl}
+                logoLightUrl={logoLightUrl}
+                siteName={siteName}
+              />
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}

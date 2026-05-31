@@ -1,13 +1,19 @@
 import Link from "next/link";
 import { MultiStepInquiryForm } from "@/components/MultiStepInquiryForm";
 import { SectionHeading } from "@/components/SectionHeading";
+import { getProductInterestOptions } from "@/lib/data/products";
 
 type CTABandProps = {
   prefilledProduct?: string;
   showForm?: boolean;
 };
 
-export function CTABand({ prefilledProduct, showForm = true }: CTABandProps) {
+export async function CTABand({
+  prefilledProduct,
+  showForm = true,
+}: CTABandProps) {
+  const productInterestOptions = await getProductInterestOptions();
+
   return (
     <section className="bg-taupe py-section-mobile md:py-section-desktop">
       <div className="mx-auto max-w-container px-6 md:px-8">
@@ -39,6 +45,7 @@ export function CTABand({ prefilledProduct, showForm = true }: CTABandProps) {
               <MultiStepInquiryForm
                 prefilledProduct={prefilledProduct}
                 variant="dark"
+                productInterestOptions={productInterestOptions}
               />
             </div>
           )}

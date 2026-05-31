@@ -5,8 +5,9 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { StatStrip } from "@/components/StatStrip";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
-import { companyStats } from "@/data/products";
-import { siteConfig } from "@/lib/utils";
+import { getStats } from "@/lib/data/stats";
+import { getSiteSettings } from "@/lib/data/site-settings";
+import { getPageContent } from "@/lib/data/pages";
 
 export const metadata = createMetadata({
   title: "About Us",
@@ -17,17 +18,31 @@ export const metadata = createMetadata({
 
 export const revalidate = 86400;
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const [companyStats, settings, aboutPage] = await Promise.all([
+    getStats(),
+    getSiteSettings(),
+    getPageContent("about"),
+  ]);
+
+  const hero = (aboutPage?.sections.hero ?? {}) as {
+    eyebrow?: string;
+    title?: string;
+  };
+  const intro = (aboutPage?.sections.intro ?? {}) as {
+    title?: string;
+    body?: string;
+  };
   return (
     <>
       <section className="pt-32 pb-section-mobile md:pb-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">
           <FadeUp>
             <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
-              Our Story
+              {hero.eyebrow ?? "Our Story"}
             </p>
             <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-6xl">
-              Where heritage meets export excellence
+              {hero.title ?? "Where heritage meets export excellence"}
             </h1>
           </FadeUp>
         </div>
@@ -49,8 +64,11 @@ export default function AboutPage() {
             </FadeUp>
             <FadeUp delay={0.1} className="lg:col-span-7 lg:pl-8">
               <SectionHeading
-                title="Deepam Textiles — Est. 1982, Solapur"
-                description="Solapur has been India's terry towel capital for over a century. Deepam Textiles was founded here in 1982 with a singular focus: produce textiles that meet the exacting standards of international hospitality and retail buyers."
+                title={intro.title ?? "Deepam Textiles — Est. 1982, Solapur"}
+                description={
+                  intro.body ??
+                  "Solapur has been India's terry towel capital for over a century. Deepam Textiles was founded here in 1982 with a singular focus: produce textiles that meet the exacting standards of international hospitality and retail buyers."
+                }
               />
               <div className="mt-8 space-y-4 font-body text-base leading-relaxed text-muted">
                 <p>
@@ -123,10 +141,10 @@ export default function AboutPage() {
             </Link>{" "}
             or email{" "}
             <a
-              href={`mailto:${siteConfig.email}`}
+              href={`mailto:${settings.contactEmail}`}
               className="text-sage-deep hover:underline"
             >
-              {siteConfig.email}
+              {settings.contactEmail}
             </a>
           </p>
         </div>

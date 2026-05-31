@@ -1,38 +1,41 @@
 import Link from "next/link";
-import { siteConfig } from "@/lib/utils";
-import { productCategories } from "@/data/products";
 import { Logo } from "@/components/Logo";
 import { WaveDivider } from "@/components/WaveDivider";
+import type {
+  NavigationItemData,
+  ProductCategoryData,
+  SiteSettingsData,
+} from "@/lib/types/cms";
 
-const footerLinks = {
-  company: [
-    { href: "/about", label: "About Us" },
-    { href: "/manufacturing", label: "Manufacturing" },
-    { href: "/certifications", label: "Certifications" },
-    { href: "/private-label", label: "Private Label" },
-    { href: "/faq", label: "FAQ" },
-    { href: "/contact", label: "Contact" },
-  ],
-  export: [
-    { href: "/products", label: "All Products" },
-    { href: "/contact#inquiry", label: "Request Quote" },
-  ],
+type FooterProps = {
+  settings: SiteSettingsData;
+  companyLinks: NavigationItemData[];
+  exportLinks: NavigationItemData[];
+  productCategories: ProductCategoryData[];
+  logoLightUrl?: string;
+  siteName?: string;
 };
 
-export function Footer() {
+export function Footer({
+  settings,
+  companyLinks,
+  exportLinks,
+  productCategories,
+  logoLightUrl,
+  siteName,
+}: FooterProps) {
   return (
     <footer className="relative bg-taupe text-pearl">
       <WaveDivider variant="pearl" className="absolute -top-8 left-0" />
       <div className="mx-auto max-w-container px-6 py-section-mobile md:px-8 md:py-20">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <Logo variant="light" />
+            <Logo variant="light" logoLightUrl={logoLightUrl} siteName={siteName} />
             <p className="mt-1 font-body text-xs uppercase tracking-[0.22em] text-pearl/50">
-              by {siteConfig.legalName}
+              by {settings.legalName}
             </p>
             <p className="mt-4 max-w-xs font-body text-sm leading-relaxed text-pearl/70">
-              Premium textile manufacturing for hospitality, retail, and private
-              label buyers across the USA and Canada.
+              {settings.footerBlurb}
             </p>
           </div>
 
@@ -41,7 +44,7 @@ export function Footer() {
               Company
             </p>
             <ul className="space-y-3">
-              {footerLinks.company.map((link) => (
+              {companyLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -78,27 +81,27 @@ export function Footer() {
             </p>
             <address className="not-italic">
               <p className="font-body text-sm text-pearl/70">
-                {siteConfig.address.street}
+                {settings.address.street}
                 <br />
-                {siteConfig.address.city}, {siteConfig.address.region}{" "}
-                {siteConfig.address.postalCode}
+                {settings.address.city}, {settings.address.region}{" "}
+                {settings.address.postalCode}
                 <br />
-                {siteConfig.address.country}
+                {settings.address.country}
               </p>
               <p className="mt-4 font-body text-sm">
                 <a
-                  href={`mailto:${siteConfig.email}`}
+                  href={`mailto:${settings.contactEmail}`}
                   className="text-pearl/70 transition-colors hover:text-pearl"
                 >
-                  {siteConfig.email}
+                  {settings.contactEmail}
                 </a>
               </p>
               <p className="mt-2 font-body text-sm text-pearl/70">
-                {siteConfig.phone}
+                {settings.contactPhone}
               </p>
             </address>
             <ul className="mt-6 space-y-3">
-              {footerLinks.export.map((link) => (
+              {exportLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -114,10 +117,12 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col gap-4 border-t border-pearl/10 pt-8 md:flex-row md:items-center md:justify-between">
           <p className="font-body text-xs text-pearl/50">
-            © {new Date().getFullYear()} {siteConfig.legalName}. All rights reserved.
+            © {new Date().getFullYear()}{" "}
+            {settings.copyrightText ??
+              `${settings.legalName}. All rights reserved.`}
           </p>
           <p className="font-body text-xs text-pearl/50">
-            Export markets: USA · Canada
+            Export markets: {settings.exportMarkets}
           </p>
         </div>
       </div>

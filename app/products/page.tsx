@@ -3,7 +3,7 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { CTABand } from "@/components/CTABand";
-import { productCategories } from "@/data/products";
+import { getProductCategories } from "@/lib/data/products";
 
 export const metadata = createMetadata({
   title: "Products",
@@ -14,7 +14,8 @@ export const metadata = createMetadata({
 
 export const revalidate = 86400;
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const productCategories = await getProductCategories();
   return (
     <>
       <section className="pt-32 pb-12 md:pb-16">
