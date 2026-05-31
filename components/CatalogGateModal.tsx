@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import {
   catalogLeadSchema,
   buyerTypeOptions,
@@ -171,16 +172,31 @@ export function CatalogGateModal({ open, onOpenChange }: CatalogGateModalProps) 
 
 type CatalogCTAProps = {
   className?: string;
+  /** Use mockup-style btn-ghost instead of shadcn Button */
+  appearance?: "button" | "ghost";
 };
 
-export function CatalogCTA({ className }: CatalogCTAProps) {
+export function CatalogCTA({
+  className,
+  appearance = "button",
+}: CatalogCTAProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)} className={className}>
-        Get Product Catalog
-      </Button>
+      {appearance === "ghost" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={cn("btn-ghost", className)}
+        >
+          Get the Catalog
+        </button>
+      ) : (
+        <Button variant="outline" onClick={() => setOpen(true)} className={className}>
+          Get Product Catalog
+        </Button>
+      )}
       <CatalogGateModal open={open} onOpenChange={setOpen} />
     </>
   );

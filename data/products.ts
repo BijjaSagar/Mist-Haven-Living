@@ -620,6 +620,33 @@ export const certifications: Certification[] = [
   },
 ];
 
+export const manufacturingHighlights = [
+  {
+    step: "01",
+    title: "Solapur Manufacturing Base",
+    description:
+      "Rooted in one of the world's leading towel-weaving regions.",
+  },
+  {
+    step: "02",
+    title: "Modern Production & Quality Control",
+    description:
+      "Inspection at every stage — weaving, dyeing, stitching, finishing.",
+  },
+  {
+    step: "03",
+    title: "Export-Ready Packaging",
+    description:
+      "Custom retail & hospitality packaging, container shipment capability.",
+  },
+  {
+    step: "04",
+    title: "Reliable Global Delivery",
+    description:
+      "Dependable lead times and documentation for North American imports.",
+  },
+];
+
 export const manufacturingSteps = [
   {
     step: "01",

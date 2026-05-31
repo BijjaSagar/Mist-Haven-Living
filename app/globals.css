@@ -3,22 +3,28 @@
 :root {
   --pearl: #fbfaf6;
   --oat: #f1ece2;
+  --sand: #e7ddcd;
   --taupe: #5e5547;
+  --taupe-dark: #4a4339;
   --muted: #857b6c;
   --sage: #c8c7ac;
   --sage-deep: #9a9a7d;
   --hairline: #e7e0d3;
+  --ink: #2e2a24;
   --white: #ffffff;
 }
 
 @theme inline {
   --color-pearl: var(--pearl);
   --color-oat: var(--oat);
+  --color-sand: var(--sand);
   --color-taupe: var(--taupe);
+  --color-taupe-dark: var(--taupe-dark);
   --color-muted: var(--muted);
   --color-sage: var(--sage);
   --color-sage-deep: var(--sage-deep);
   --color-hairline: var(--hairline);
+  --color-ink: var(--ink);
   --color-white: var(--white);
 
   --font-display: var(--font-cormorant), Georgia, serif;
@@ -77,6 +83,47 @@
   max-width: var(--spacing-container);
 }
 
+@utility btn-solid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5625rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.9375rem 1.625rem;
+  border: 1px solid var(--taupe);
+  background: var(--taupe);
+  color: var(--pearl);
+  transition: all 0.35s ease;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+@utility btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5625rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.9375rem 1.625rem;
+  border: 1px solid var(--taupe);
+  background: transparent;
+  color: var(--taupe);
+  transition: all 0.35s ease;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+@utility nav-link-underline {
+  position: relative;
+  padding: 0.25rem 0;
+}
+
 @utility bg-paper-texture {
   background-color: var(--pearl);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
@@ -109,4 +156,29 @@ h4 {
 
 ::selection {
   background: color-mix(in srgb, var(--sage) 40%, transparent);
+}
+
+.btn-solid:hover {
+  background: var(--taupe-dark);
+  border-color: var(--taupe-dark);
+}
+
+.btn-ghost:hover {
+  background: var(--taupe);
+  color: var(--pearl);
+}
+
+.nav-link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: var(--sage-deep);
+  transition: width 0.3s ease;
+}
+
+.nav-link-underline:hover::after {
+  width: 100%;
 }

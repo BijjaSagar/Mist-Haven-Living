@@ -60,8 +60,8 @@ export function Header({
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
         scrolled
-          ? "border-b border-hairline bg-pearl/95 shadow-sm backdrop-blur-md"
-          : "bg-transparent",
+          ? "border-b border-hairline bg-pearl/95 py-3 shadow-[0_8px_30px_-22px_rgba(74,67,57,0.5)] backdrop-blur-md"
+          : "bg-transparent py-5",
       )}
     >
       <div className="mx-auto flex h-20 max-w-container items-center justify-between px-6 md:h-[4.75rem] md:px-8">
@@ -80,7 +80,7 @@ export function Header({
           >
             <Link
               href="/products"
-              className="inline-flex items-center gap-1 font-body text-sm text-taupe transition-colors hover:text-sage-deep"
+              className="nav-link-underline inline-flex items-center gap-1 font-body text-xs uppercase tracking-[0.13em] text-taupe transition-colors hover:text-sage-deep"
             >
               Products
               <ChevronDown
@@ -123,7 +123,7 @@ export function Header({
             <Link
               key={link.href}
               href={link.href}
-              className="font-body text-sm text-taupe transition-colors hover:text-sage-deep"
+              className="nav-link-underline font-body text-xs uppercase tracking-[0.13em] text-taupe transition-colors hover:text-sage-deep"
             >
               {link.label}
             </Link>
@@ -131,7 +131,7 @@ export function Header({
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button asChild className="hidden sm:inline-flex" size="sm">
+          <Button asChild className="hidden uppercase tracking-[0.12em] sm:inline-flex" size="sm">
             <Link href="/contact#inquiry">Request Quote</Link>
           </Button>
           <button
