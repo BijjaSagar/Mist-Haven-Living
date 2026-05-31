@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
-import {
-  HeaderWrapper,
-  getThemeStyle,
-} from "@/components/layout/HeaderWrapper";
-import { FooterWrapper } from "@/components/layout/FooterWrapper";
-import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
+import { getThemeStyle } from "@/components/layout/HeaderWrapper";
 import { createMetadata, organizationJsonLd } from "@/lib/seo";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import "./globals.css";
@@ -54,10 +49,7 @@ export default async function RootLayout({
         className="min-h-screen antialiased bg-paper-texture"
         style={themeStyle}
       >
-        <HeaderWrapper />
-        <main className="flex-1">{children}</main>
-        <FooterWrapper />
-        <WhatsAppButton />
+        {children}
       </body>
     </html>
   );

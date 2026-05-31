@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import {
   productCategories,
   companyStats,
@@ -177,6 +178,30 @@ async function main() {
       update: {},
       create: page,
     });
+  }
+
+  const adminEmail = (
+    process.env.ADMIN_EMAIL ?? "admin@mistandhaven.com"
+  ).toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "changeme123";
+  const existingAdmin = await prisma.adminUser.findUnique({
+    where: { email: adminEmail },
+  });
+
+  if (!existingAdmin) {
+    const hashedPassword = await bcrypt.hash(adminPassword, 12);
+    await prisma.adminUser.create({
+      data: {
+        email: adminEmail,
+        password: hashedPassword,
+        name: "Default Admin",
+        role: "admin",
+        active: true,
+      },
+    });
+    console.log(`Created default admin user: ${adminEmail}`);
+  } else {
+    console.log(`Admin user already exists: ${adminEmail}`);
   }
 
   console.log("Seed completed successfully.");

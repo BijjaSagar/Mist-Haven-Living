@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { getAdminSession } from "@/lib/auth/admin";
+import { getAdminSession, type AdminSession } from "@/lib/auth/admin";
 
-export async function requireAdmin(): Promise<
-  { email: string } | NextResponse
-> {
+export async function requireAdmin(): Promise<AdminSession | NextResponse> {
   const session = await getAdminSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -12,8 +10,17 @@ export async function requireAdmin(): Promise<
   return session;
 }
 
+export async function requireAdminRole(): Promise<AdminSession | NextResponse> {
+  const session = await requireAdmin();
+  if (isUnauthorized(session)) return session;
+  if (session.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return session;
+}
+
 export function isUnauthorized(
-  result: { email: string } | NextResponse,
+  result: AdminSession | NextResponse,
 ): result is NextResponse {
   return result instanceof NextResponse;
 }

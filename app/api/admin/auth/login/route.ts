@@ -15,11 +15,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!validateAdminCredentials(email, password)) {
+    const user = await validateAdminCredentials(email, password);
+    if (!user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const token = await createAdminSession(email);
+    const token = await createAdminSession(user);
     await setAdminSessionCookie(token);
     return NextResponse.json({ success: true });
   } catch {

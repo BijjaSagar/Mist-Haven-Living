@@ -98,3 +98,14 @@ model Certification {
   sortOrder   Int     @default(0)
   visible     Boolean @default(true)
 }
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("admin")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
