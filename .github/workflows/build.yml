@@ -3,6 +3,10 @@ name: Build
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -16,11 +20,48 @@ jobs:
           cache: "npm"
 
       - run: npm ci
-      - run: npx prisma generate
-      - run: npx next build --webpack
+      - run: npm run build
       - run: npm run package:deploy -- next-build.zip
+      - run: CHECK_LIVE=0 npm run verify:deploy
 
       - uses: actions/upload-artifact@v4
         with:
           name: next-build
           path: next-build.zip
+          retention-days: 14
+
+  deploy:
+    needs: build
+    if: vars.HOSTINGER_AUTO_DEPLOY == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-build
+
+      - name: Upload zip to Hostinger
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT || 65002 }}
+          source: next-build.zip
+          target: ${{ secrets.HOSTINGER_APP_PATH || '~/domains/mistandhaven.com/app' }}
+
+      - name: Extract bundle on server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT || 65002 }}
+          script: |
+            set -e
+            APP="${{ secrets.HOSTINGER_APP_PATH || '~/domains/mistandhaven.com/app' }}"
+            cd "$APP"
+            git pull origin main || true
+            bash scripts/server-deploy.sh next-build.zip
+            echo "Done. Restart Node.js app in hPanel if the site does not update."

@@ -30,16 +30,117 @@ Example:
 DATABASE_URL="mysql://u123456789_admin:SecretPass@srv123.hstgr.io:3306/u123456789_mist_haven"
 ```
 
-## 2. Connect the repository
+## 2. Connect GitHub in Hostinger
 
 In **hPanel → Websites → Node.js Web Apps**:
 
-1. Create a new Node.js application
-2. Connect your GitHub repo: `https://github.com/BijjaSagar/Mist-Haven-Living.git`
-3. Set the branch (usually `main`)
-4. Set **Node.js version** to 20.x or 22.x (LTS)
+1. Create a new Node.js application (or open your existing one)
+2. Click **Connect Git repository** (or **Deploy from GitHub**)
+3. Authorize GitHub if prompted, then select:
+   - Repository: **`BijjaSagar/Mist-Haven-Living`**
+   - Branch: **`main`**
+4. Set **Node.js version** to **20.x** (LTS)
+5. Set **Application root** to: `~/domains/mistandhaven.com/app`
+6. Set **Build command** to:
+   ```bash
+   echo "pre-built"
+   ```
+   (Do **not** use `npm run build` on Hostinger — shared hosting cannot build Next.js.)
+7. Set **Start command** to:
+   ```bash
+   npm run start:standalone
+   ```
 
-## 3. Environment variables
+### Important: Git pull does not deploy the website
+
+The GitHub repo contains **source code only** — not the built CSS, JS, or `server.js` bundle. Hostinger’s **Deploy** / **Git pull** button updates files like `package.json` and `scripts/`, but **does not** update the live site until you also install the **pre-built bundle** (see section 3 below).
+
+Think of it this way:
+
+| What GitHub / git pull gives you | What actually runs the site |
+|---|---|
+| Source code, scripts, docs | `.next/standalone/` folder (built on Mac or GitHub Actions) |
+
+After every code change on `main`, you must redeploy the **build artifact** using **Option A** (automatic) or **Option B** (manual) below.
+
+## 3. Redeploy from GitHub (after code changes)
+
+Every push to `main` triggers **[GitHub Actions → Build](https://github.com/BijjaSagar/Mist-Haven-Living/actions)** which:
+
+1. Builds the site on GitHub’s servers (not Hostinger)
+2. Packages `next-build.zip` (standalone bundle with CSS/JS)
+3. Optionally auto-deploys to Hostinger if you enabled SSH deploy (Option A)
+
+### Option A — Automatic redeploy (recommended once set up)
+
+GitHub builds and uploads the zip to your server over SSH, then runs `scripts/server-deploy.sh`.
+
+**One-time setup (Sagar or your developer):**
+
+1. **Generate an SSH key** on your Mac (if you don’t have one for Hostinger):
+   ```bash
+   ssh-keygen -t ed25519 -C "github-deploy" -f ~/.ssh/hostinger_deploy -N ""
+   ```
+2. **Add the public key to Hostinger:** hPanel → **Advanced → SSH Access** → add `~/.ssh/hostinger_deploy.pub`
+3. **Note SSH details** from hPanel (usually):
+   - Host: `srvXXX.hstgr.io` or your server IP
+   - Port: **65002** (Hostinger default, not 22)
+   - Username: e.g. `u123456789`
+4. **Add GitHub repository secrets** — repo → **Settings → Secrets and variables → Actions → New repository secret**:
+
+   | Secret name | Value |
+   |---|---|
+   | `HOSTINGER_SSH_HOST` | SSH hostname from hPanel |
+   | `HOSTINGER_SSH_USER` | SSH username |
+   | `HOSTINGER_SSH_KEY` | Full private key file contents (`~/.ssh/hostinger_deploy`) |
+   | `HOSTINGER_SSH_PORT` | `65002` (optional if default works) |
+   | `HOSTINGER_APP_PATH` | `~/domains/mistandhaven.com/app` (optional) |
+
+5. **Enable auto-deploy** — same page → **Variables** tab → **New repository variable**:
+   - Name: `HOSTINGER_AUTO_DEPLOY`
+   - Value: `true`
+
+**Going forward:** push to `main` → GitHub Actions builds → deploy job uploads zip → server extracts → **Restart** the Node.js app in hPanel if the site doesn’t update within a minute.
+
+### Option B — Manual redeploy from server (no SSH secrets)
+
+Use this if you prefer not to store SSH keys in GitHub.
+
+1. Push your changes to `main` on GitHub (or ask your developer to)
+2. Open **GitHub → Actions → Build** → click the latest green run
+3. Scroll to **Artifacts** → download **`next-build`** (a zip file)
+4. Upload the zip to the server app root, e.g. with File Manager or:
+   ```bash
+   scp -P 65002 next-build.zip u123456789@srvXXX.hstgr.io:~/domains/mistandhaven.com/app/
+   ```
+5. **SSH into Hostinger** (hPanel → Terminal, or your SSH client):
+   ```bash
+   cd ~/domains/mistandhaven.com/app
+   git pull origin main          # updates scripts/server-deploy.sh if needed
+   bash scripts/server-deploy.sh next-build.zip
+   ```
+6. **hPanel → Node.js Web Apps → your app → Restart**
+7. Optional: **Websites → Performance / CDN → Clear cache**, then hard-refresh the browser
+
+### Option C — Build on your Mac (same as before)
+
+```bash
+cd Mist-website
+npm install
+npm run build
+npm run package:deploy    # creates deploy-standalone.zip
+scp -P 65002 deploy-standalone.zip user@host:~/domains/mistandhaven.com/app/
+```
+
+On the server:
+```bash
+cd ~/domains/mistandhaven.com/app
+bash scripts/server-deploy.sh deploy-standalone.zip
+```
+
+Then restart the Node.js app in hPanel.
+
+## 4. Environment variables
 
 Set these in the Hostinger Node.js app panel **Environment variables**, or in a `.env` file in the app root (never commit secrets to Git):
 
@@ -82,7 +183,7 @@ Change the password immediately after first login (Admin → Users), or set `ADM
 
 Session cookie: `mist_admin_session` (httpOnly, `SameSite=Lax`, `Secure` on HTTPS production).
 
-## 4. Build and start commands
+## 5. Build and start commands
 
 ### Recommended: build locally or via GitHub Actions
 
@@ -102,6 +203,7 @@ cd Mist-website
 npm install
 npm run build          # runs postbuild (copies public + .next/static into standalone)
 npm run package:deploy # creates deploy-standalone.zip with verified CSS/JS
+npm run verify:deploy  # optional: checks local bundle + live mistandhaven.com URLs
 
 # Upload zip to server (adjust user@host and path):
 scp deploy-standalone.zip user@host:~/domains/mistandhaven.com/app/
@@ -116,6 +218,65 @@ unzip -o deploy-standalone.zip -d .next/standalone/
 ```
 
 Set **Start command** in hPanel to `npm run start:standalone` (see **Start commands** below). Skip the Hostinger **Build command** (or set it to `echo "pre-built"`).
+
+### Hostinger SSH: `npm: command not found`
+
+Interactive SSH often has a **minimal `PATH`** — `npm` and `node` are not on it even though the Node.js Web App panel runs them. That is normal; you do not need `npm` to deploy a pre-built zip.
+
+**Use Node/npm when you must** (migrations, seed, on-server build):
+
+```bash
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+which node npm   # should print paths under /opt/alt/alt-nodejs20/...
+node -v
+```
+
+Try Node 22 if your hPanel app uses 22.x: `/opt/alt/alt-nodejs22/root/usr/bin`.
+
+**Start the app without npm** (same as `npm run start:standalone`):
+
+```bash
+cd ~/domains/mistandhaven.com/app
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+export PORT="${PORT:-3000}"   # hPanel usually sets PORT for the managed app
+node .next/standalone/server.js
+```
+
+For production, prefer hPanel **Start command** `npm run start:standalone` (panel injects PATH) — use direct `node` only for one-off debugging.
+
+**Manual verify on SSH (no npm)** — from app root after unzip:
+
+```bash
+cd ~/domains/mistandhaven.com/app
+
+# Bundle on disk (use find — ls | wc -l only counts top-level names, ~18–20 is OK)
+ls -la .next/standalone/.next/static/css/
+find .next/standalone/.next/static/chunks -name '*.js' | wc -l   # expect ~63 for current build
+test -f .next/standalone/server.js && echo OK server.js
+
+CSS=$(basename .next/standalone/.next/static/css/*.css)
+HASH="${CSS%.css}"
+echo "CSS file: $CSS"
+
+# Live site (curl is enough; no npm)
+curl -sS -o /tmp/mh-home.html -w 'homepage HTTP %{http_code}\n' https://mistandhaven.com/
+grep -oE '/_next/static/css/[a-f0-9]+\.css' /tmp/mh-home.html | head -1
+curl -sSI -o /dev/null -w "CSS HTTP %{http_code}\n" "https://mistandhaven.com/_next/static/css/$CSS"
+curl -sSI -o /dev/null -w "webpack HTTP %{http_code}\n" "https://mistandhaven.com/_next/static/chunks/webpack-51534d4e830d01a3.js"
+```
+
+If homepage HTML references a **different** CSS hash than `ls` shows on disk, redeploy the zip, restart the Node app, purge CDN cache, and hard-refresh the browser.
+
+**Re-unzip a fresh bundle:**
+
+```bash
+cd ~/domains/mistandhaven.com/app
+mkdir -p .next/standalone
+unzip -o deploy-standalone.zip -d .next/standalone/
+find .next/standalone/.next/static/chunks -name '*.js' | wc -l
+```
+
+**hPanel restart after deploy:** **Websites → Node.js Web Apps →** your app → confirm **Application root** is `~/domains/mistandhaven.com/app` → **Build command** `echo "pre-built"` → **Start command** `npm run start:standalone` → **Restart** (or Stop then Start). Optional: **Websites →** your site → **Performance / CDN → Clear cache**.
 
 **Alternative — rsync instead of zip:**
 
@@ -203,7 +364,7 @@ cp -r .next/static .next/standalone/.next/static
 npm run start:standalone
 ```
 
-## 5. Database migrations (one-time setup)
+## 6. Database migrations (one-time setup)
 
 Run once against the production database via **SSH** or the **Hostinger terminal** in hPanel:
 
@@ -218,7 +379,7 @@ npx prisma db seed
 
 Re-run `migrate deploy` after pulling schema changes. Re-seed only on a fresh database (seeding may duplicate data if run again).
 
-## 6. File uploads
+## 7. File uploads
 
 Logo uploads from the admin CMS are stored in `public/uploads/`. On Hostinger's persistent Node.js server, these files **persist across restarts** — unlike Vercel serverless where the filesystem is ephemeral.
 
@@ -231,13 +392,13 @@ chmod 755 public/uploads
 
 Default logos in `/public/logo.png` work without any uploads.
 
-## 7. Domain and SSL
+## 8. Domain and SSL
 
 1. In hPanel, attach your domain to the Node.js app
 2. Hostinger provides free SSL via Let's Encrypt — enable it under **SSL**
 3. Point your domain's DNS A record to Hostinger's server IP if not already configured
 
-## 8. PM2 (optional, via SSH)
+## 9. PM2 (optional, via SSH)
 
 If you have SSH access and prefer process management over the Hostinger panel:
 
@@ -298,9 +459,79 @@ ls .next/standalone/.next/static/css/
 https://mistandhaven.com/_next/static/css/HASH.css
 ```
 
-**Do not** run the app from an old `nodejs/` folder with a partial copy; use one app root path consistently.
+**Do not** run the app from an old `nodejs/` folder with a partial copy; use one app root path consistently (see **Dual app folders** below).
 
 `app/layout.tsx` imports `./globals.css` correctly — styling breaks only when static assets are not deployed or the wrong start command is used. No `assetPrefix` is needed for the root domain `mistandhaven.com`.
+
+### Hash mismatch (HTML asks for old CSS/JS, server has new files)
+
+**Symptoms:** Browser Network tab shows 404 for `/_next/static/css/09sm9j6sx77q4.css` (or similar short hash) while `ls .next/standalone/.next/static/css/` on the server shows a different file such as `00c4429d59a52a14.css`.
+
+**Cause:** HTML and static files came from **different builds** or **different deploy paths**:
+
+1. Partial redeploy — only `server.js` / `node_modules` updated, not `.next/static`
+2. Stale **browser or Hostinger CDN (hcdn)** cache serving old HTML after a new deploy
+3. Old build used Turbopack (default `next build` without `--webpack`) — different chunk/CSS naming than the webpack build this repo uses
+4. Two copies of the app (`~/domains/mistandhaven.com/app/` vs `~/domains/mistandhaven.com/nodejs/`) — hPanel start command points at one folder while the zip was uploaded to the other
+
+**Fix:**
+
+```bash
+# Mac — fresh bundle
+npm run build
+npm run package:deploy
+npm run verify:deploy   # confirms local HTML hash matches .next/static
+
+# Upload and extract on server (app root ONLY)
+scp deploy-standalone.zip user@host:~/domains/mistandhaven.com/app/
+ssh user@host
+cd ~/domains/mistandhaven.com/app
+mkdir -p .next/standalone
+unzip -o deploy-standalone.zip -d .next/standalone/
+
+# Confirm files on disk
+ls -la .next/standalone/.next/static/css/
+find .next/standalone/.next/static/chunks -name '*.js' | wc -l   # ~63 JS files (ls | wc -l ≈18 top-level only)
+
+# hPanel → Websites → Node.js Web Apps → your app:
+#   Application root: ~/domains/mistandhaven.com/app  (NOT nodejs/)
+#   Build command: echo "pre-built"
+#   Start command: npm run start:standalone
+# Restart the app, then hard-refresh browser (Cmd+Shift+R) or test in a private window
+```
+
+Verify in browser (replace `HASH` with `ls` output):
+
+```
+https://mistandhaven.com/_next/static/css/HASH.css   → must be HTTP 200
+```
+
+If HTML still references an old hash after redeploy, purge Hostinger cache: **hPanel → Websites → your site → Performance / CDN → Clear cache** (wording varies by plan).
+
+### Dual app folders on Hostinger
+
+Hostinger sometimes creates both:
+
+- `~/domains/mistandhaven.com/app/` — Node.js app root (use this)
+- `~/domains/mistandhaven.com/nodejs/` — legacy or duplicate folder
+
+Use **one** path everywhere: hPanel application root, SSH `cd`, and unzip target. If the start command runs from `app/` but you uploaded the zip to `nodejs/.next/standalone/`, the running process will not see your static files.
+
+Remove or ignore the unused folder after confirming which path hPanel uses.
+
+### public_html and .htaccess
+
+For Node.js Web Apps, Hostinger proxies requests to your Node process. You usually **do not** need rewrite rules for `/_next/static` in `public_html`.
+
+If you previously hosted a static site or WordPress under `public_html`, check for an `.htaccess` that intercepts `/_next/*` or serves stale files. Either remove conflicting rules or ensure the domain is attached to the **Node.js app**, not an old document root.
+
+Example of a **problematic** rule (do not add this for Next.js standalone):
+
+```apache
+RewriteRule ^_next/static - [L]
+```
+
+The Node app must serve `/_next/static/*` itself from `.next/standalone/.next/static/`.
 
 ### Build fails with EAGAIN on SSH
 
