@@ -63,7 +63,7 @@ Configure in the Hostinger Node.js app panel:
 
 | Setting | Value |
 |---|---|
-| **Build command** | `npm run build` |
+| **Build command** | `npm run build:hostinger` |
 | **Start command** | `npm start` |
 
 ### What the build does
@@ -146,6 +146,40 @@ pm2 startup
 The included `ecosystem.config.js` runs `next start -p 3000`. Adjust `PORT` in the config if Hostinger assigns a different port.
 
 ## Troubleshooting
+
+### Build fails with EAGAIN on SSH
+
+If `npm run build` fails near the end with:
+
+```
+uncaughtException Error: spawn .../node EAGAIN
+spawnargs: [.../jest-worker/processChild.js]
+```
+
+Hostinger shared hosting hit its **process/thread limit** (CloudLinux LVE). Next.js spawns many worker processes during the build; the fix is to limit parallelism.
+
+**Recommended — use the Hostinger build script:**
+
+```bash
+cd ~/domains/mistandhaven.com/app
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+npm run build:hostinger
+```
+
+This sets `NODE_OPTIONS='--max-old-space-size=512'`, disables telemetry, and runs `prisma generate && next build`.
+
+**hPanel build command:** set the Node.js app **Build command** to:
+
+```bash
+npm run build:hostinger
+```
+
+**Config fix (already in repo):** `next.config.ts` sets `experimental.cpus: 1` and `workerThreads: false` so Next.js uses a single build worker instead of spawning many child processes.
+
+**Alternatives if SSH build still fails:**
+
+1. **Build in hPanel** — trigger a redeploy from **Websites → Node.js Web Apps**; the panel may have slightly higher limits than an interactive SSH session.
+2. **Build locally and upload** — on your Mac run `npm run build`, then upload `.next/standalone/` (and ensure `public/` and `.next/static` are copied per the `postbuild` script).
 
 | Issue | Fix |
 |---|---|

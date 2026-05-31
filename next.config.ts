@@ -6,6 +6,11 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Limit build parallelism for shared hosting (CloudLinux LVE / EAGAIN on spawn)
+  experimental: {
+    cpus: 1,
+    workerThreads: false,
+  },
   turbopack: {
     root: projectRoot,
   },
