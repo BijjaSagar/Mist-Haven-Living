@@ -10,6 +10,7 @@ import {
   AdminMessage,
   AdminCard,
 } from "@/components/admin/AdminShell";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
   const [data, setData] = useState(initial);
@@ -18,19 +19,6 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
     text: string;
     type: "success" | "error";
   } | null>(null);
-
-  async function uploadLogo(file: File, field: "logoUrl" | "logoLightUrl") {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/admin/upload", {
-      method: "POST",
-      body: formData,
-    });
-    if (res.ok) {
-      const { url } = await res.json();
-      setData((d) => ({ ...d, [field]: url }));
-    }
-  }
 
   async function handleSave() {
     setSaving(true);
@@ -68,42 +56,26 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
       <AdminCard>
         <h2 className="mb-4 font-display text-xl text-taupe">Branding</h2>
         <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <Label>Logo (default)</Label>
-            <Input
-              value={data.logoUrl}
-              onChange={(e) => setData({ ...data, logoUrl: e.target.value })}
-              className="mt-1"
-            />
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-2 font-body text-sm"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadLogo(f, "logoUrl");
-              }}
-            />
-          </div>
-          <div>
-            <Label>Logo (light / footer)</Label>
-            <Input
-              value={data.logoLightUrl}
-              onChange={(e) =>
-                setData({ ...data, logoLightUrl: e.target.value })
-              }
-              className="mt-1"
-            />
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-2 font-body text-sm"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadLogo(f, "logoLightUrl");
-              }}
-            />
-          </div>
+          <ImageUploadField
+            label="Logo (default)"
+            value={data.logoUrl}
+            onChange={(logoUrl) => setData({ ...data, logoUrl })}
+            hint="Used in header on light backgrounds. Save settings after upload."
+          />
+          <ImageUploadField
+            label="Logo (light / footer)"
+            value={data.logoLightUrl}
+            onChange={(logoLightUrl) => setData({ ...data, logoLightUrl })}
+            hint="Used on dark footer. Save settings after upload."
+          />
+          <ImageUploadField
+            label="Favicon"
+            value={data.faviconUrl ?? ""}
+            onChange={(faviconUrl) =>
+              setData({ ...data, faviconUrl: faviconUrl || null })
+            }
+            hint="Optional .ico or PNG. Save settings after upload."
+          />
           <div>
             <Label>Site name</Label>
             <Input

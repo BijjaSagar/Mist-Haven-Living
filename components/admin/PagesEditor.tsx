@@ -10,6 +10,7 @@ import {
   AdminMessage,
   AdminCard,
 } from "@/components/admin/AdminShell";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export function PagesEditor({ initial }: { initial: PageContentData[] }) {
   const [pages, setPages] = useState(initial);
@@ -29,7 +30,25 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
   }
 
   function updateHeroField(key: string, value: string) {
-    const sections = { ...active.sections, hero: { ...(active.sections.hero as Record<string, string>), [key]: value } };
+    const sections = {
+      ...active.sections,
+      hero: {
+        ...(active.sections.hero as Record<string, string>),
+        [key]: value,
+      },
+    };
+    updateActive("sections", sections);
+  }
+
+  function updateSectionImage(
+    sectionKey: "hero" | "heritage",
+    imageUrl: string,
+  ) {
+    const section = (active.sections[sectionKey] ?? {}) as Record<string, string>;
+    const sections = {
+      ...active.sections,
+      [sectionKey]: { ...section, imageUrl },
+    };
     updateActive("sections", sections);
   }
 
@@ -51,6 +70,7 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
   }
 
   const hero = (active?.sections.hero ?? {}) as Record<string, string>;
+  const heritage = (active?.sections.heritage ?? {}) as Record<string, string>;
 
   return (
     <div className="space-y-6">
@@ -140,7 +160,27 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
                     />
                   </div>
                 )}
+                {hero.imageUrl !== undefined && (
+                  <ImageUploadField
+                    label="Hero image"
+                    value={hero.imageUrl ?? ""}
+                    onChange={(url) => updateSectionImage("hero", url)}
+                    hint="Homepage hero background. Save page after upload."
+                  />
+                )}
               </div>
+            </AdminCard>
+          )}
+
+          {activeSlug === "home" && heritage.imageUrl !== undefined && (
+            <AdminCard>
+              <h2 className="mb-4 font-display text-xl text-taupe">Heritage</h2>
+              <ImageUploadField
+                label="Heritage image"
+                value={heritage.imageUrl ?? ""}
+                onChange={(url) => updateSectionImage("heritage", url)}
+                hint="Manufacturing / heritage block on homepage. Save page after upload."
+              />
             </AdminCard>
           )}
 

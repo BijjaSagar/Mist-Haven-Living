@@ -8,6 +8,124 @@ This guide covers deploying **Mist & Haven Living** on [Hostinger Business/Cloud
 - A domain pointed to Hostinger (or use the temporary Hostinger subdomain)
 - SSH or hPanel terminal access for one-time database setup
 
+## 0. Hostinger folder layout (read this first)
+
+Hostinger accounts use **one of two layouts**. The docs and older SSH sessions often assume layout **A**; many newer GitHub-connected accounts use layout **B** instead.
+
+### Layout A — `domains/` (older / manual setup)
+
+```
+~/domains/mistandhaven.com/
+├── app/              ← Node.js app root (full git repo, scripts/, package.json)
+├── public_html/      ← Apache document root (serves /_next/static when symlinked)
+└── nodejs/           ← sometimes a duplicate — ignore unless hPanel points here
+```
+
+**Application root in hPanel:** `~/domains/mistandhaven.com/app`
+
+### Layout B — account root (GitHub auto-deploy, your current account)
+
+```
+~/   (your home folder, e.g. /home/u123456789)
+├── nodejs/           ← GitHub deploy lands here (.next, server.js, package.json)
+├── public_html/      ← Apache document root for mistandhaven.com
+└── DO_NOT_UPLOAD_HERE
+```
+
+There is **no** `~/domains/mistandhaven.com/app` folder on this layout. Commands like `cd ~/domains/mistandhaven.com/app` or `bash scripts/setup-hostinger-static.sh` will fail until you either use **`~/nodejs`** (Path A below) or create an **`app/`** clone (Path B below).
+
+**Application root in hPanel:** `~/nodejs` (not `domains/.../app`)
+
+### Find your layout (SSH — copy/paste)
+
+In **hPanel → Advanced → SSH Access** (or **Terminal**), run:
+
+```bash
+pwd
+whoami
+echo "--- home folder ---"
+ls ~
+echo "--- domains (may not exist) ---"
+ls ~/domains 2>/dev/null || echo "No ~/domains folder"
+echo "--- nodejs deploy folder ---"
+ls ~/nodejs 2>/dev/null || echo "No ~/nodejs folder"
+echo "--- public_html ---"
+ls ~/public_html 2>/dev/null || echo "No ~/public_html folder"
+```
+
+| You see | Use this app root | CSS symlink target |
+|---|---|---|
+| `~/nodejs/` with `server.js` | **`~/nodejs`** | `~/public_html/_next/static` |
+| `~/domains/mistandhaven.com/app/` | **`~/domains/mistandhaven.com/app`** | `~/domains/mistandhaven.com/public_html/_next/static` |
+
+Use **one** path everywhere: hPanel Application root, SSH `cd`, zip upload, and GitHub secret `HOSTINGER_APP_PATH`.
+
+### Recovery path A — keep `~/nodejs` (recommended if GitHub already deploys there)
+
+1. **hPanel → Websites → Node.js Web Apps →** your app → set **Application root** to `~/nodejs`
+2. Set **Build command** to `echo "pre-built"` (do not build Next.js on Hostinger)
+3. Set **Start command** — run the check below first, then pick the matching line:
+
+```bash
+cd ~/nodejs
+test -f .next/standalone/server.js && echo "Use: npm run start:standalone"
+test -f server.js && ! test -f .next/standalone/server.js && echo "Use: node server.js"
+```
+
+4. **Fix CSS** (manual symlink — `scripts/` is not in `nodejs/` on auto-deploy):
+
+```bash
+cd ~/nodejs
+
+# Pick the static folder that exists (try standalone first, then flat .next)
+if [ -d .next/standalone/.next/static/css ]; then
+  STATIC="$(pwd)/.next/standalone/.next/static"
+elif [ -d .next/static/css ]; then
+  STATIC="$(pwd)/.next/static"
+else
+  echo "ERROR: no CSS folder — upload a pre-built zip first (see section 3)"
+  exit 1
+fi
+
+mkdir -p ~/public_html/_next
+rm -rf ~/public_html/_next/static
+ln -sfn "$STATIC" ~/public_html/_next/static
+ls -la ~/public_html/_next/static/css/
+```
+
+5. **Restart** the Node.js app in hPanel, then hard-refresh https://mistandhaven.com
+
+6. If you use GitHub auto-deploy, set secret **`HOSTINGER_APP_PATH`** to `~/nodejs` (not `~/domains/mistandhaven.com/app`).
+
+### Recovery path B — create full `app/` repo with `scripts/`
+
+Use this if you want the full git repo (migrations, `scripts/server-deploy.sh`, `setup-hostinger-static.sh`) on the server.
+
+```bash
+mkdir -p ~/domains/mistandhaven.com
+cd ~/domains/mistandhaven.com
+git clone https://github.com/BijjaSagar/Mist-Haven-Living.git app
+cd ~/domains/mistandhaven.com/app
+ls scripts/    # should list server-deploy.sh, setup-hostinger-static.sh
+```
+
+Then in **hPanel → Node.js Web Apps**:
+
+| Setting | Value |
+|---|---|
+| **Application root** | `~/domains/mistandhaven.com/app` |
+| **Build command** | `echo "pre-built"` |
+| **Start command** | `npm run start:standalone` |
+
+Upload and extract a build zip (section 3), then:
+
+```bash
+cd ~/domains/mistandhaven.com/app
+bash scripts/server-deploy.sh next-build.zip
+```
+
+That script unzips into `.next/standalone/` and symlinks `public_html/_next/static` automatically.
+
 ## 1. Create MySQL database
 
 In **hPanel → Databases → MySQL Databases**:
@@ -40,7 +158,9 @@ In **hPanel → Websites → Node.js Web Apps**:
    - Repository: **`BijjaSagar/Mist-Haven-Living`**
    - Branch: **`main`**
 4. Set **Node.js version** to **20.x** (LTS)
-5. Set **Application root** to: `~/domains/mistandhaven.com/app`
+5. Set **Application root** to match your layout (see **section 0**):
+   - Layout B (GitHub → `~/nodejs`): **`~/nodejs`**
+   - Layout A (full repo): **`~/domains/mistandhaven.com/app`**
 6. Set **Build command** to:
    ```bash
    echo "pre-built"
@@ -94,7 +214,7 @@ GitHub builds and uploads the zip to your server over SSH, then runs `scripts/se
    | `HOSTINGER_SSH_USER` | SSH username |
    | `HOSTINGER_SSH_KEY` | Full private key file contents (`~/.ssh/hostinger_deploy`) |
    | `HOSTINGER_SSH_PORT` | `65002` (optional if default works) |
-   | `HOSTINGER_APP_PATH` | `~/domains/mistandhaven.com/app` (optional) |
+   | `HOSTINGER_APP_PATH` | `~/nodejs` **or** `~/domains/mistandhaven.com/app` — must match hPanel Application root (see section 0) |
 
 5. **Enable auto-deploy** — same page → **Variables** tab → **New repository variable**:
    - Name: `HOSTINGER_AUTO_DEPLOY`
@@ -423,7 +543,9 @@ Re-run `migrate deploy` after pulling schema changes. Re-seed only on a fresh da
 
 ## 7. File uploads
 
-Logo uploads from the admin CMS are stored in `public/uploads/`. On Hostinger's persistent Node.js server, these files **persist across restarts** — unlike Vercel serverless where the filesystem is ephemeral.
+Admin **Settings → Branding**, **Products** (hero/card), and **Pages** (home hero & heritage) use **Upload image**, which `POST`s to `/api/admin/upload` (admin session required). Files are saved under `public/uploads/` and referenced as `/uploads/<filename>` in the database after you click **Save**.
+
+On Hostinger's persistent Node.js server, these files **persist across restarts** — unlike Vercel serverless where the filesystem is ephemeral. They are **not** included in `next-build.zip`; back up `public/uploads/` separately if you redeploy from scratch.
 
 Ensure the `public/uploads` directory is writable by the Node.js process. Create it if missing:
 
@@ -579,14 +701,18 @@ https://mistandhaven.com/_next/static/css/HASH.css   → must be HTTP 200
 
 If HTML still references an old hash after redeploy, purge Hostinger cache: **hPanel → Websites → your site → Performance / CDN → Clear cache** (wording varies by plan).
 
-### Dual app folders on Hostinger
+### Dual app folders / wrong layout on Hostinger
 
-Hostinger sometimes creates both:
+Hostinger may use **layout A** (`domains/.../app/`) or **layout B** (`~/nodejs/` only). See **section 0**.
 
-- `~/domains/mistandhaven.com/app/` — Node.js app root (use this)
+Common duplicates on layout A:
+
+- `~/domains/mistandhaven.com/app/` — Node.js app root (use this on layout A)
 - `~/domains/mistandhaven.com/nodejs/` — legacy or duplicate folder
 
-Use **one** path everywhere: hPanel application root, SSH `cd`, and unzip target. If the start command runs from `app/` but you uploaded the zip to `nodejs/.next/standalone/`, the running process will not see your static files.
+On layout B, **`~/nodejs/`** is the only deploy folder — there is no `app/` until you create it (recovery path B).
+
+Use **one** path everywhere: hPanel application root, SSH `cd`, zip upload, and `HOSTINGER_APP_PATH`. If the start command runs from `app/` but you uploaded the zip to `nodejs/.next/standalone/`, the running process will not see your static files (and CSS will 404).
 
 Remove or ignore the unused folder after confirming which path hPanel uses.
 
@@ -594,9 +720,17 @@ Remove or ignore the unused folder after confirming which path hPanel uses.
 
 For Node.js Web Apps, Hostinger proxies most requests to your Node process, but **`/_next/static/*` is often resolved from `public_html/_next/static/` first**. If that folder is missing or stale, you get **404 even when files exist under `app/.next/standalone/.next/static/`**.
 
-**Required after every build/deploy:**
+**Required after every build/deploy** (replace `APP_ROOT` with `~/nodejs` or `~/domains/mistandhaven.com/app`):
 
 ```bash
+# Layout B (~/nodejs) — manual symlink (no scripts/ folder on auto-deploy):
+cd ~/nodejs
+STATIC="$(pwd)/.next/standalone/.next/static"
+test -d "$STATIC/css" || STATIC="$(pwd)/.next/static"
+mkdir -p ~/public_html/_next && rm -rf ~/public_html/_next/static
+ln -sfn "$STATIC" ~/public_html/_next/static
+
+# Layout A (app/) — with repo scripts:
 cd ~/domains/mistandhaven.com/app
 bash scripts/setup-hostinger-static.sh
 # Or manually:

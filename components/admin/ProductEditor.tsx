@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { ProductCategoryData } from "@/lib/types/cms";
 import { AdminCard } from "@/components/admin/AdminShell";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export function ProductsList({ products }: { products: ProductCategoryData[] }) {
   return (
@@ -72,8 +73,20 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
           <Field label="GSM Range" value={data.gsmRange} onChange={(v) => setData({ ...data, gsmRange: v })} />
           <Field label="MOQ" value={data.moq} onChange={(v) => setData({ ...data, moq: v })} />
           <Field label="Lead Time" value={data.leadTime} onChange={(v) => setData({ ...data, leadTime: v })} />
-          <Field label="Hero Image URL" value={data.heroImage} onChange={(v) => setData({ ...data, heroImage: v })} />
-          <Field label="Card Image URL" value={data.cardImage} onChange={(v) => setData({ ...data, cardImage: v })} />
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <ImageUploadField
+            label="Hero image"
+            value={data.heroImage}
+            onChange={(heroImage) => setData({ ...data, heroImage })}
+            hint="Product detail page hero. Save product after upload."
+          />
+          <ImageUploadField
+            label="Card image"
+            value={data.cardImage}
+            onChange={(cardImage) => setData({ ...data, cardImage })}
+            hint="Grid/list thumbnail. Save product after upload."
+          />
         </div>
         <div className="mt-4">
           <label className="font-body text-sm text-taupe">Short description</label>

@@ -50,16 +50,20 @@ async function getNavByLocation(
   location: NavigationItemData["location"],
   fallback: NavigationItemData[],
 ): Promise<NavigationItemData[]> {
-  if (!isDbConfigured()) return fallback;
+  if (!isDbConfigured()) {
+    return fallback.filter((item) => item.visible);
+  }
   try {
     const rows = await prisma.navigationItem.findMany({
-      where: { location, visible: true },
+      where: { location },
       orderBy: { sortOrder: "asc" },
     });
-    if (rows.length === 0) return fallback;
-    return rows.map(mapNav);
+    if (rows.length === 0) {
+      return fallback.filter((item) => item.visible);
+    }
+    return rows.filter((row) => row.visible).map(mapNav);
   } catch {
-    return fallback;
+    return fallback.filter((item) => item.visible);
   }
 }
 
