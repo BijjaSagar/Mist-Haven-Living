@@ -97,7 +97,13 @@ export async function PUT(request: NextRequest) {
 
     await revalidateSite();
     return NextResponse.json(mapSettings(row));
-  } catch {
-    return NextResponse.json({ error: "Failed to save settings" }, { status: 500 });
+  } catch (error) {
+    console.error("[admin/settings PUT]", error);
+    const message =
+      error instanceof Error &&
+      /Unknown column|column.*does not exist|P2022/i.test(error.message)
+        ? "Database schema is out of date. Run: npx prisma migrate deploy"
+        : "Failed to save settings";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

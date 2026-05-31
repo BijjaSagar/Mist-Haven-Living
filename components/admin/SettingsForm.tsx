@@ -31,7 +31,13 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
     if (res.ok) {
       setMessage({ text: "Settings saved successfully.", type: "success" });
     } else {
-      setMessage({ text: "Failed to save settings.", type: "error" });
+      const body = (await res.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      setMessage({
+        text: body?.error ?? "Failed to save settings.",
+        type: "error",
+      });
     }
     setSaving(false);
   }

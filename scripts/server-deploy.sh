@@ -59,6 +59,7 @@ bash "$ROOT/scripts/setup-hostinger-static.sh" || {
 
 echo ""
 echo "Next steps:"
-echo "  1. hPanel → Websites → Node.js Web Apps → your app → Restart"
-echo "  2. Start command must be: npm run start:standalone"
-echo "  3. Verify: https://mistandhaven.com/_next/static/css/$(basename "$CSS")"
+echo "  1. If schema changed: npx prisma migrate deploy  (from app root with prisma/migrations/)"
+echo "  2. hPanel → Websites → Node.js Web Apps → your app → Restart"
+echo "  3. Start command must be: npm run start:standalone"
+echo "  4. Verify: https://mistandhaven.com/_next/static/css/$(basename "$CSS")"
