@@ -309,8 +309,16 @@ Only for plans where SSH build sometimes works. Uses single-thread env vars and 
 
 ```bash
 export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
-npm run build:hostinger
+npm run build:hostinger   # runs build + postbuild (copies public/ and .next/static into standalone)
 ```
+
+If you previously ran `build:hostinger` from an older package.json (before postbuild was wired), fix the live site without rebuilding:
+
+```bash
+npm run postbuild
+```
+
+Then restart the Node.js app in hPanel.
 
 If you still get `EAGAIN` / `SIGABRT`, use Option A or B.
 
