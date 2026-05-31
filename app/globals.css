@@ -69,6 +69,25 @@
   }
 }
 
+@keyframes float-ring {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-6px, 8px);
+  }
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @utility py-section-mobile {
   padding-top: var(--spacing-section-mobile);
   padding-bottom: var(--spacing-section-mobile);
@@ -181,4 +200,43 @@ h4 {
 
 .nav-link-underline:hover::after {
   width: 100%;
+}
+
+.logo .wave path {
+  stroke-dasharray: 90;
+  stroke-dashoffset: 90;
+  transition: stroke-dashoffset 1.1s ease 0.15s;
+}
+
+.logo.rv.in .wave path,
+.rv.in .wave path {
+  stroke-dashoffset: 0;
+}
+
+.hero-ring {
+  animation: float-ring 8s ease-in-out infinite;
+}
+
+.marquee-track {
+  animation: marquee-scroll 38s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-ring {
+    animation: none;
+  }
+
+  .marquee-track {
+    animation: none;
+  }
+
+  .logo .wave path,
+  .rv .wave path {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+
+  .hero-frame {
+    transform: none !important;
+  }
 }

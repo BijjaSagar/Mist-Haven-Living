@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Menu, X, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Logo } from "@/components/Logo";
+import { hasCustomLogo } from "@/lib/brand-logo";
 import type { NavigationItemData } from "@/lib/types/cms";
 import type { ProductCategoryData } from "@/lib/types/cms";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,8 @@ export function Header({
     }
   }, [mobileOpen]);
 
+  const useImageLogo = hasCustomLogo(logoUrl, logoLightUrl, "header");
+
   return (
     <header
       className={cn(
@@ -65,12 +68,16 @@ export function Header({
       )}
     >
       <div className="mx-auto flex h-20 max-w-container items-center justify-between px-6 md:h-[4.75rem] md:px-8">
-        <Logo
-          priority
-          logoUrl={logoUrl}
-          logoLightUrl={logoLightUrl}
-          siteName={siteName}
-        />
+        {useImageLogo ? (
+          <Logo
+            priority
+            logoUrl={logoUrl}
+            logoLightUrl={logoLightUrl}
+            siteName={siteName}
+          />
+        ) : (
+          <BrandLogo variant="header" />
+        )}
 
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Main">
           <div
@@ -131,9 +138,12 @@ export function Header({
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button asChild className="hidden uppercase tracking-[0.12em] sm:inline-flex" size="sm">
-            <Link href="/contact#inquiry">Request Quote</Link>
-          </Button>
+          <Link
+            href="/contact#inquiry"
+            className="btn-solid hidden sm:inline-flex"
+          >
+            Request Quote
+          </Link>
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center text-taupe lg:hidden"
@@ -152,12 +162,19 @@ export function Header({
               <DialogHeader className="sr-only">
                 <DialogTitle>Navigation menu</DialogTitle>
               </DialogHeader>
-              <Logo
-                onNavigate={() => setMobileOpen(false)}
-                logoUrl={logoUrl}
-                logoLightUrl={logoLightUrl}
-                siteName={siteName}
-              />
+              {useImageLogo ? (
+                <Logo
+                  onNavigate={() => setMobileOpen(false)}
+                  logoUrl={logoUrl}
+                  logoLightUrl={logoLightUrl}
+                  siteName={siteName}
+                />
+              ) : (
+                <BrandLogo
+                  variant="header"
+                  onNavigate={() => setMobileOpen(false)}
+                />
+              )}
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
@@ -224,11 +241,13 @@ export function Header({
               ))}
             </nav>
             <div className="shrink-0 border-t border-hairline p-6">
-              <Button asChild className="w-full">
-                <Link href="/contact#inquiry" onClick={() => setMobileOpen(false)}>
-                  Request Quote
-                </Link>
-              </Button>
+              <Link
+                href="/contact#inquiry"
+                className="btn-solid w-full justify-center"
+                onClick={() => setMobileOpen(false)}
+              >
+                Request Quote
+              </Link>
             </div>
           </div>
         </DialogContent>

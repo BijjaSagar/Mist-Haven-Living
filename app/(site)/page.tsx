@@ -4,6 +4,7 @@ import { TrustStrip } from "@/components/TrustStrip";
 import { SectionHeading } from "@/components/SectionHeading";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { CategoryGrid } from "@/components/CategoryGrid";
+import { ProductMarquee } from "@/components/ProductMarquee";
 import { StatStrip } from "@/components/StatStrip";
 import { CTABand } from "@/components/CTABand";
 import { SolutionsSection } from "@/components/SolutionsSection";
@@ -124,6 +125,7 @@ export default async function HomePage() {
               className="mx-auto mb-12 md:mb-14"
             />
           </FadeUp>
+          <ProductMarquee categories={productCategories} />
           <CategoryGrid categories={productCategories} columns={4} />
         </div>
       </section>

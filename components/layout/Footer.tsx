@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Logo } from "@/components/Logo";
+import { hasCustomLogo } from "@/lib/brand-logo";
 import type {
   NavigationItemData,
   ProductCategoryData,
@@ -24,13 +26,22 @@ export function Footer({
   siteName,
 }: FooterProps) {
   const certLabels = ["ISO 9001:2015", "OEKO-TEX®", "BCI-Aligned"];
+  const useImageLogo = hasCustomLogo(undefined, logoLightUrl, "footer");
 
   return (
     <footer className="relative bg-taupe-dark text-pearl">
       <div className="mx-auto max-w-container px-6 py-section-mobile md:px-8 md:py-20">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.2fr] lg:gap-10">
           <div>
-            <Logo variant="light" logoLightUrl={logoLightUrl} siteName={siteName} />
+            {useImageLogo ? (
+              <Logo
+                variant="light"
+                logoLightUrl={logoLightUrl}
+                siteName={siteName}
+              />
+            ) : (
+              <BrandLogo variant="footer" />
+            )}
             <p className="mt-1 font-body text-xs uppercase tracking-[0.22em] text-pearl/50">
               by {settings.legalName}
             </p>
