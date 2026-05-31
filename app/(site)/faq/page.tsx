@@ -9,13 +9,18 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { faqItems } from "@/data/products";
+import { getPageContent } from "@/lib/data/pages";
 
-export const metadata = createMetadata({
-  title: "FAQ",
-  description:
-    "Frequently asked questions about MOQs, samples, lead times, shipping, payment terms, customization, and certifications for Mist & Haven Living export buyers.",
-  path: "/faq",
-});
+export async function generateMetadata() {
+  const page = await getPageContent("faq");
+  return createMetadata({
+    title: page?.metaTitle ?? "FAQ",
+    description:
+      page?.metaDescription ??
+      "Frequently asked questions about MOQs, samples, lead times, shipping, payment terms, customization, and certifications for Mist & Haven Living export buyers.",
+    path: "/faq",
+  });
+}
 
 export const revalidate = 86400;
 

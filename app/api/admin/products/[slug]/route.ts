@@ -47,6 +47,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         idealFor: body.idealFor,
         leadTime: body.leadTime,
         moq: body.moq,
+        metaTitle: body.metaTitle ?? null,
+        metaDescription: body.metaDescription ?? null,
         sortOrder: body.sortOrder,
         visible: body.visible,
       },

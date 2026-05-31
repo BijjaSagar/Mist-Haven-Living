@@ -6,14 +6,19 @@ import { StatStrip } from "@/components/StatStrip";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { manufacturingSteps } from "@/data/products";
+import { getPageContent } from "@/lib/data/pages";
 import { getStats } from "@/lib/data/stats";
 
-export const metadata = createMetadata({
-  title: "Manufacturing",
-  description:
-    "Vertical textile manufacturing from yarn selection to export packaging. ISO-certified facility in Solapur, India serving USA and Canada buyers.",
-  path: "/manufacturing",
-});
+export async function generateMetadata() {
+  const page = await getPageContent("manufacturing");
+  return createMetadata({
+    title: page?.metaTitle ?? "Manufacturing",
+    description:
+      page?.metaDescription ??
+      "Vertical textile manufacturing from yarn selection to export packaging. ISO-certified facility in Solapur, India serving USA and Canada buyers.",
+    path: "/manufacturing",
+  });
+}
 
 export const revalidate = 86400;
 

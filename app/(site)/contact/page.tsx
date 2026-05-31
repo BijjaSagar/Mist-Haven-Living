@@ -6,14 +6,19 @@ import { CatalogCTA } from "@/components/CatalogGateModal";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { getProductInterestOptions } from "@/lib/data/products";
+import { getPageContent } from "@/lib/data/pages";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 
-export const metadata = createMetadata({
-  title: "Contact",
-  description:
-    "Contact Mist & Haven Living export team for B2B textile inquiries. USA and Canada buyers welcome. Response within one business day.",
-  path: "/contact",
-});
+export async function generateMetadata() {
+  const page = await getPageContent("contact");
+  return createMetadata({
+    title: page?.metaTitle ?? "Contact",
+    description:
+      page?.metaDescription ??
+      "Contact Mist & Haven Living export team for B2B textile inquiries. USA and Canada buyers welcome. Response within one business day.",
+    path: "/contact",
+  });
+}
 
 export const revalidate = 86400;
 

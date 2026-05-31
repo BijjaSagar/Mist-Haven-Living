@@ -8,13 +8,18 @@ import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { Button } from "@/components/ui/button";
 import { getCategoryBySlug } from "@/lib/data/products";
+import { getPageContent } from "@/lib/data/pages";
 
-export const metadata = createMetadata({
-  title: "Private Label",
-  description:
-    "Launch or scale your towel and linen brand with full private label manufacturing—from product development to retail-ready packaging. Export to USA and Canada.",
-  path: "/private-label",
-});
+export async function generateMetadata() {
+  const page = await getPageContent("private-label");
+  return createMetadata({
+    title: page?.metaTitle ?? "Private Label",
+    description:
+      page?.metaDescription ??
+      "Launch or scale your towel and linen brand with full private label manufacturing—from product development to retail-ready packaging. Export to USA and Canada.",
+    path: "/private-label",
+  });
+}
 
 export const revalidate = 86400;
 

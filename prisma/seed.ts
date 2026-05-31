@@ -137,37 +137,49 @@ async function main() {
       slug: "about",
       metaTitle: "About Us",
       metaDescription:
-        "Learn about Deepam Textiles and Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India.",
+        "Learn about Deepam Textiles and Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India, exporting to USA and Canada.",
       sections: DEFAULT_ABOUT_SECTIONS,
     },
     {
       slug: "manufacturing",
       metaTitle: "Manufacturing",
-      metaDescription: "Vertical textile manufacturing from yarn to export.",
+      metaDescription:
+        "Vertical textile manufacturing from yarn selection to export packaging. ISO-certified facility in Solapur, India serving USA and Canada buyers.",
       sections: {},
     },
     {
       slug: "certifications",
       metaTitle: "Certifications",
-      metaDescription: "Quality and compliance certifications.",
+      metaDescription:
+        "ISO 9001:2015, OEKO-TEX Standard 100, BCI, GOTS, BSCI, and SEDEX/SMETA compliance for export textile manufacturing to USA and Canada.",
       sections: {},
     },
     {
       slug: "private-label",
       metaTitle: "Private Label",
-      metaDescription: "Private label textile programs.",
+      metaDescription:
+        "Launch or scale your towel and linen brand with full private label manufacturing—from product development to retail-ready packaging. Export to USA and Canada.",
       sections: {},
     },
     {
       slug: "contact",
       metaTitle: "Contact",
-      metaDescription: "Contact our export team.",
+      metaDescription:
+        "Contact Mist & Haven Living export team for B2B textile inquiries. USA and Canada buyers welcome. Response within one business day.",
       sections: {},
     },
     {
       slug: "faq",
       metaTitle: "FAQ",
-      metaDescription: "Frequently asked questions.",
+      metaDescription:
+        "Frequently asked questions about MOQs, samples, lead times, shipping, payment terms, customization, and certifications for Mist & Haven Living export buyers.",
+      sections: {},
+    },
+    {
+      slug: "products",
+      metaTitle: "Products",
+      metaDescription:
+        "Explore our full range of premium B2B textile products—bath towels, hotel linen, spa towels, private label, and more for USA and Canada export.",
       sections: {},
     },
   ];

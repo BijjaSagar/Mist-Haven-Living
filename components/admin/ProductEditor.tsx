@@ -113,6 +113,34 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
       )}
 
       <AdminCard>
+        <h2 className="mb-4 font-display text-xl text-taupe">SEO</h2>
+        <div className="space-y-4">
+          <Field
+            label="Meta title"
+            value={data.metaTitle ?? ""}
+            onChange={(v) => setData({ ...data, metaTitle: v || null })}
+            placeholder={data.name}
+          />
+          <div>
+            <label className="font-body text-sm text-taupe">Meta description</label>
+            <textarea
+              className="mt-1 w-full rounded-md border border-hairline px-3 py-2 font-body text-sm"
+              rows={2}
+              value={data.metaDescription ?? ""}
+              onChange={(e) =>
+                setData({ ...data, metaDescription: e.target.value || null })
+              }
+              placeholder={data.shortDescription}
+            />
+            <p className="mt-1 font-body text-xs text-muted">
+              Focus phrases for your reference (not shown to Google as keywords
+              tag). Leave blank to use short description.
+            </p>
+          </div>
+        </div>
+      </AdminCard>
+
+      <AdminCard>
         <label className="font-display text-lg text-taupe">Sizes (JSON)</label>
         <textarea
           className="mt-2 w-full rounded-md border border-hairline px-3 py-2 font-mono text-sm"
@@ -144,10 +172,12 @@ function Field({
   label,
   value,
   onChange,
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  placeholder?: string;
 }) {
   return (
     <div>
@@ -155,6 +185,7 @@ function Field({
       <input
         className="mt-1 w-full rounded-md border border-hairline px-3 py-2 font-body text-sm"
         value={value}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
       />
     </div>

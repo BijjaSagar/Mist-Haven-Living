@@ -4,13 +4,18 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { CTABand } from "@/components/CTABand";
 import { getProductCategories } from "@/lib/data/products";
+import { getPageContent } from "@/lib/data/pages";
 
-export const metadata = createMetadata({
-  title: "Products",
-  description:
-    "Explore our full range of premium B2B textile products—bath towels, hotel linen, spa towels, private label, and more for USA and Canada export.",
-  path: "/products",
-});
+export async function generateMetadata() {
+  const page = await getPageContent("products");
+  return createMetadata({
+    title: page?.metaTitle ?? "Products",
+    description:
+      page?.metaDescription ??
+      "Explore our full range of premium B2B textile products—bath towels, hotel linen, spa towels, private label, and more for USA and Canada export.",
+    path: "/products",
+  });
+}
 
 export const revalidate = 86400;
 

@@ -7,10 +7,18 @@ import {
 } from "@/data/products";
 import type { ProductCategoryData } from "@/lib/types/cms";
 
+function withSeoFields(
+  category: Omit<ProductCategoryData, "metaTitle" | "metaDescription">,
+): ProductCategoryData {
+  return { ...category, metaTitle: null, metaDescription: null };
+}
+
 function mapProduct(row: ProductCategory): ProductCategoryData {
   return {
     slug: row.slug,
     name: row.name,
+    metaTitle: row.metaTitle,
+    metaDescription: row.metaDescription,
     shortDescription: row.shortDescription,
     description: row.description,
     eyebrow: row.eyebrow,
@@ -30,32 +38,32 @@ function mapProduct(row: ProductCategory): ProductCategoryData {
 
 export async function getProductCategories(): Promise<ProductCategoryData[]> {
   if (!isDbConfigured()) {
-    return staticCategories;
+    return staticCategories.map(withSeoFields);
   }
   try {
     const rows = await prisma.productCategory.findMany({
       where: { visible: true },
       orderBy: { sortOrder: "asc" },
     });
-    if (rows.length === 0) return staticCategories;
+    if (rows.length === 0) return staticCategories.map(withSeoFields);
     return rows.map(mapProduct);
   } catch {
-    return staticCategories;
+    return staticCategories.map(withSeoFields);
   }
 }
 
 export async function getAllProductCategoriesAdmin(): Promise<
   ProductCategoryData[]
 > {
-  if (!isDbConfigured()) return staticCategories;
+  if (!isDbConfigured()) return staticCategories.map(withSeoFields);
   try {
     const rows = await prisma.productCategory.findMany({
       orderBy: { sortOrder: "asc" },
     });
-    if (rows.length === 0) return staticCategories;
+    if (rows.length === 0) return staticCategories.map(withSeoFields);
     return rows.map(mapProduct);
   } catch {
-    return staticCategories;
+    return staticCategories.map(withSeoFields);
   }
 }
 
@@ -63,14 +71,19 @@ export async function getCategoryBySlug(
   slug: string,
 ): Promise<ProductCategoryData | undefined> {
   if (!isDbConfigured()) {
-    return staticGetBySlug(slug);
+    const category = staticGetBySlug(slug);
+    return category ? withSeoFields(category) : undefined;
   }
   try {
     const row = await prisma.productCategory.findUnique({ where: { slug } });
-    if (!row || !row.visible) return staticGetBySlug(slug);
+    if (!row || !row.visible) {
+      const category = staticGetBySlug(slug);
+      return category ? withSeoFields(category) : undefined;
+    }
     return mapProduct(row);
   } catch {
-    return staticGetBySlug(slug);
+    const category = staticGetBySlug(slug);
+    return category ? withSeoFields(category) : undefined;
   }
 }
 

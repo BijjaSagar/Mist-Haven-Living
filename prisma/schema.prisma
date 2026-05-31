@@ -68,6 +68,8 @@ model ProductCategory {
   idealFor         Json
   leadTime         String
   moq              String
+  metaTitle        String?
+  metaDescription  String?  @db.Text
   sortOrder        Int      @default(0)
   visible          Boolean  @default(true)
   updatedAt        DateTime @updatedAt

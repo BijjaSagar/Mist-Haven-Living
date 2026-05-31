@@ -31,8 +31,8 @@ export async function generateMetadata({ params }: PageProps) {
   if (!category) return {};
 
   return createMetadata({
-    title: category.name,
-    description: category.shortDescription,
+    title: category.metaTitle ?? category.name,
+    description: category.metaDescription ?? category.shortDescription,
     path: `/products/${slug}`,
     image: category.heroImage,
   });

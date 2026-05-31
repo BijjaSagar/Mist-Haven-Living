@@ -7,6 +7,8 @@ export type ProductSize = {
 export type ProductCategoryData = {
   slug: string;
   name: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
   shortDescription: string;
   description: string;
   eyebrow: string;

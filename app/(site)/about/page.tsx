@@ -9,12 +9,16 @@ import { getStats } from "@/lib/data/stats";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { getPageContent } from "@/lib/data/pages";
 
-export const metadata = createMetadata({
-  title: "About Us",
-  description:
-    "Learn about Deepam Textiles and Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India, exporting to USA and Canada.",
-  path: "/about",
-});
+export async function generateMetadata() {
+  const page = await getPageContent("about");
+  return createMetadata({
+    title: page?.metaTitle ?? "About Us",
+    description:
+      page?.metaDescription ??
+      "Learn about Deepam Textiles and Mist & Haven Living—four decades of premium textile manufacturing in Solapur, India, exporting to USA and Canada.",
+    path: "/about",
+  });
+}
 
 export const revalidate = 86400;
 

@@ -99,6 +99,10 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
                   className="mt-1"
                   rows={2}
                 />
+                <p className="mt-1 font-body text-xs text-muted">
+                  Focus phrases for your reference (not shown to Google as
+                  keywords tag)
+                </p>
               </div>
             </div>
           </AdminCard>

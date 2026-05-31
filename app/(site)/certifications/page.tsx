@@ -12,13 +12,18 @@ import {
 } from "@/components/ui/accordion";
 import { socialCompliancePoints } from "@/data/products";
 import { getCertifications } from "@/lib/data/certifications";
+import { getPageContent } from "@/lib/data/pages";
 
-export const metadata = createMetadata({
-  title: "Certifications",
-  description:
-    "ISO 9001:2015, OEKO-TEX Standard 100, BCI, GOTS, BSCI, and SEDEX/SMETA compliance for export textile manufacturing to USA and Canada.",
-  path: "/certifications",
-});
+export async function generateMetadata() {
+  const page = await getPageContent("certifications");
+  return createMetadata({
+    title: page?.metaTitle ?? "Certifications",
+    description:
+      page?.metaDescription ??
+      "ISO 9001:2015, OEKO-TEX Standard 100, BCI, GOTS, BSCI, and SEDEX/SMETA compliance for export textile manufacturing to USA and Canada.",
+    path: "/certifications",
+  });
+}
 
 export const revalidate = 86400;
 

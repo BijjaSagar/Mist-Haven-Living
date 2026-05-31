@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import { getThemeStyle } from "@/components/layout/HeaderWrapper";
 import { createMetadata, organizationJsonLd } from "@/lib/seo";
+import { getPageContent } from "@/lib/data/pages";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import "./globals.css";
 
@@ -20,10 +21,13 @@ const inter = Inter({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings();
+  const [page, settings] = await Promise.all([
+    getPageContent("home"),
+    getSiteSettings(),
+  ]);
   return createMetadata({
-    title: settings.siteName,
-    description: settings.description,
+    title: page?.metaTitle ?? settings.siteName,
+    description: page?.metaDescription ?? settings.description,
     path: "/",
   });
 }
