@@ -531,18 +531,115 @@ npm run start:standalone
 
 ## 6. Database migrations (one-time setup)
 
-Run once against the production database via **SSH** or the **Hostinger terminal** in hPanel:
+Run once against the production database via **SSH** or the **Hostinger terminal** in hPanel.
+
+**Every SSH session:** Hostinger’s shell has a minimal `PATH` — prefix commands with:
 
 ```bash
-cd /path/to/your/app
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+```
+
+**`DATABASE_URL` in SSH:** hPanel env vars apply to the Node.js app process, **not** your SSH shell. Copy `DATABASE_URL` from **hPanel → Node.js Web Apps → Environment variables** and either `export DATABASE_URL='...'` or put it in a `.env` file in the folder where you run Prisma.
+
+### Full repo app root (layout A `app/` or recovery path B)
+
+```bash
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+cd ~/domains/mistandhaven.com/app   # or wherever the full git clone lives
+export DATABASE_URL='mysql://USER:PASS@HOST:3306/DATABASE'   # paste from hPanel
 npx prisma migrate deploy
-npx prisma db seed
+npx prisma db seed   # first-time only — skip if DB already seeded
 ```
 
 - `migrate deploy` applies all pending migrations
 - `db seed` imports product categories, navigation, stats, and default content
 
 Re-run `migrate deploy` after pulling schema changes. Re-seed only on a fresh database (seeding may duplicate data if run again).
+
+### GitHub auto-deploy only (`nodejs/` — no `prisma/migrations/`)
+
+GitHub deploy to **`~/nodejs`** or **`~/domains/mistandhaven.com/nodejs`** usually contains only `.next/`, `server.js`, `package.json`, and `node_modules` — **not** `prisma/migrations/`. Admin save then fails with:
+
+> Database schema is out of date. Run: npx prisma migrate deploy
+
+The running app folder stays as-is; use a **separate full clone** (or manual SQL) only to apply migrations.
+
+#### Step 0 — find your deploy folder
+
+```bash
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+ls ~/nodejs 2>/dev/null && echo "→ layout B: ~/nodejs"
+ls ~/domains/mistandhaven.com/nodejs 2>/dev/null && echo "→ domains/nodejs"
+```
+
+#### Option A — clone full repo, migrate (recommended)
+
+One-time. Does **not** replace your GitHub deploy folder.
+
+```bash
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+
+mkdir -p ~/domains/mistandhaven.com
+cd ~/domains/mistandhaven.com
+git clone https://github.com/BijjaSagar/Mist-Haven-Living.git app
+cd app
+
+# Paste DATABASE_URL from hPanel (same value the Node app uses)
+export DATABASE_URL='mysql://USER:PASS@HOST:3306/DATABASE'
+
+npm install
+npx prisma migrate deploy
+npx prisma migrate status   # should show "Database schema is up to date"
+```
+
+Keep this `app/` folder for future `npx prisma migrate deploy` after schema changes. Do **not** point hPanel Application root here unless you intentionally switch to a full-repo deploy.
+
+#### Option B — migrate from `nodejs/` (only if migrations exist there)
+
+```bash
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+
+# Use whichever folder hPanel uses as Application root:
+cd ~/domains/mistandhaven.com/nodejs   # or: cd ~/nodejs
+
+ls prisma/migrations || { echo "NO prisma/migrations — use Option A"; exit 1; }
+ls node_modules/.bin/prisma || { echo "NO prisma CLI — use Option A"; exit 1; }
+
+export DATABASE_URL='mysql://USER:PASS@HOST:3306/DATABASE'
+npx prisma migrate deploy
+npx prisma migrate status
+```
+
+If either check fails, use **Option A**.
+
+#### Option C — manual SQL (phpMyAdmin or mysql CLI)
+
+When Prisma cannot run. Latest pending migration (`20260601120000_inquiry_settings`) adds inquiry settings columns:
+
+```sql
+ALTER TABLE `SiteSettings`
+  ADD COLUMN `leadsToEmail` VARCHAR(191) NULL,
+  ADD COLUMN `resendFromEmail` VARCHAR(191) NULL,
+  ADD COLUMN `inquiryEnabled` BOOLEAN NOT NULL DEFAULT true;
+```
+
+**hPanel → Databases → phpMyAdmin** → select your database → **SQL** tab → paste → **Go**.
+
+If a column already exists, MySQL errors on that column — skip duplicates or run columns one at a time.
+
+Optional (keeps Prisma migration history in sync — run from Option A clone after manual SQL):
+
+```bash
+npx prisma migrate resolve --applied 20260601120000_inquiry_settings
+```
+
+#### After migrate — restart app and retry admin
+
+1. **hPanel → Websites → Node.js Web Apps →** your app → **Restart**
+2. Open **https://mistandhaven.com/admin/settings**
+3. Set **Leads inbox email**, **Resend from email**, enable inquiries → **Save**
+
+You should no longer see the schema-out-of-date error.
 
 ## 7. File uploads
 
