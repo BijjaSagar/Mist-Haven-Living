@@ -19,6 +19,8 @@
 
 # production
 /build
+deploy-standalone.zip
+next-build.zip
 
 # misc
 .DS_Store

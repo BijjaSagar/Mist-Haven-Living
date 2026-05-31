@@ -100,32 +100,47 @@ Next.js build worker exited with code: null and signal: SIGABRT
 ```bash
 cd Mist-website
 npm install
-npm run build
-# postbuild copies public/ and .next/static into standalone — verify:
-ls .next/standalone/server.js
+npm run build          # runs postbuild (copies public + .next/static into standalone)
+npm run package:deploy # creates deploy-standalone.zip with verified CSS/JS
 
-# Upload to server (adjust user@host and path):
-rsync -avz .next/standalone/ user@host:~/domains/mistandhaven.com/app/.next/standalone/
-rsync -avz .next/static/ user@host:~/domains/mistandhaven.com/app/.next/standalone/.next/static/
-rsync -avz public/ user@host:~/domains/mistandhaven.com/app/.next/standalone/public/
+# Upload zip to server (adjust user@host and path):
+scp deploy-standalone.zip user@host:~/domains/mistandhaven.com/app/
 ```
 
-On the server, set **Start command** to `npm run start:standalone` or `node .next/standalone/server.js`. Skip the Hostinger **Build command** (or set it to `echo "pre-built"`).
+On the server (SSH or hPanel terminal), from the **app root** (where `package.json` lives):
+
+```bash
+cd ~/domains/mistandhaven.com/app
+mkdir -p .next/standalone
+unzip -o deploy-standalone.zip -d .next/standalone/
+```
+
+Set **Start command** in hPanel to `npm run start:standalone` (see **Start commands** below). Skip the Hostinger **Build command** (or set it to `echo "pre-built"`).
+
+**Alternative — rsync instead of zip:**
+
+```bash
+rsync -avz .next/standalone/ user@host:~/domains/mistandhaven.com/app/.next/standalone/
+# Only if postbuild already ran locally — standalone must contain .next/static/css/*.css
+```
+
+Do **not** upload only `server.js` and `node_modules` without `.next/static` — that causes an unstyled site (see troubleshooting).
 
 #### Option B: Download artifact from GitHub Actions
 
-Every push to `main` runs [.github/workflows/build.yml](./.github/workflows/build.yml):
+Every push to `main` runs [.github/workflows/build.yml](./.github/workflows/build.yml), which runs `npm run package:deploy` (postbuild + CSS verification) and uploads **`next-build.zip`**.
 
 1. Open the repo on GitHub → **Actions** → latest **Build** workflow run
-2. Download the **`next-build`** artifact (`next-build.zip`)
+2. Download the **`next-build`** artifact
 3. On the server, from the app root:
 
 ```bash
 cd ~/domains/mistandhaven.com/app
+mkdir -p .next/standalone
 unzip -o next-build.zip -d .next/standalone/
 ```
 
-Ensure `.env` and `node_modules` exist on the server (`npm ci --omit=dev` if needed). Start with `npm run start:standalone`.
+Ensure `.env` exists on the server. The zip already includes production `node_modules` inside standalone — you do **not** need a separate `npm ci` for the app to serve pages. Start with `npm run start:standalone`.
 
 #### Option C: Try `build:hostinger` on the server (may still fail)
 
@@ -145,40 +160,47 @@ Configure in the Hostinger Node.js app panel when you **must** build on Hostinge
 | Setting | Value |
 |---|---|
 | **Build command** | `npm run build:hostinger` (prefer Option A/B instead) |
-| **Start command** | `npm start` or `npm run start:standalone` |
+| **Start command** | `npm run start:standalone` (required for pre-built standalone uploads) |
 
 ### What the build does
 
 ```bash
 npm run build
 # → prisma generate && next build --webpack
-# → postbuild copies public/ and .next/static into .next/standalone/
+# → postbuild: mkdir .next/standalone/.next, copy public/ and .next/static/
+
+npm run package:deploy
+# → re-runs postbuild, verifies .next/static/css/*.css, creates deploy-standalone.zip
 ```
 
 **Why `--webpack`?** Next.js 16 uses Turbopack by default for `next build`. On Hostinger shared hosting, Turbopack can panic with `EAGAIN` / "global thread pool has not been initialized" because shared plans enforce strict process and thread limits (CloudLinux LVE). The `--webpack` flag forces the classic webpack bundler. `next.config.ts` sets `experimental.cpus: 1`, `workerThreads: false`, `webpackBuildWorker: false`, and `webpack.parallelism: 1` to minimize child processes.
 
-### Start options
+### Start commands (important)
 
-**Option A — standard (recommended for Hostinger panel):**
+| Command | When to use | Needs on server |
+|---|---|---|
+| `npm run start:standalone` | **Pre-built deploy** (Mac build, GitHub zip, rsync standalone) | `.next/standalone/` with `server.js`, `public/`, `.next/static/` |
+| `npm start` | Full build **on the same machine** as start | Full `.next/` at **app root** (not standalone-only upload) |
+
+**For mistandhaven.com (uploaded standalone bundle):** use **`npm run start:standalone`** only.
+
+Running `npm start` (`next start`) after uploading only `.next/standalone/` will serve HTML **without** CSS/JS, because `next start` looks for `.next/static` at the app root, not inside standalone.
+
+`start:standalone` runs from the app root:
 
 ```bash
-npm start
-# → next start -p ${PORT:-3000}
+node .next/standalone/server.js
 ```
 
-**Option B — standalone server (after build):**
+Hostinger sets `PORT` automatically; the script respects `${PORT:-3000}` via the Node.js app panel.
+
+Manual copy (if postbuild was skipped):
 
 ```bash
-npm run start:standalone
-# → node .next/standalone/server.js
-```
-
-The `postbuild` script automatically copies static assets into the standalone folder. If you deploy manually via SSH, you can also run:
-
-```bash
+mkdir -p .next/standalone/.next
 cp -r public .next/standalone/public
 cp -r .next/static .next/standalone/.next/static
-node .next/standalone/server.js
+npm run start:standalone
 ```
 
 ## 5. Database migrations (one-time setup)
@@ -226,9 +248,59 @@ pm2 save
 pm2 startup
 ```
 
-The included `ecosystem.config.js` runs `next start -p 3000`. Adjust `PORT` in the config if Hostinger assigns a different port.
+The included `ecosystem.config.js` runs `.next/standalone/server.js` (same as `npm run start:standalone`). Adjust `PORT` if Hostinger assigns a different port.
 
 ## Troubleshooting
+
+### CSS broken / unstyled site (hero only, plain white page)
+
+**Symptoms:** Full-bleed images or raw HTML links; no header, fonts, or Tailwind layout. Browser Network tab shows **404** for `/_next/static/css/...` or `/_next/static/chunks/...`.
+
+**Cause:** The standalone folder on the server is missing `.next/static` (and sometimes `public/`). Common mistakes:
+
+1. Uploaded only part of `.next/standalone/` (e.g. `server.js` + `node_modules`, no static)
+2. Ran **`npm start`** instead of **`npm run start:standalone`** after a standalone-only upload
+3. Build on Mac without **postbuild** / **package:deploy** before upload
+4. Unzipped deploy artifact to the wrong directory (must be **app root** → `.next/standalone/`)
+
+**Fix:**
+
+1. On your Mac, from the repo:
+
+```bash
+npm run build
+npm run package:deploy
+```
+
+2. Upload `deploy-standalone.zip` to the server app root and extract:
+
+```bash
+cd ~/domains/mistandhaven.com/app
+mkdir -p .next/standalone
+unzip -o deploy-standalone.zip -d .next/standalone/
+```
+
+3. In hPanel → Node.js app → set **Start command** to:
+
+```bash
+npm run start:standalone
+```
+
+4. Restart the Node.js app.
+
+**Verify (should return HTTP 200, not 404):**
+
+```bash
+# On server — list CSS file:
+ls .next/standalone/.next/static/css/
+
+# In browser (replace HASH with your file name from ls):
+https://mistandhaven.com/_next/static/css/HASH.css
+```
+
+**Do not** run the app from an old `nodejs/` folder with a partial copy; use one app root path consistently.
+
+`app/layout.tsx` imports `./globals.css` correctly — styling breaks only when static assets are not deployed or the wrong start command is used. No `assetPrefix` is needed for the root domain `mistandhaven.com`.
 
 ### Build fails with EAGAIN on SSH
 
@@ -272,7 +344,7 @@ npm run build:hostinger
 |---|---|
 | Build fails on Prisma | Ensure `postinstall` runs (`prisma generate`) — Hostinger runs `npm install` before build |
 | Database connection refused | Verify `DATABASE_URL` host is the hPanel MySQL host, not `localhost` |
-| Images or CSS missing | Re-run build; `postbuild` copies `public/` and `.next/static` into standalone |
+| Images or CSS missing | Run `npm run package:deploy`, upload zip, unzip to `.next/standalone/`, use `npm run start:standalone`; verify `/_next/static/css/` returns 200 |
 | Admin login fails | Run `npm run db:seed`; use seeded email/password or set matching `ADMIN_EMAIL` / `ADMIN_PASSWORD`; ensure `ADMIN_SECRET` or `ADMIN_PASSWORD` is set for JWT; cookie requires HTTPS in production |
 | Admin login shows "Login failed" (500) | Cookie or DB error — see **Admin login troubleshooting** below |
 | Uploads fail | Ensure `public/uploads` exists and is writable |

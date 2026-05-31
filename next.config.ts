@@ -6,6 +6,7 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  compress: true,
   // Limit build parallelism for shared hosting (CloudLinux LVE / EAGAIN on spawn)
   experimental: {
     cpus: 1,

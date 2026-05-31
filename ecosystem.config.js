@@ -3,12 +3,12 @@ module.exports = {
   apps: [
     {
       name: "mist-haven",
-      script: "node_modules/next/dist/bin/next",
-      args: "start -p 3000",
+      // Standalone deploy: requires postbuild (public + .next/static in .next/standalone)
+      script: ".next/standalone/server.js",
       cwd: __dirname,
       env: {
         NODE_ENV: "production",
-        PORT: 3000,
+        PORT: process.env.PORT || 3000,
       },
       instances: 1,
       autorestart: true,
