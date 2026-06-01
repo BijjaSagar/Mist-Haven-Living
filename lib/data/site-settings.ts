@@ -1,4 +1,5 @@
 import type { SiteSettings } from "@prisma/client";
+import { mergeStringField } from "@/lib/branding";
 import { prisma, isDbConfigured } from "@/lib/db";
 import { siteConfig } from "@/lib/utils";
 import type { SiteColors, SiteSettingsData } from "@/lib/types/cms";
@@ -38,10 +39,13 @@ const STATIC_SETTINGS: SiteSettingsData = {
 
 function mapSettings(row: SiteSettings): SiteSettingsData {
   return {
-    siteName: row.siteName,
-    legalName: row.legalName,
-    tagline: row.tagline,
-    description: row.description,
+    siteName: mergeStringField(STATIC_SETTINGS.siteName, row.siteName) as string,
+    legalName: mergeStringField(STATIC_SETTINGS.legalName, row.legalName) as string,
+    tagline: mergeStringField(STATIC_SETTINGS.tagline, row.tagline) as string,
+    description: mergeStringField(
+      STATIC_SETTINGS.description,
+      row.description,
+    ) as string,
     logoUrl: row.logoUrl,
     logoLightUrl: row.logoLightUrl,
     faviconUrl: row.faviconUrl,
@@ -61,9 +65,20 @@ function mapSettings(row: SiteSettings): SiteSettingsData {
     inquiryEnabled: row.inquiryEnabled,
     whatsappNumber: row.whatsappNumber,
     calendlyUrl: row.calendlyUrl,
-    footerBlurb: row.footerBlurb,
-    copyrightText: row.copyrightText,
-    exportMarkets: row.exportMarkets,
+    footerBlurb: mergeStringField(
+      STATIC_SETTINGS.footerBlurb,
+      row.footerBlurb,
+    ) as string,
+    copyrightText: row.copyrightText
+      ? (mergeStringField(
+          STATIC_SETTINGS.copyrightText,
+          row.copyrightText,
+        ) as string | null)
+      : null,
+    exportMarkets: mergeStringField(
+      STATIC_SETTINGS.exportMarkets,
+      row.exportMarkets,
+    ) as string,
     address: {
       street: row.addressStreet,
       city: row.addressCity,

@@ -1,3 +1,7 @@
+import {
+  deepMergeSections,
+  mergeStringField,
+} from "@/lib/branding";
 import { prisma, isDbConfigured } from "@/lib/db";
 import type { PageContentData } from "@/lib/types/cms";
 import { siteConfig } from "@/lib/utils";
@@ -108,12 +112,18 @@ function mergePageWithDefaults(row: {
   const fallback = STATIC_PAGES[row.slug];
   return {
     slug: row.slug,
-    metaTitle: row.metaTitle ?? fallback?.metaTitle ?? null,
-    metaDescription: row.metaDescription ?? fallback?.metaDescription ?? null,
-    sections: (row.sections ?? fallback?.sections ?? {}) as Record<
-      string,
-      unknown
-    >,
+    metaTitle: mergeStringField(
+      fallback?.metaTitle ?? null,
+      row.metaTitle,
+    ) as string | null,
+    metaDescription: mergeStringField(
+      fallback?.metaDescription ?? null,
+      row.metaDescription,
+    ) as string | null,
+    sections: deepMergeSections(
+      fallback?.sections as Record<string, unknown> | undefined,
+      row.sections,
+    ),
   };
 }
 

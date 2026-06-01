@@ -188,9 +188,17 @@ async function main() {
   ];
 
   for (const page of pages) {
+    const refreshBrandedSections =
+      page.slug === "home" || page.slug === "about";
     await prisma.pageContent.upsert({
       where: { slug: page.slug },
-      update: {},
+      update: refreshBrandedSections
+        ? {
+            sections: page.sections,
+            metaTitle: page.metaTitle,
+            metaDescription: page.metaDescription,
+          }
+        : {},
       create: page,
     });
   }

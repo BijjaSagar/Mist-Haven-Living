@@ -18,7 +18,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "admin:reset": "tsx scripts/reset-admin.ts"
+    "admin:reset": "tsx scripts/reset-admin.ts",
+    "fix:branding": "tsx scripts/fix-deepam-content.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
