@@ -4,6 +4,7 @@ import { createMetadata } from "@/lib/seo";
 import { SectionHeading } from "@/components/SectionHeading";
 import { StatStrip } from "@/components/StatStrip";
 import { CTABand } from "@/components/CTABand";
+import { ContactEmails } from "@/components/ContactEmails";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { getStats } from "@/lib/data/stats";
 import { getSiteSettings } from "@/lib/data/site-settings";
@@ -144,12 +145,12 @@ export default async function AboutPage() {
               Contact our export team
             </Link>{" "}
             or email{" "}
-            <a
-              href={`mailto:${settings.contactEmail}`}
-              className="text-sage-deep hover:underline"
-            >
-              {settings.contactEmail}
-            </a>
+            <ContactEmails
+              primary={settings.contactEmail}
+              secondary={settings.contactEmailSecondary}
+              layout="inline"
+              linkClassName="text-sage-deep hover:underline"
+            />
           </p>
         </div>
       </section>

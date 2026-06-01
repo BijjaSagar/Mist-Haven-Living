@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `SiteSettings` ADD COLUMN `contactEmailSecondary` VARCHAR(191) NULL AFTER `contactEmail`;

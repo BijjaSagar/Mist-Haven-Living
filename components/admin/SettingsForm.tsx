@@ -146,7 +146,7 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
         <h2 className="mb-4 font-display text-xl text-taupe">Contact</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <Label>Public contact email</Label>
+            <Label>Public contact email (primary)</Label>
             <Input
               type="email"
               value={data.contactEmail}
@@ -156,8 +156,24 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
               className="mt-1"
             />
             <p className="mt-1 font-body text-xs text-muted">
-              Shown on the site and used as fallback for quote inquiries if leads
-              email is empty.
+              Shown on the contact page, footer, and home inquiry section.
+            </p>
+          </div>
+          <div>
+            <Label>Public contact email (secondary)</Label>
+            <Input
+              type="email"
+              value={data.contactEmailSecondary ?? ""}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  contactEmailSecondary: e.target.value.trim() || null,
+                })
+              }
+              className="mt-1"
+            />
+            <p className="mt-1 font-body text-xs text-muted">
+              Optional second address shown alongside the primary contact email.
             </p>
           </div>
           <div>
@@ -234,11 +250,12 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
                 })
               }
               className="mt-1"
-              placeholder={data.contactEmail || "export@yourcompany.com"}
+              placeholder={data.leadsToEmail ?? "export@mistandhaven.com"}
             />
             <p className="mt-1 font-body text-xs text-muted">
-              Destination for Request Quote submissions. Falls back to public
-              contact email, then <code className="text-xs">LEADS_TO_EMAIL</code> env.
+              Destination for Request Quote submissions. Separate from public contact
+              emails. Falls back to <code className="text-xs">LEADS_TO_EMAIL</code> env
+              if empty.
             </p>
           </div>
           <div>

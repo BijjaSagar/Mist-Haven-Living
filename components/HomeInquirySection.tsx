@@ -1,4 +1,5 @@
 import { SectionHeading } from "@/components/SectionHeading";
+import { ContactEmails } from "@/components/ContactEmails";
 import { MultiStepInquiryForm } from "@/components/MultiStepInquiryForm";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { WaveUnderline } from "@/components/WaveDivider";
@@ -31,13 +32,24 @@ export async function HomeInquirySection() {
               </p>
               <p>
                 <strong className="font-medium text-taupe">Email:</strong>{" "}
-                <a
-                  href={`mailto:${settings.contactEmail}`}
-                  className="hover:text-sage-deep"
-                >
-                  {settings.contactEmail}
-                </a>
+                <ContactEmails
+                  primary={settings.contactEmail}
+                  secondary={settings.contactEmailSecondary}
+                  layout="inline"
+                  linkClassName="hover:text-sage-deep"
+                />
               </p>
+              {settings.contactPhone ? (
+                <p>
+                  <strong className="font-medium text-taupe">Phone:</strong>{" "}
+                  <a
+                    href={`tel:${settings.contactPhone.replace(/\D/g, "")}`}
+                    className="hover:text-sage-deep"
+                  >
+                    {settings.contactPhone}
+                  </a>
+                </p>
+              ) : null}
               {settings.whatsappNumber ? (
                 <p>
                   <strong className="font-medium text-taupe">WhatsApp:</strong>{" "}

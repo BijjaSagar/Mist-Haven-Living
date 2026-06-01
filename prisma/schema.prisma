@@ -23,8 +23,9 @@ model SiteSettings {
   colorSage         String   @default("#c8c7ac")
   colorSageDeep     String   @default("#9a9a7d")
   colorHairline     String   @default("#e7e0d3")
-  contactEmail      String
-  contactPhone      String
+  contactEmail          String
+  contactEmailSecondary String?
+  contactPhone          String
   leadsToEmail      String?
   resendFromEmail   String?
   inquiryEnabled    Boolean  @default(true)

@@ -14,7 +14,6 @@ export async function getInquiryEmailConfig(): Promise<InquiryEmailConfig> {
   const settings = await getSiteSettings();
   const leadsEmail =
     settings.leadsToEmail?.trim() ||
-    settings.contactEmail?.trim() ||
     process.env.LEADS_TO_EMAIL?.trim() ||
     null;
   const resendFrom =

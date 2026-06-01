@@ -12,8 +12,10 @@ export const siteConfig = {
   description:
     "Premium B2B textile manufacturing for hospitality, retail, and private label buyers across the USA and Canada.",
   url: "https://mistandhaven.com",
-  email: "export@mistandhaven.com",
-  phone: "+91 98765 43210",
+  email: "kalash@mistandhaven.com",
+  emailSecondary: "abhiraj@mistandhaven.com",
+  leadsEmail: "export@mistandhaven.com",
+  phone: "+91-7420-902500",
   address: {
     street: "Industrial Area, MIDC",
     city: "Solapur",

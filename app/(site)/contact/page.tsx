@@ -7,7 +7,8 @@ import { FadeUp } from "@/components/motion/FadeUp";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { getProductInterestOptions } from "@/lib/data/products";
 import { getPageContent } from "@/lib/data/pages";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { ContactEmails } from "@/components/ContactEmails";
+import { MapPin, Clock, Mail, Phone } from "lucide-react";
 
 export async function generateMetadata() {
   const page = await getPageContent("contact");
@@ -69,18 +70,20 @@ export default async function ContactPage() {
                 </div>
                 <div className="flex gap-4">
                   <Mail className="h-5 w-5 shrink-0 text-sage-deep" />
-                  <a
-                    href={`mailto:${settings.contactEmail}`}
-                    className="font-body text-sm text-muted hover:text-sage-deep"
-                  >
-                    {settings.contactEmail}
-                  </a>
+                  <ContactEmails
+                    primary={settings.contactEmail}
+                    secondary={settings.contactEmailSecondary}
+                    linkClassName="font-body text-sm text-muted hover:text-sage-deep"
+                  />
                 </div>
                 <div className="flex gap-4">
                   <Phone className="h-5 w-5 shrink-0 text-sage-deep" />
-                  <span className="font-body text-sm text-muted">
+                  <a
+                    href={`tel:${settings.contactPhone.replace(/\D/g, "")}`}
+                    className="font-body text-sm text-muted hover:text-sage-deep"
+                  >
                     {settings.contactPhone}
-                  </span>
+                  </a>
                 </div>
                 <div className="flex gap-4">
                   <Clock className="h-5 w-5 shrink-0 text-sage-deep" />

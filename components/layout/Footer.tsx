@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/BrandLogo";
+import { ContactEmails } from "@/components/ContactEmails";
 import { Logo } from "@/components/Logo";
 import { hasCustomLogo } from "@/lib/brand-logo";
 import type {
@@ -91,16 +92,18 @@ export function Footer({
               Contact
             </p>
             <address className="not-italic">
-              <p className="font-body text-[13.5px] text-pearl/70">
+              <ContactEmails
+                primary={settings.contactEmail}
+                secondary={settings.contactEmailSecondary}
+                linkClassName="font-body text-[13.5px] text-pearl/70 transition-colors hover:text-pearl"
+              />
+              <p className="mt-3 font-body text-[13.5px] text-pearl/70">
                 <a
-                  href={`mailto:${settings.contactEmail}`}
+                  href={`tel:${settings.contactPhone.replace(/\D/g, "")}`}
                   className="transition-colors hover:text-pearl"
                 >
-                  {settings.contactEmail}
+                  {settings.contactPhone}
                 </a>
-              </p>
-              <p className="mt-3 font-body text-[13.5px] text-pearl/70">
-                {settings.contactPhone}
               </p>
               <p className="mt-3 font-body text-[13.5px] text-pearl/70">
                 {settings.address.city}, {settings.address.region},{" "}

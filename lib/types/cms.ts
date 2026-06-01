@@ -45,6 +45,7 @@ export type SiteSettingsData = {
   faviconUrl: string | null;
   colors: SiteColors;
   contactEmail: string;
+  contactEmailSecondary: string | null;
   contactPhone: string;
   leadsToEmail: string | null;
   resendFromEmail: string | null;
