@@ -117,7 +117,7 @@ export function ProductGalleryField({
         <input
           ref={inputRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept="image/png,image/jpeg,image/webp,image/svg+xml"
           multiple
           className="sr-only"
           id={`gallery-upload-${productSlug}`}

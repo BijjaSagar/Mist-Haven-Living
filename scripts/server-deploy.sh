@@ -51,6 +51,13 @@ echo "→ OK CSS: $(basename "$CSS")"
 echo "→ OK chunks: $CHUNKS JS files"
 
 echo ""
+echo "→ Syncing admin uploads into standalone public/..."
+bash "$ROOT/scripts/setup-hostinger-uploads.sh" || {
+  echo "WARN: uploads sync skipped — run manually if /uploads/* returns 404:" >&2
+  echo "  bash scripts/setup-hostinger-uploads.sh" >&2
+}
+
+echo ""
 echo "→ Linking public_html/_next/static (Apache serves /_next/static from document root)..."
 bash "$ROOT/scripts/setup-hostinger-static.sh" || {
   echo "WARN: public_html symlink skipped — run manually if CSS still 404s:" >&2

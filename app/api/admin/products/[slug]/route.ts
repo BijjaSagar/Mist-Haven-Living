@@ -38,7 +38,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         eyebrow: body.eyebrow,
         heroImage: body.heroImage,
         cardImage: body.cardImage,
-        galleryImages: body.galleryImages ?? [],
+        galleryImages: Array.isArray(body.galleryImages) ? body.galleryImages : [],
         features: body.features,
         materials: body.materials,
         sizes: body.sizes,
@@ -56,8 +56,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     });
     await revalidateSite();
     return NextResponse.json(mapProduct(product));
-  } catch {
-    return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
+  } catch (error) {
+    const message =
+      error instanceof Error &&
+      /Unknown column|galleryImages/i.test(error.message)
+        ? "Database schema is out of date. Run: npx prisma migrate deploy"
+        : "Failed to update product";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

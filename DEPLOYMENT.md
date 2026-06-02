@@ -614,24 +614,59 @@ If either check fails, use **Option A**.
 
 #### Option C — manual SQL (phpMyAdmin or mysql CLI)
 
-When Prisma cannot run. Latest pending migration (`20260601120000_inquiry_settings`) adds inquiry settings columns:
+When Prisma cannot run. Latest pending migration (`20260602140000_inquiries`) creates the `Inquiry` table:
 
 ```sql
-ALTER TABLE `SiteSettings`
-  ADD COLUMN `leadsToEmail` VARCHAR(191) NULL,
-  ADD COLUMN `resendFromEmail` VARCHAR(191) NULL,
-  ADD COLUMN `inquiryEnabled` BOOLEAN NOT NULL DEFAULT true;
+CREATE TABLE `Inquiry` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `company` VARCHAR(191) NOT NULL,
+    `country` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `phone` VARCHAR(191) NOT NULL,
+    `productInterest` VARCHAR(191) NOT NULL,
+    `message` TEXT NOT NULL,
+    `buyerType` VARCHAR(191) NOT NULL,
+    `estimatedVolume` VARCHAR(191) NULL,
+    `targetMarket` VARCHAR(191) NULL,
+    `source` VARCHAR(191) NOT NULL DEFAULT 'web',
+    `emailSent` BOOLEAN NOT NULL DEFAULT false,
+    `emailError` TEXT NULL,
+    `readAt` DATETIME(3) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    INDEX `Inquiry_createdAt_idx`(`createdAt`),
+    INDEX `Inquiry_readAt_idx`(`readAt`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 **hPanel → Databases → phpMyAdmin** → select your database → **SQL** tab → paste → **Go**.
 
-If a column already exists, MySQL errors on that column — skip duplicates or run columns one at a time.
+If the table already exists, skip or drop it first on a fresh DB only.
 
 Optional (keeps Prisma migration history in sync — run from Option A clone after manual SQL):
 
 ```bash
-npx prisma migrate resolve --applied 20260601120000_inquiry_settings
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+cd ~/domains/mistandhaven.com/app
+export DATABASE_URL='mysql://USER:PASS@HOST:3306/DATABASE'
+npx prisma migrate resolve --applied 20260602140000_inquiries
 ```
+
+### Layout: `domains/.../nodejs` only (no `app/` yet)
+
+Many mistandhaven.com accounts look like this:
+
+```
+~/domains/mistandhaven.com/
+├── nodejs/        ← hPanel Application root (GitHub deploy; no prisma/migrations/)
+├── public_html/
+└── app/           ← create once for migrations only (not the running app)
+```
+
+- **Do not** run `npm run build` in `nodejs/` — shared hosting cannot build Next.js. Deploy pre-built bundles via GitHub Actions or Mac (`npm run package:deploy`).
+- **Do not** change hPanel Application root away from `~/domains/mistandhaven.com/nodejs`.
+- Clone the full repo to `app/` only to run `npx prisma migrate deploy`; the live app keeps running from `nodejs/`.
 
 #### After migrate — restart app and retry admin
 
@@ -643,25 +678,75 @@ You should no longer see the schema-out-of-date error.
 
 ## 7. File uploads
 
-Admin uploads use `POST /api/admin/upload` (admin session required). Files live on disk under **`public/uploads/`** (referenced in the DB as `/uploads/...` after you click **Save** on the product or page).
+Admin uploads use `POST /api/admin/upload` (admin session required). Files are stored on disk and referenced in the DB as `/uploads/...` after you click **Save product** in the admin editor.
 
-| Admin area | What to upload | On-disk path |
-|------------|----------------|--------------|
-| **Settings → Branding** | Logo, favicon | `public/uploads/` |
-| **Products → [category]** | Hero, card, gallery images | `public/uploads/products/{slug}/` |
-| **Pages → private-label** | Specification PDF | `public/uploads/pdfs/private-label/` |
-| **Pages → home** | Hero & heritage images | `public/uploads/` (or custom folder) |
+### Where uploads live (standalone deploy)
 
-**Persistence:** On Hostinger's Node.js app, `public/uploads/` (including nested `products/` and `pdfs/` folders) **survives app restarts**. Uploads are **not** inside `next-build.zip`. `scripts/server-deploy.sh` backs up and restores `.next/standalone/public/uploads/` when redeploying — keep that directory on the server; do not delete it during deploys.
+When the app runs with **`npm run start:standalone`**, Next.js serves static files from **`.next/standalone/public/`**, not `public/` at the app root. The upload API writes to:
+
+```
+.next/standalone/public/uploads/
+├── products/bath-towels/…
+├── pdfs/private-label/…
+└── …
+```
+
+| Admin area | What to upload | URL path | On-disk path (standalone) |
+|------------|----------------|----------|----------------------------|
+| **Settings → Branding** | Logo, favicon | `/uploads/…` | `.next/standalone/public/uploads/` |
+| **Products → [category]** | Hero, card, gallery | `/uploads/products/{slug}/…` | `.next/standalone/public/uploads/products/{slug}/` |
+| **Pages → private-label** | Specification PDF | `/uploads/pdfs/…` | `.next/standalone/public/uploads/pdfs/…` |
+
+**Always click Save product** after uploading hero, card, or gallery images — uploads only update the URL fields in the admin form until you save.
+
+**Persistence:** Uploads are **not** inside `next-build.zip`. `scripts/server-deploy.sh` backs up and restores `.next/standalone/public/uploads/` when redeploying. New uploads after this fix go directly to the standalone public folder.
+
+### One-time fix: migrate uploads already on the server
+
+If admin uploads succeed but `https://mistandhaven.com/uploads/…` returns **404**, files may have been written to the legacy `public/uploads/` at app root. SSH into the app root (`~/nodejs` or `~/domains/mistandhaven.com/app`) and run:
+
+```bash
+cd ~/nodejs   # or your hPanel Application root
+bash scripts/setup-hostinger-uploads.sh
+```
+
+This merges `public/uploads/` → `.next/standalone/public/uploads/` (non-destructive copy). Then restart the Node.js app in hPanel.
+
+Verify a known file:
+
+```bash
+curl -sSI -o /dev/null -w 'upload HTTP %{http_code}\n' \
+  'https://mistandhaven.com/uploads/products/bath-towels/YOUR-FILE.jpg'
+```
+
+Expect **HTTP 200**.
 
 Ensure uploads are writable:
 
 ```bash
-mkdir -p public/uploads/products public/uploads/pdfs/private-label
-chmod -R 755 public/uploads
+mkdir -p .next/standalone/public/uploads/products .next/standalone/public/uploads/pdfs/private-label
+chmod -R 755 .next/standalone/public/uploads
 ```
 
-After schema changes that add `galleryImages`, run `npx prisma migrate deploy` on the server.
+### Product gallery (`galleryImages` column)
+
+Gallery images require the `galleryImages` JSON column on `ProductCategory`. Run migrations once:
+
+```bash
+export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
+cd ~/domains/mistandhaven.com/app   # full repo clone — see section 6
+export DATABASE_URL='mysql://USER:PASS@HOST:3306/DATABASE'
+npx prisma migrate deploy
+```
+
+Manual SQL if Prisma cannot run (phpMyAdmin):
+
+```sql
+ALTER TABLE `ProductCategory`
+  ADD COLUMN `galleryImages` JSON NOT NULL DEFAULT (JSON_ARRAY());
+```
+
+Skip if the column already exists.
 
 Default logos in `/public/logo.png` work without any uploads.
 
@@ -903,7 +988,9 @@ npm run build:hostinger
 | Images or CSS missing | Run `npm run package:deploy`, upload zip, unzip to `.next/standalone/`, use `npm run start:standalone`; verify `/_next/static/css/` returns 200 |
 | Admin login fails | Run `npm run db:seed`; use seeded email/password or set matching `ADMIN_EMAIL` / `ADMIN_PASSWORD`; ensure `ADMIN_SECRET` or `ADMIN_PASSWORD` is set for JWT; cookie requires HTTPS in production |
 | Admin login shows "Login failed" (500) | Cookie or DB error — see **Admin login troubleshooting** below |
-| Uploads fail | Ensure `public/uploads` exists and is writable |
+| Uploads fail | Ensure `.next/standalone/public/uploads` exists and is writable |
+| Product gallery empty on site but saved in admin | Click **Save product** after uploads; run `bash scripts/setup-hostinger-uploads.sh` if `/uploads/*` returns 404 |
+| `/uploads/*` returns 404 | Files in wrong folder — run `bash scripts/setup-hostinger-uploads.sh` from app root, restart Node app |
 
 ### Admin login troubleshooting
 

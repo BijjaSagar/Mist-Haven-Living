@@ -55,7 +55,12 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    setMessage(res.ok ? "Product saved." : "Failed to save.");
+    if (res.ok) {
+      setMessage("Product saved.");
+    } else {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      setMessage(body?.error ?? "Failed to save.");
+    }
     setSaving(false);
   }
 

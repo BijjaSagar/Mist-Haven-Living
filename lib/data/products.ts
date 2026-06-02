@@ -7,6 +7,22 @@ import {
 } from "@/data/products";
 import type { ProductCategoryData } from "@/lib/types/cms";
 
+function normalizeGalleryImages(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter(
+      (item): item is string => typeof item === "string" && item.trim().length > 0,
+    );
+  }
+  if (typeof value === "string") {
+    try {
+      return normalizeGalleryImages(JSON.parse(value));
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 function withSeoFields(
   category: Omit<ProductCategoryData, "metaTitle" | "metaDescription" | "galleryImages"> & {
     galleryImages?: string[];
@@ -16,7 +32,7 @@ function withSeoFields(
     ...category,
     metaTitle: null,
     metaDescription: null,
-    galleryImages: category.galleryImages ?? [],
+    galleryImages: normalizeGalleryImages(category.galleryImages),
   };
 }
 
@@ -31,7 +47,7 @@ function mapProduct(row: ProductCategory): ProductCategoryData {
     eyebrow: row.eyebrow,
     heroImage: row.heroImage,
     cardImage: row.cardImage,
-    galleryImages: (row.galleryImages as string[] | null) ?? [],
+    galleryImages: normalizeGalleryImages(row.galleryImages),
     features: row.features as string[],
     materials: row.materials as string[],
     sizes: row.sizes as ProductCategoryData["sizes"],

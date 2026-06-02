@@ -101,6 +101,30 @@ export default async function ProductCategoryPage({ params }: PageProps) {
         </FadeUp>
       </section>
 
+      {category.galleryImages.length > 0 && (
+        <section className="border-t border-hairline bg-oat py-section-mobile md:py-section-desktop">
+          <div className="mx-auto max-w-container px-6 md:px-8">
+            <SectionHeading title="Gallery" className="mb-8" />
+            <StaggerChildren className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {category.galleryImages.map((src, index) => (
+                <div
+                  key={`${src}-${index}`}
+                  className="relative aspect-[4/3] overflow-hidden bg-pearl"
+                >
+                  <HoverScaleImage
+                    src={src}
+                    alt={`${category.name} ${index + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    containerClassName="absolute inset-0"
+                  />
+                </div>
+              ))}
+            </StaggerChildren>
+          </div>
+        </section>
+      )}
+
       <section className="py-section-mobile md:py-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">
           <StaggerChildren className="grid gap-12 lg:grid-cols-12">
@@ -160,30 +184,6 @@ export default async function ProductCategoryPage({ params }: PageProps) {
           </StaggerChildren>
         </div>
       </section>
-
-      {category.galleryImages.length > 0 && (
-        <section className="border-t border-hairline bg-oat py-section-mobile md:py-section-desktop">
-          <div className="mx-auto max-w-container px-6 md:px-8">
-            <SectionHeading title="Gallery" className="mb-8" />
-            <StaggerChildren className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {category.galleryImages.map((src, index) => (
-                <div
-                  key={`${src}-${index}`}
-                  className="relative aspect-[4/3] overflow-hidden bg-pearl"
-                >
-                  <HoverScaleImage
-                    src={src}
-                    alt={`${category.name} ${index + 1}`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    containerClassName="absolute inset-0"
-                  />
-                </div>
-              ))}
-            </StaggerChildren>
-          </div>
-        </section>
-      )}
 
       <section className="border-y border-hairline bg-white py-section-mobile md:py-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">
