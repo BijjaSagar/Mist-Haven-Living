@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SiteSettingsData } from "@/lib/types/cms";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,18 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
     text: string;
     type: "success" | "error";
   } | null>(null);
+  const [emailStatus, setEmailStatus] = useState<{
+    hasResendKey: boolean;
+    hasLeadsEmail: boolean;
+    configured: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/inquiries/email-status")
+      .then((r) => r.json())
+      .then(setEmailStatus)
+      .catch(() => null);
+  }, []);
 
   async function handleSave() {
     setSaving(true);
@@ -219,11 +231,37 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
           Request Quote / inquiries
         </h2>
         <p className="mb-4 font-body text-sm text-muted">
-          Configure where B2B leads and catalog downloads are sent. The Resend API
-          key must stay in server environment variables (
+          Configure where B2B leads and catalog downloads are sent. All
+          submissions are saved under Admin → Inquiries even if email fails. The
+          Resend API key must stay in server environment variables (
           <code className="text-xs">RESEND_API_KEY</code>) — never commit it to the
           database.
         </p>
+        {emailStatus && (
+          <div
+            className={`mb-4 rounded-md px-4 py-3 font-body text-sm ${
+              emailStatus.configured
+                ? "bg-sage/20 text-sage-deep"
+                : "bg-amber-50 text-amber-900"
+            }`}
+          >
+            {emailStatus.configured ? (
+              <p>Email notifications are configured and ready.</p>
+            ) : (
+              <ul className="list-inside list-disc space-y-1">
+                {!emailStatus.hasResendKey && (
+                  <li>
+                    Add <code className="text-xs">RESEND_API_KEY</code> in hPanel
+                    environment variables
+                  </li>
+                )}
+                {!emailStatus.hasLeadsEmail && (
+                  <li>Set the leads inbox email below (required for notifications)</li>
+                )}
+              </ul>
+            )}
+          </div>
+        )}
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className="flex cursor-pointer items-center gap-2 font-body text-sm text-taupe">

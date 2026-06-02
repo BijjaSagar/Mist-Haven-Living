@@ -13,6 +13,7 @@ import {
   Users,
   ExternalLink,
   LogOut,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/pages", label: "Pages", icon: FileText },
   { href: "/admin/stats", label: "Stats", icon: BarChart3 },
+  { href: "/admin/inquiries", label: "Inquiries", icon: Inbox },
   { href: "/admin/certifications", label: "Certifications", icon: Award },
   { href: "/admin/users", label: "Users", icon: Users },
 ];

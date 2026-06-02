@@ -67,6 +67,9 @@ export function InquiryForm({
       if (!res.ok) {
         throw new Error(json.error ?? "Submission failed");
       }
+      if (json.warning) {
+        console.warn("Inquiry submitted with warning:", json.warning);
+      }
       setSubmitted(true);
     } catch (err) {
       setSubmitError(

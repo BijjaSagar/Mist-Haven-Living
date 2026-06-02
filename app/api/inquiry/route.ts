@@ -1,9 +1,25 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
 import { inquirySchema } from "@/lib/validations/inquiry";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getCategoryBySlug } from "@/lib/data/products";
 import { getInquiryEmailConfig } from "@/lib/data/inquiry-config";
+import {
+  createInquiry,
+  markInquiryEmailResult,
+} from "@/lib/data/inquiries";
+import { sendInquiryNotificationEmail } from "@/lib/inquiry/send-notification";
+import { isDbConfigured } from "@/lib/db";
+
+function resolveSource(
+  productInterest: string,
+  request: Request,
+): string {
+  if (productInterest === "catalog-download") return "catalog";
+  const referer = request.headers.get("referer") ?? "";
+  if (referer.includes("/contact")) return "contact";
+  if (referer.endsWith("/") || referer.match(/\/\?/)) return "home";
+  return "web";
+}
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +30,7 @@ export async function POST(request: Request) {
 
     if (!checkRateLimit(ip)) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { error: "Too many requests. Please try again later.", code: "RATE_LIMITED" },
         { status: 429 },
       );
     }
@@ -24,7 +40,11 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid form data", details: parsed.error.flatten() },
+        {
+          error: "Invalid form data",
+          code: "VALIDATION_ERROR",
+          details: parsed.error.flatten(),
+        },
         { status: 400 },
       );
     }
@@ -39,17 +59,21 @@ export async function POST(request: Request) {
 
     if (!emailConfig.inquiryEnabled) {
       return NextResponse.json(
-        { error: "Inquiry form is temporarily unavailable" },
+        {
+          error: "Inquiry form is temporarily unavailable",
+          code: "INQUIRY_DISABLED",
+        },
         { status: 503 },
       );
     }
 
-    if (!emailConfig.configured) {
-      console.error(
-        "Inquiry email not configured: set RESEND_API_KEY and leads destination in Admin → Settings (or LEADS_TO_EMAIL env)",
-      );
+    if (!isDbConfigured()) {
+      console.error("Inquiry submission failed: DATABASE_URL is not configured");
       return NextResponse.json(
-        { error: "Email service not configured" },
+        {
+          error: "Unable to save inquiry. Database is not configured.",
+          code: "DATABASE_NOT_CONFIGURED",
+        },
         { status: 503 },
       );
     }
@@ -63,34 +87,71 @@ export async function POST(request: Request) {
         ? "Product Catalog Download"
         : (product?.name ?? data.productInterest);
 
-    const resend = new Resend(emailConfig.resendKey!);
+    const source = resolveSource(data.productInterest, request);
 
-    await resend.emails.send({
-      from: emailConfig.resendFrom,
-      to: emailConfig.leadsEmail!,
-      replyTo: data.email,
-      subject: `New B2B Inquiry: ${data.company} — ${productLabel}`,
-      html: `
-        <h2>New Export Inquiry</h2>
-        <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Company:</strong> ${data.company}</p>
-        <p><strong>Buyer Type:</strong> ${data.buyerType ?? "—"}</p>
-        <p><strong>Estimated Volume:</strong> ${data.estimatedVolume ?? "—"}</p>
-        <p><strong>Target Market:</strong> ${data.targetMarket ?? "—"}</p>
-        <p><strong>Country:</strong> ${data.country}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Phone:</strong> ${data.phone}</p>
-        <p><strong>Product Interest:</strong> ${productLabel}</p>
-        <p><strong>Message:</strong></p>
-        <p>${data.message.replace(/\n/g, "<br>")}</p>
-      `,
+    const inquiry = await createInquiry({
+      name: data.name,
+      company: data.company,
+      country: data.country,
+      email: data.email,
+      phone: data.phone,
+      productInterest: data.productInterest,
+      message: data.message,
+      buyerType: data.buyerType,
+      estimatedVolume: data.estimatedVolume,
+      targetMarket: data.targetMarket,
+      source,
     });
 
-    return NextResponse.json({ success: true });
+    const emailResult = await sendInquiryNotificationEmail(emailConfig, {
+      name: data.name,
+      company: data.company,
+      buyerType: data.buyerType,
+      estimatedVolume: data.estimatedVolume,
+      targetMarket: data.targetMarket,
+      country: data.country,
+      email: data.email,
+      phone: data.phone,
+      productLabel,
+      message: data.message,
+    });
+
+    await markInquiryEmailResult(
+      inquiry.id,
+      emailResult.ok,
+      emailResult.ok
+        ? null
+        : [emailResult.code, emailResult.message, emailResult.detail]
+            .filter(Boolean)
+            .join(" — "),
+    );
+
+    if (!emailResult.ok) {
+      console.error("Inquiry saved but email failed:", {
+        inquiryId: inquiry.id,
+        code: emailResult.code,
+        message: emailResult.message,
+        detail: emailResult.detail,
+      });
+
+      return NextResponse.json({
+        success: true,
+        warning:
+          "Your inquiry was received and saved. Email notification could not be sent — our team will still follow up.",
+        emailSent: false,
+      });
+    }
+
+    return NextResponse.json({ success: true, emailSent: true });
   } catch (error) {
-    console.error("Inquiry submission error:", error);
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error("Inquiry submission error:", { detail, error });
     return NextResponse.json(
-      { error: "Failed to send inquiry" },
+      {
+        error: "Failed to save inquiry. Please try again or contact us directly.",
+        code: "SUBMISSION_FAILED",
+        ...(process.env.NODE_ENV === "development" ? { detail } : {}),
+      },
       { status: 500 },
     );
   }

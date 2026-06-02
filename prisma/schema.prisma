@@ -116,3 +116,25 @@ model AdminUser {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Inquiry {
+  id              String    @id @default(cuid())
+  name            String
+  company         String
+  country         String
+  email           String
+  phone           String
+  productInterest String
+  message         String    @db.Text
+  buyerType       String
+  estimatedVolume String?
+  targetMarket    String?
+  source          String    @default("web")
+  emailSent       Boolean   @default(false)
+  emailError      String?   @db.Text
+  readAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([readAt])
+}
