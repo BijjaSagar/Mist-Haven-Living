@@ -1,20 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   isUnauthorized,
   requireAdmin,
   revalidateSite,
 } from "@/lib/admin/api-helpers";
+import { apiError, apiSuccess, listMeta } from "@/lib/api-response";
+import { withApiHandler } from "@/lib/api-route";
 
-export async function GET() {
+export const GET = withApiHandler(async () => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
   const pages = await prisma.pageContent.findMany({ orderBy: { slug: "asc" } });
-  return NextResponse.json(pages);
-}
+  return apiSuccess(pages, { meta: listMeta(pages) });
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = withApiHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
@@ -35,8 +37,8 @@ export async function PUT(request: NextRequest) {
       },
     });
     await revalidateSite();
-    return NextResponse.json(page);
+    return apiSuccess(page);
   } catch {
-    return NextResponse.json({ error: "Failed to save page" }, { status: 500 });
+    return apiError("Failed to save page", 500, "SAVE_FAILED");
   }
-}
+});

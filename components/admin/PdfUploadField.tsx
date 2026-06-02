@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getApiErrorMessage } from "@/lib/api-response";
+import { getApiData, getApiErrorMessage } from "@/lib/api-response";
 
 type PdfUploadFieldProps = {
   label: string;
@@ -37,12 +37,17 @@ export function PdfUploadField({
         method: "POST",
         body: formData,
       });
-      const body = (await res.json()) as { url?: string };
-      if (!res.ok || !body.url) {
+      const body = await res.json();
+      if (!res.ok) {
         setError(getApiErrorMessage(body));
         return;
       }
-      onChange(body.url);
+      const { url } = getApiData<{ url: string }>(body);
+      if (!url) {
+        setError("Upload failed");
+        return;
+      }
+      onChange(url);
     } catch {
       setError("Upload failed");
     } finally {

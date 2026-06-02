@@ -1,49 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import {
   getInquiryById,
   markInquiryRead,
   markInquiryUnread,
 } from "@/lib/data/inquiries";
 import { isUnauthorized, requireAdmin } from "@/lib/admin/api-helpers";
+import { apiError, apiSuccess } from "@/lib/api-response";
+import { withApiHandler, type RouteContext } from "@/lib/api-route";
 
-type RouteParams = { params: Promise<{ id: string }> };
+export const GET = withApiHandler(
+  async (_request: NextRequest, context: RouteContext) => {
+    const auth = await requireAdmin();
+    if (isUnauthorized(auth)) return auth;
 
-export async function GET(_request: NextRequest, { params }: RouteParams) {
-  const auth = await requireAdmin();
-  if (isUnauthorized(auth)) return auth;
+    const { id } = await context.params;
+    const inquiry = await getInquiryById(id);
 
-  const { id } = await params;
-  const inquiry = await getInquiryById(id);
-
-  if (!inquiry) {
-    return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
-  }
-
-  return NextResponse.json(inquiry);
-}
-
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const auth = await requireAdmin();
-  if (isUnauthorized(auth)) return auth;
-
-  const { id } = await params;
-
-  try {
-    const body = await request.json();
-    const read = body.read as boolean | undefined;
-
-    if (read === true) {
-      const inquiry = await markInquiryRead(id);
-      return NextResponse.json(inquiry);
+    if (!inquiry) {
+      return apiError("Inquiry not found", 404, "NOT_FOUND");
     }
 
-    if (read === false) {
-      const inquiry = await markInquiryUnread(id);
-      return NextResponse.json(inquiry);
-    }
+    return apiSuccess(inquiry);
+  },
+);
 
-    return NextResponse.json({ error: "Invalid update" }, { status: 400 });
-  } catch {
-    return NextResponse.json({ error: "Failed to update inquiry" }, { status: 500 });
-  }
-}
+export const PATCH = withApiHandler(
+  async (request: NextRequest, context: RouteContext) => {
+    const auth = await requireAdmin();
+    if (isUnauthorized(auth)) return auth;
+
+    const { id } = await context.params;
+
+    try {
+      const body = await request.json();
+      const read = body.read as boolean | undefined;
+
+      if (read === true) {
+        const inquiry = await markInquiryRead(id);
+        return apiSuccess(inquiry);
+      }
+
+      if (read === false) {
+        const inquiry = await markInquiryUnread(id);
+        return apiSuccess(inquiry);
+      }
+
+      return apiError("Invalid update", 400, "VALIDATION_ERROR");
+    } catch {
+      return apiError("Failed to update inquiry", 500, "UPDATE_FAILED");
+    }
+  },
+);

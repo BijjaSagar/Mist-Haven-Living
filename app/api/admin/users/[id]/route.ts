@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashAdminPassword } from "@/lib/auth/admin";
 import { isUnauthorized, requireAdminRole } from "@/lib/admin/api-helpers";
 import { updateAdminUserSchema } from "@/lib/validations/admin-users";
-
-type RouteContext = { params: Promise<{ id: string }> };
+import { apiError, apiSuccess, apiZodError } from "@/lib/api-response";
+import { withApiHandler, type RouteContext } from "@/lib/api-route";
 
 function serializeAdminUser(user: {
   id: string;
@@ -36,103 +36,107 @@ async function countActiveAdmins(excludeId?: string): Promise<number> {
   });
 }
 
-export async function PATCH(request: NextRequest, context: RouteContext) {
-  const auth = await requireAdminRole();
-  if (isUnauthorized(auth)) return auth;
+export const PATCH = withApiHandler(
+  async (request: NextRequest, context: RouteContext) => {
+    const auth = await requireAdminRole();
+    if (isUnauthorized(auth)) return auth;
 
-  const { id } = await context.params;
+    const { id } = await context.params;
 
-  try {
-    const body = await request.json();
-    const parsed = updateAdminUserSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 },
-      );
+    try {
+      const body = await request.json();
+      const parsed = updateAdminUserSchema.safeParse(body);
+      if (!parsed.success) {
+        return apiZodError(parsed.error);
+      }
+
+      const existing = await prisma.adminUser.findUnique({ where: { id } });
+      if (!existing) {
+        return apiError("User not found", 404, "NOT_FOUND");
+      }
+
+      const nextRole = parsed.data.role ?? existing.role;
+      const nextActive =
+        parsed.data.active !== undefined ? parsed.data.active : existing.active;
+
+      if (existing.role === "admin" && existing.active) {
+        const wouldRemoveAdmin =
+          nextRole !== "admin" || nextActive === false;
+        if (wouldRemoveAdmin) {
+          const otherActiveAdmins = await countActiveAdmins(id);
+          if (otherActiveAdmins === 0) {
+            return apiError(
+              "Cannot remove or deactivate the last admin user",
+              400,
+              "VALIDATION_ERROR",
+            );
+          }
+        }
+      }
+
+      const user = await prisma.adminUser.update({
+        where: { id },
+        data: {
+          ...(parsed.data.name !== undefined
+            ? { name: parsed.data.name?.trim() || null }
+            : {}),
+          ...(parsed.data.role !== undefined ? { role: parsed.data.role } : {}),
+          ...(parsed.data.active !== undefined
+            ? { active: parsed.data.active }
+            : {}),
+          ...(parsed.data.password
+            ? { password: await hashAdminPassword(parsed.data.password) }
+            : {}),
+        },
+      });
+
+      return apiSuccess(serializeAdminUser(user));
+    } catch {
+      return apiError("Failed to update user", 500, "UPDATE_FAILED");
     }
+  },
+);
 
-    const existing = await prisma.adminUser.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+export const DELETE = withApiHandler(
+  async (_request: NextRequest, context: RouteContext) => {
+    const auth = await requireAdminRole();
+    if (isUnauthorized(auth)) return auth;
 
-    const nextRole = parsed.data.role ?? existing.role;
-    const nextActive =
-      parsed.data.active !== undefined ? parsed.data.active : existing.active;
+    const { id } = await context.params;
 
-    if (existing.role === "admin" && existing.active) {
-      const wouldRemoveAdmin =
-        nextRole !== "admin" || nextActive === false;
-      if (wouldRemoveAdmin) {
+    try {
+      const existing = await prisma.adminUser.findUnique({ where: { id } });
+      if (!existing) {
+        return apiError("User not found", 404, "NOT_FOUND");
+      }
+
+      if (existing.role === "admin" && existing.active) {
         const otherActiveAdmins = await countActiveAdmins(id);
         if (otherActiveAdmins === 0) {
-          return NextResponse.json(
-            { error: "Cannot remove or deactivate the last admin user" },
-            { status: 400 },
+          return apiError(
+            "Cannot deactivate the last admin user",
+            400,
+            "VALIDATION_ERROR",
           );
         }
       }
-    }
 
-    const user = await prisma.adminUser.update({
-      where: { id },
-      data: {
-        ...(parsed.data.name !== undefined
-          ? { name: parsed.data.name?.trim() || null }
-          : {}),
-        ...(parsed.data.role !== undefined ? { role: parsed.data.role } : {}),
-        ...(parsed.data.active !== undefined
-          ? { active: parsed.data.active }
-          : {}),
-        ...(parsed.data.password
-          ? { password: await hashAdminPassword(parsed.data.password) }
-          : {}),
-      },
-    });
-
-    return NextResponse.json(serializeAdminUser(user));
-  } catch {
-    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
-  }
-}
-
-export async function DELETE(_request: NextRequest, context: RouteContext) {
-  const auth = await requireAdminRole();
-  if (isUnauthorized(auth)) return auth;
-
-  const { id } = await context.params;
-
-  try {
-    const existing = await prisma.adminUser.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    if (existing.role === "admin" && existing.active) {
-      const otherActiveAdmins = await countActiveAdmins(id);
-      if (otherActiveAdmins === 0) {
-        return NextResponse.json(
-          { error: "Cannot deactivate the last admin user" },
-          { status: 400 },
+      if (auth.id === id && existing.active) {
+        return apiError(
+          "You cannot deactivate your own account",
+          400,
+          "VALIDATION_ERROR",
         );
       }
+
+      const user = await prisma.adminUser.update({
+        where: { id },
+        data: { active: false },
+      });
+
+      return apiSuccess(serializeAdminUser(user));
+    } catch {
+      return apiError("Failed to deactivate user", 500, "DEACTIVATE_FAILED");
     }
-
-    if (auth.id === id && existing.active) {
-      return NextResponse.json(
-        { error: "You cannot deactivate your own account" },
-        { status: 400 },
-      );
-    }
-
-    const user = await prisma.adminUser.update({
-      where: { id },
-      data: { active: false },
-    });
-
-    return NextResponse.json(serializeAdminUser(user));
-  } catch {
-    return NextResponse.json({ error: "Failed to deactivate user" }, { status: 500 });
-  }
-}
+  },
+);

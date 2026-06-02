@@ -5,13 +5,20 @@ import {
   isSecureAdminRequest,
   validateAdminCredentials,
 } from "@/lib/auth/admin";
-import { apiError, apiSuccess } from "@/lib/api-response";
+import { apiError, apiSuccess, apiValidationError } from "@/lib/api-response";
+import { withApiHandler } from "@/lib/api-route";
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (request: NextRequest) => {
   try {
     const { email, password } = await request.json();
     if (!email || !password) {
-      return apiError("Email and password required", 400, "VALIDATION_ERROR");
+      return apiValidationError("Email and password required", {
+        fieldErrors: {
+          ...(!email ? { email: ["Required"] } : {}),
+          ...(!password ? { password: ["Required"] } : {}),
+        },
+        formErrors: [],
+      });
     }
 
     let result;
@@ -40,4 +47,4 @@ export async function POST(request: NextRequest) {
     console.error("Admin login error:", err);
     return apiError("Login failed", 500, "LOGIN_FAILED");
   }
-}
+});

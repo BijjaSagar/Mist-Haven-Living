@@ -1,20 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   isUnauthorized,
   requireAdmin,
   revalidateSite,
 } from "@/lib/admin/api-helpers";
+import { apiError, apiSuccess, listMeta } from "@/lib/api-response";
+import { withApiHandler } from "@/lib/api-route";
 
-export async function GET() {
+export const GET = withApiHandler(async () => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
   const stats = await prisma.stat.findMany({ orderBy: { sortOrder: "asc" } });
-  return NextResponse.json(stats);
-}
+  return apiSuccess(stats, { meta: listMeta(stats) });
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
@@ -30,13 +32,13 @@ export async function POST(request: NextRequest) {
       },
     });
     await revalidateSite();
-    return NextResponse.json(stat);
+    return apiSuccess(stat, { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Failed to create stat" }, { status: 500 });
+    return apiError("Failed to create stat", 500, "CREATE_FAILED");
   }
-}
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = withApiHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
@@ -63,8 +65,8 @@ export async function PUT(request: NextRequest) {
     }
 
     await revalidateSite();
-    return NextResponse.json({ success: true });
+    return apiSuccess({ updated: true });
   } catch {
-    return NextResponse.json({ error: "Failed to update stats" }, { status: 500 });
+    return apiError("Failed to update stats", 500, "UPDATE_FAILED");
   }
-}
+});

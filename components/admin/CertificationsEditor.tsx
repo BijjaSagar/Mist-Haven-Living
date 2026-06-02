@@ -11,6 +11,7 @@ import {
   AdminMessage,
   AdminCard,
 } from "@/components/admin/AdminShell";
+import { getApiData, getApiErrorMessage } from "@/lib/api-response";
 
 export function CertificationsEditor({
   initial,
@@ -42,10 +43,11 @@ export function CertificationsEditor({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items }),
     });
+    const json = await res.json().catch(() => null);
     setMessage(
       res.ok
         ? { text: "Certifications saved.", type: "success" }
-        : { text: "Failed to save.", type: "error" },
+        : { text: getApiErrorMessage(json), type: "error" },
     );
     setSaving(false);
   }
@@ -64,8 +66,8 @@ export function CertificationsEditor({
       }),
     });
     if (res.ok) {
-      const cert = await res.json();
-      setItems((prev) => [...prev, cert]);
+      const json = await res.json();
+      setItems((prev) => [...prev, getApiData<CertificationData>(json)]);
     }
   }
 

@@ -1,22 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   isUnauthorized,
   requireAdmin,
   revalidateSite,
 } from "@/lib/admin/api-helpers";
+import { apiError, apiSuccess, listMeta } from "@/lib/api-response";
+import { withApiHandler } from "@/lib/api-route";
 
-export async function GET() {
+export const GET = withApiHandler(async () => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
   const certs = await prisma.certification.findMany({
     orderBy: { sortOrder: "asc" },
   });
-  return NextResponse.json(certs);
-}
+  return apiSuccess(certs, { meta: listMeta(certs) });
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
@@ -34,13 +36,13 @@ export async function POST(request: NextRequest) {
       },
     });
     await revalidateSite();
-    return NextResponse.json(cert);
+    return apiSuccess(cert, { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Failed to create certification" }, { status: 500 });
+    return apiError("Failed to create certification", 500, "CREATE_FAILED");
   }
-}
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = withApiHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
@@ -71,8 +73,8 @@ export async function PUT(request: NextRequest) {
     }
 
     await revalidateSite();
-    return NextResponse.json({ success: true });
+    return apiSuccess({ updated: true });
   } catch {
-    return NextResponse.json({ error: "Failed to update certifications" }, { status: 500 });
+    return apiError("Failed to update certifications", 500, "UPDATE_FAILED");
   }
-}
+});

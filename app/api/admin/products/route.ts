@@ -6,19 +6,21 @@ import {
   revalidateSite,
 } from "@/lib/admin/api-helpers";
 import { mapProduct } from "@/lib/data/products";
-import { apiError, apiSuccess } from "@/lib/api-response";
+import { apiError, apiSuccess, listMeta } from "@/lib/api-response";
+import { withApiHandler } from "@/lib/api-route";
 
-export async function GET() {
+export const GET = withApiHandler(async () => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
   const products = await prisma.productCategory.findMany({
     orderBy: { sortOrder: "asc" },
   });
-  return apiSuccess(products.map(mapProduct));
-}
+  const data = products.map(mapProduct);
+  return apiSuccess(data, { meta: listMeta(data) });
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
@@ -52,4 +54,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return apiError("Failed to create product", 500, "CREATE_FAILED");
   }
-}
+});

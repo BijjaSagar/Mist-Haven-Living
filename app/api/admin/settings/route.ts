@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   isUnauthorized,
@@ -6,8 +6,10 @@ import {
   revalidateSite,
 } from "@/lib/admin/api-helpers";
 import { mapSettings } from "@/lib/data/site-settings";
+import { apiError, apiSuccess } from "@/lib/api-response";
+import { withApiHandler } from "@/lib/api-route";
 
-export async function GET() {
+export const GET = withApiHandler(async () => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
@@ -15,12 +17,12 @@ export async function GET() {
     where: { id: "default" },
   });
   if (!row) {
-    return NextResponse.json({ error: "Settings not found" }, { status: 404 });
+    return apiError("Settings not found", 404, "NOT_FOUND");
   }
-  return NextResponse.json(mapSettings(row));
-}
+  return apiSuccess(mapSettings(row));
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = withApiHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isUnauthorized(auth)) return auth;
 
@@ -98,7 +100,7 @@ export async function PUT(request: NextRequest) {
     });
 
     await revalidateSite();
-    return NextResponse.json(mapSettings(row));
+    return apiSuccess(mapSettings(row));
   } catch (error) {
     console.error("[admin/settings PUT]", error);
     const message =
@@ -106,6 +108,6 @@ export async function PUT(request: NextRequest) {
       /Unknown column|column.*does not exist|P2022/i.test(error.message)
         ? "Database schema is out of date. Run: npx prisma migrate deploy"
         : "Failed to save settings";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError(message, 500, "SAVE_FAILED");
   }
-}
+});

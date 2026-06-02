@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { getApiErrorMessage } from "@/lib/api-response";
+import { getApiData, getApiErrorMessage } from "@/lib/api-response";
 
 type ProductGalleryFieldProps = {
   images: string[];
@@ -34,12 +34,17 @@ export function ProductGalleryField({
           method: "POST",
           body: formData,
         });
-        const body = (await res.json()) as { url?: string };
-        if (!res.ok || !body.url) {
+        const body = await res.json();
+        if (!res.ok) {
           setError(getApiErrorMessage(body));
           break;
         }
-        added.push(body.url);
+        const { url } = getApiData<{ url: string }>(body);
+        if (!url) {
+          setError("Upload failed");
+          break;
+        }
+        added.push(url);
       }
       if (added.length > 0) {
         onChange([...images, ...added]);

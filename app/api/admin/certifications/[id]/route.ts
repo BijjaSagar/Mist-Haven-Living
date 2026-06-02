@@ -1,24 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   isUnauthorized,
   requireAdmin,
   revalidateSite,
 } from "@/lib/admin/api-helpers";
+import { apiError, apiSuccess } from "@/lib/api-response";
+import { withApiHandler, type RouteContext } from "@/lib/api-route";
 
-type RouteContext = { params: Promise<{ id: string }> };
+export const DELETE = withApiHandler(
+  async (_request: NextRequest, context: RouteContext) => {
+    const auth = await requireAdmin();
+    if (isUnauthorized(auth)) return auth;
 
-export async function DELETE(_request: NextRequest, context: RouteContext) {
-  const auth = await requireAdmin();
-  if (isUnauthorized(auth)) return auth;
+    const { id } = await context.params;
 
-  const { id } = await context.params;
-
-  try {
-    await prisma.certification.delete({ where: { id } });
-    await revalidateSite();
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Failed to delete certification" }, { status: 500 });
-  }
-}
+    try {
+      await prisma.certification.delete({ where: { id } });
+      await revalidateSite();
+      return apiSuccess({ deleted: true });
+    } catch {
+      return apiError("Failed to delete certification", 500, "DELETE_FAILED");
+    }
+  },
+);

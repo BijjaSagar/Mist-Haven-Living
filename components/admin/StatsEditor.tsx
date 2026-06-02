@@ -10,6 +10,7 @@ import {
   AdminMessage,
   AdminCard,
 } from "@/components/admin/AdminShell";
+import { getApiData, getApiErrorMessage } from "@/lib/api-response";
 
 export function StatsEditor({ initial }: { initial: StatData[] }) {
   const [items, setItems] = useState(initial);
@@ -37,10 +38,11 @@ export function StatsEditor({ initial }: { initial: StatData[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items }),
     });
+    const json = await res.json().catch(() => null);
     setMessage(
       res.ok
         ? { text: "Stats saved.", type: "success" }
-        : { text: "Failed to save.", type: "error" },
+        : { text: getApiErrorMessage(json), type: "error" },
     );
     setSaving(false);
   }
@@ -57,8 +59,8 @@ export function StatsEditor({ initial }: { initial: StatData[] }) {
       }),
     });
     if (res.ok) {
-      const stat = await res.json();
-      setItems((prev) => [...prev, stat]);
+      const json = await res.json();
+      setItems((prev) => [...prev, getApiData<StatData>(json)]);
     }
   }
 

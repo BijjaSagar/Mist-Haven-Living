@@ -10,6 +10,7 @@ import {
   AdminMessage,
   AdminCard,
 } from "@/components/admin/AdminShell";
+import { getApiData, getApiErrorMessage } from "@/lib/api-response";
 
 const LOCATIONS = [
   { value: "header", label: "Header" },
@@ -47,10 +48,11 @@ export function NavigationEditor({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items }),
     });
+    const json = await res.json().catch(() => null);
     setMessage(
       res.ok
         ? { text: "Navigation saved.", type: "success" }
-        : { text: "Failed to save.", type: "error" },
+        : { text: getApiErrorMessage(json), type: "error" },
     );
     setSaving(false);
   }
@@ -69,8 +71,8 @@ export function NavigationEditor({
       }),
     });
     if (res.ok) {
-      const item = await res.json();
-      setItems((prev) => [...prev, item]);
+      const json = await res.json();
+      setItems((prev) => [...prev, getApiData<NavigationItemData>(json)]);
     }
   }
 

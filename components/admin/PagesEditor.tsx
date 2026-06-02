@@ -14,6 +14,7 @@ import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { PdfUploadField } from "@/components/admin/PdfUploadField";
 import { HeroSlidesEditor } from "@/components/admin/HeroSlidesEditor";
 import { FaqItemsEditor } from "@/components/admin/FaqItemsEditor";
+import { getApiErrorMessage } from "@/lib/api-response";
 
 const HERO_IMAGE_PAGES = new Set([
   "about",
@@ -74,10 +75,11 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(active),
     });
+    const json = await res.json().catch(() => null);
     setMessage(
       res.ok
         ? { text: "Page saved.", type: "success" }
-        : { text: "Failed to save.", type: "error" },
+        : { text: getApiErrorMessage(json), type: "error" },
     );
     setSaving(false);
   }

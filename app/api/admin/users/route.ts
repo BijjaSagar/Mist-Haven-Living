@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashAdminPassword } from "@/lib/auth/admin";
 import { isUnauthorized, requireAdminRole } from "@/lib/admin/api-helpers";
 import { createAdminUserSchema } from "@/lib/validations/admin-users";
+import { apiError, apiSuccess, apiZodError, listMeta } from "@/lib/api-response";
+import { withApiHandler } from "@/lib/api-route";
 
 function serializeAdminUser(user: {
   id: string;
@@ -24,7 +26,7 @@ function serializeAdminUser(user: {
   };
 }
 
-export async function GET() {
+export const GET = withApiHandler(async () => {
   const auth = await requireAdminRole();
   if (isUnauthorized(auth)) return auth;
 
@@ -32,29 +34,28 @@ export async function GET() {
     orderBy: { createdAt: "asc" },
   });
 
-  return NextResponse.json(users.map(serializeAdminUser));
-}
+  const data = users.map(serializeAdminUser);
+  return apiSuccess(data, { meta: listMeta(data) });
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (request: NextRequest) => {
   const auth = await requireAdminRole();
   if (isUnauthorized(auth)) return auth;
 
-  try {
-    const body = await request.json();
-    const parsed = createAdminUserSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 },
-      );
-    }
+  const body = await request.json();
+  const parsed = createAdminUserSchema.safeParse(body);
+  if (!parsed.success) {
+    return apiZodError(parsed.error);
+  }
 
+  try {
     const email = parsed.data.email.trim().toLowerCase();
     const existing = await prisma.adminUser.findUnique({ where: { email } });
     if (existing) {
-      return NextResponse.json(
-        { error: "A user with this email already exists" },
-        { status: 409 },
+      return apiError(
+        "A user with this email already exists",
+        409,
+        "CONFLICT",
       );
     }
 
@@ -69,8 +70,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(serializeAdminUser(user), { status: 201 });
+    return apiSuccess(serializeAdminUser(user), { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+    return apiError("Failed to create user", 500, "CREATE_FAILED");
   }
-}
+});

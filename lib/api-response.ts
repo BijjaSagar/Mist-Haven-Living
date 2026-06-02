@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { ZodError } from "zod";
 
 export type ApiErrorBody = {
   message: string;
@@ -35,6 +36,26 @@ export function apiError(
 ): NextResponse<ApiFailureBody> {
   const error: ApiErrorBody = { message, ...(code ? { code } : {}), ...extra };
   return NextResponse.json({ success: false, error }, { status });
+}
+
+/** Zod / field validation — 422 with flattened field paths in `error.details`. */
+export function apiValidationError(
+  message: string,
+  details: unknown,
+): NextResponse<ApiFailureBody> {
+  return apiError(message, 422, "VALIDATION_ERROR", { details });
+}
+
+export function apiZodError(error: ZodError, message = "Validation failed") {
+  return apiValidationError(message, error.flatten());
+}
+
+/** List endpoint meta when DB pagination is not applied yet. */
+export function listMeta<T>(
+  items: readonly T[],
+  extra?: { page?: number; limit?: number },
+): Record<string, unknown> {
+  return { total: items.length, ...extra };
 }
 
 /** Parse error message from envelope or legacy `{ error: string }` responses. */

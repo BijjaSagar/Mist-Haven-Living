@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { getApiData, getApiErrorMessage } from "@/lib/api-response";
 
 const buyerTypeLabels = Object.fromEntries(
   buyerTypeOptions.map((o) => [o.value, o.label]),
@@ -59,7 +60,7 @@ export function InquiriesEditor({ initial }: { initial: InquiryRecord[] }) {
   useEffect(() => {
     fetch("/api/admin/inquiries/email-status")
       .then((r) => r.json())
-      .then(setEmailStatus)
+      .then((json) => setEmailStatus(getApiData(json)))
       .catch(() => null);
   }, []);
 
@@ -71,12 +72,13 @@ export function InquiriesEditor({ initial }: { initial: InquiryRecord[] }) {
       body: JSON.stringify({ read }),
     });
 
+    const json = await res.json();
     if (!res.ok) {
-      setMessage({ text: "Failed to update inquiry.", type: "error" });
+      setMessage({ text: getApiErrorMessage(json), type: "error" });
       return;
     }
 
-    const updated = (await res.json()) as InquiryRecord;
+    const updated = getApiData<InquiryRecord>(json);
     setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
     setMessage({
       text: read ? "Marked as read." : "Marked as unread.",

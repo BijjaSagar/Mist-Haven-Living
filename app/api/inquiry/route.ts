@@ -8,7 +8,8 @@ import {
 } from "@/lib/data/inquiries";
 import { sendInquiryNotificationEmail } from "@/lib/inquiry/send-notification";
 import { isDbConfigured } from "@/lib/db";
-import { apiError, apiSuccess } from "@/lib/api-response";
+import { apiError, apiSuccess, apiZodError } from "@/lib/api-response";
+import { withApiHandler } from "@/lib/api-route";
 
 function resolveSource(
   productInterest: string,
@@ -21,7 +22,7 @@ function resolveSource(
   return "web";
 }
 
-export async function POST(request: Request) {
+export const POST = withApiHandler(async (request) => {
   try {
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -40,9 +41,7 @@ export async function POST(request: Request) {
     const parsed = inquirySchema.safeParse(body);
 
     if (!parsed.success) {
-      return apiError("Invalid form data", 400, "VALIDATION_ERROR", {
-        details: parsed.error.flatten(),
-      });
+      return apiZodError(parsed.error, "Invalid form data");
     }
 
     const data = parsed.data;
@@ -144,4 +143,4 @@ export async function POST(request: Request) {
       process.env.NODE_ENV === "development" ? { details: detail } : undefined,
     );
   }
-}
+});

@@ -1,11 +1,11 @@
 ---
 description: Next.js App Router API route JSON conventions
-globs: app/api/**/*.ts, lib/api-response.ts, lib/admin/api-helpers.ts
+globs: app/api/**/*.ts, lib/api-response.ts, lib/api-route.ts, lib/admin/api-helpers.ts
 ---
 
 # API routes (Mist & Haven Living)
 
-Use `apiSuccess` / `apiError` from `@/lib/api-response` for new or migrated endpoints.
+All routes return the standard envelope via `apiSuccess` / `apiError` from `@/lib/api-response`. Wrap handlers with `withApiHandler` from `@/lib/api-route` so unexpected errors become `{ success: false, error: { message, code: "INTERNAL_ERROR" } }`.
 
 ## Envelope
 
@@ -16,10 +16,13 @@ Use `apiSuccess` / `apiError` from `@/lib/api-response` for new or migrated endp
 
 ## Conventions
 
-- **Empty lists**: `200` + `data: []` — never `404` for “no rows”.
-- **Missing resource**: `404` + `error.message` (single item by id/slug).
-- **Validation**: `400` with `code: "VALIDATION_ERROR"` and `error.details` (Zod flatten).
-- **Auth**: `401` unauthorized, `403` forbidden — use `requireAdmin` / `requireAdminRole`.
+- **Empty lists**: `200` + `data: []` + `meta: { total: 0 }` — never `404` for “no rows”.
+- **Missing resource**: `404` + `code: "NOT_FOUND"`.
+- **Validation (Zod)**: `422` + `code: "VALIDATION_ERROR"` + `error.details` (Zod `flatten()` field paths). Use `apiZodError` / `apiValidationError`.
+- **Upload success**: `data: { url }`.
+- **Bulk save / delete**: `data: { updated: true }` or `{ deleted: true }`.
+- **Auth**: `401` `UNAUTHORIZED`, `403` `FORBIDDEN` — `requireAdmin` / `requireAdminRole`.
+- **Lists**: `meta: { total }` via `listMeta(items)`; add `page` / `limit` when DB pagination exists.
 - **Do not leak** stack traces in production; log server-side only.
 
 ## Client parsing
@@ -31,4 +34,4 @@ if (!res.ok) throw new Error(getApiErrorMessage(json));
 const payload = getApiData(json);
 ```
 
-Legacy routes may still return raw arrays or `{ error: string }`; migrate incrementally.
+`getApiErrorMessage` and `getApiData` still accept legacy `{ error: string }` and raw bodies during migration.

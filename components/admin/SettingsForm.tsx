@@ -11,6 +11,7 @@ import {
   AdminCard,
 } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
+import { getApiData, getApiErrorMessage } from "@/lib/api-response";
 
 export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
   const [data, setData] = useState(initial);
@@ -28,7 +29,7 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
   useEffect(() => {
     fetch("/api/admin/inquiries/email-status")
       .then((r) => r.json())
-      .then(setEmailStatus)
+      .then((json) => setEmailStatus(getApiData(json)))
       .catch(() => null);
   }, []);
 
@@ -43,11 +44,9 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
     if (res.ok) {
       setMessage({ text: "Settings saved successfully.", type: "success" });
     } else {
-      const body = (await res.json().catch(() => null)) as {
-        error?: string;
-      } | null;
+      const body = await res.json().catch(() => null);
       setMessage({
-        text: body?.error ?? "Failed to save settings.",
+        text: getApiErrorMessage(body),
         type: "error",
       });
     }

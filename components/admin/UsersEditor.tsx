@@ -9,6 +9,7 @@ import {
   AdminMessage,
   AdminCard,
 } from "@/components/admin/AdminShell";
+import { getApiData, getApiErrorMessage } from "@/lib/api-response";
 
 export type AdminUserData = {
   id: string;
@@ -78,13 +79,13 @@ export function UsersEditor({ initial }: { initial: AdminUserData[] }) {
       body: JSON.stringify(createForm),
     });
 
-    const data = await res.json();
+    const json = await res.json();
     if (res.ok) {
-      setUsers((prev) => [...prev, data]);
+      setUsers((prev) => [...prev, getApiData<AdminUserData>(json)]);
       setCreateForm(emptyForm);
       setMessage({ text: "User created.", type: "success" });
     } else {
-      setMessage({ text: data.error ?? "Failed to create user.", type: "error" });
+      setMessage({ text: getApiErrorMessage(json), type: "error" });
     }
     setCreating(false);
   }
@@ -108,13 +109,15 @@ export function UsersEditor({ initial }: { initial: AdminUserData[] }) {
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
+    const json = await res.json();
     if (res.ok) {
-      setUsers((prev) => prev.map((u) => (u.id === id ? data : u)));
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? getApiData<AdminUserData>(json) : u)),
+      );
       cancelEdit();
       setMessage({ text: "User updated.", type: "success" });
     } else {
-      setMessage({ text: data.error ?? "Failed to update user.", type: "error" });
+      setMessage({ text: getApiErrorMessage(json), type: "error" });
     }
     setSavingId(null);
   }
@@ -126,14 +129,16 @@ export function UsersEditor({ initial }: { initial: AdminUserData[] }) {
 
     setMessage(null);
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
-    const data = await res.json();
+    const json = await res.json();
 
     if (res.ok) {
-      setUsers((prev) => prev.map((u) => (u.id === id ? data : u)));
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? getApiData<AdminUserData>(json) : u)),
+      );
       if (editingId === id) cancelEdit();
       setMessage({ text: "User deactivated.", type: "success" });
     } else {
-      setMessage({ text: data.error ?? "Failed to deactivate user.", type: "error" });
+      setMessage({ text: getApiErrorMessage(json), type: "error" });
     }
   }
 
