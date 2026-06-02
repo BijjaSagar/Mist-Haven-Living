@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { HeaderWrapper } from "@/components/layout/HeaderWrapper";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
+import { RouteProgressBar } from "@/components/ui/RouteProgressBar";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
 export async function SiteChrome({
@@ -16,6 +18,9 @@ export async function SiteChrome({
 
   return (
     <>
+      <Suspense fallback={null}>
+        <RouteProgressBar />
+      </Suspense>
       <HeaderWrapper />
       <main className="flex-1">{children}</main>
       <FooterWrapper />

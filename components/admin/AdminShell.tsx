@@ -163,11 +163,13 @@ export function AdminMessage({
   if (!message) return null;
   return (
     <p
+      role="status"
+      aria-live="polite"
       className={cn(
-        "mb-4 rounded-md px-4 py-2 font-body text-sm",
+        "mb-4 rounded-md border px-4 py-3 font-body text-sm",
         type === "success"
-          ? "bg-sage/20 text-sage-deep"
-          : "bg-red-50 text-red-700",
+          ? "border-sage-deep/30 bg-sage/20 text-sage-deep"
+          : "border-red-200 bg-red-50 text-red-700",
       )}
     >
       {message}
