@@ -3,13 +3,27 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { ProductCategoryData } from "@/lib/types/cms";
-import { AdminCard } from "@/components/admin/AdminShell";
+import {
+  AdminCard,
+  AdminMessage,
+  AdminSaveButton,
+} from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { ProductGalleryField } from "@/components/admin/ProductGalleryField";
 
 const productUploadFolder = (slug: string) => `products/${slug}`;
 
 export function ProductsList({ products }: { products: ProductCategoryData[] }) {
+  if (products.length === 0) {
+    return (
+      <AdminCard>
+        <p className="font-body text-sm text-muted">
+          No product categories yet. Seed data or add categories via the database.
+        </p>
+      </AdminCard>
+    );
+  }
+
   return (
     <AdminCard className="p-0">
       <ul className="divide-y divide-hairline">
@@ -44,7 +58,10 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
     galleryImages: product.galleryImages ?? [],
   });
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
   const folder = productUploadFolder(product.slug);
 
   async function handleSave() {
@@ -55,12 +72,16 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (res.ok) {
-      setMessage("Product saved.");
-    } else {
-      const body = (await res.json().catch(() => null)) as { error?: string } | null;
-      setMessage(body?.error ?? "Failed to save.");
-    }
+    setMessage(
+      res.ok
+        ? { text: "Product saved.", type: "success" }
+        : {
+            text:
+              ((await res.json().catch(() => null)) as { error?: string } | null)
+                ?.error ?? "Failed to save.",
+            type: "error",
+          },
+    );
     setSaving(false);
   }
 
@@ -79,11 +100,10 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
 
   return (
     <div className="space-y-6">
-      {message && (
-        <p className="rounded-md bg-sage/20 px-4 py-2 font-body text-sm text-sage-deep">
-          {message}
-        </p>
-      )}
+      <AdminMessage
+        message={message?.text ?? null}
+        type={message?.type ?? "success"}
+      />
 
       <AdminCard>
         <div className="grid gap-4 md:grid-cols-2">
@@ -197,14 +217,7 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
         />
       </AdminCard>
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="rounded-md bg-taupe px-6 py-2 font-body text-sm text-pearl disabled:opacity-50"
-      >
-        {saving ? "Saving…" : "Save product"}
-      </button>
+      <AdminSaveButton saving={saving} onClick={handleSave} label="Save product" />
     </div>
   );
 }

@@ -7,6 +7,10 @@ type TrustStripProps = {
 export function TrustStrip({ certifications }: TrustStripProps) {
   const items = certifications.slice(0, 3);
 
+  if (items.length === 0) {
+    return null;
+  }
+
   return (
     <div className="border-y border-hairline bg-pearl">
       <div className="mx-auto flex max-w-container flex-wrap items-center justify-center gap-x-4 gap-y-3 px-6 py-6 md:gap-x-6 md:px-8 md:py-7">

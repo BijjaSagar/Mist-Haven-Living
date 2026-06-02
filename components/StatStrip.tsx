@@ -18,6 +18,10 @@ type StatStripProps = {
 export function StatStrip({ stats, dark = true, limit }: StatStripProps) {
   const displayStats = limit ? stats.slice(0, limit) : stats;
 
+  if (displayStats.length === 0) {
+    return null;
+  }
+
   return (
     <div
       className={`grid grid-cols-2 gap-8 md:gap-10 lg:grid-cols-4 ${dark ? "text-pearl" : "text-taupe"}`}

@@ -6,6 +6,10 @@ type ProductMarqueeProps = {
 };
 
 export function ProductMarquee({ categories, className }: ProductMarqueeProps) {
+  if (categories.length === 0) {
+    return null;
+  }
+
   const names = categories.map((c) => c.name);
   const track = [...names, ...names];
 

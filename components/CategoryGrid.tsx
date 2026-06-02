@@ -1,4 +1,5 @@
 import { ProductCard } from "@/components/ProductCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StaggerChildren } from "@/components/motion/StaggerChildren";
 import type { ProductCategoryData } from "@/lib/types/cms";
 
@@ -13,6 +14,17 @@ export function CategoryGrid({
   columns = 4,
   variant = "compact",
 }: CategoryGridProps) {
+  if (categories.length === 0) {
+    return (
+      <EmptyState
+        title="Product catalogue coming soon"
+        description="Our export categories are being updated. Contact us for current availability, specs, and MOQs."
+        actionLabel="Request a quote"
+        actionHref="/contact"
+      />
+    );
+  }
+
   const gridClass =
     columns === 4
       ? "sm:grid-cols-2 xl:grid-cols-4"

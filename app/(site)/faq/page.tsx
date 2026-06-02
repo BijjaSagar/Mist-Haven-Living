@@ -9,6 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { getPageContent } from "@/lib/data/pages";
 import type { FaqItem } from "@/lib/types/cms";
 
@@ -93,14 +94,24 @@ export default async function FaqPage() {
 
       <section className="pb-section-mobile md:pb-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">
-          <Accordion type="single" collapsible className="max-w-3xl">
-            {faqItems.map((item, index) => (
-              <AccordionItem key={item.question} value={`faq-${index}`}>
-                <AccordionTrigger>{item.question}</AccordionTrigger>
-                <AccordionContent>{item.answer}</AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          {faqItems.length === 0 ? (
+            <EmptyState
+              title="FAQs are being updated"
+              description="Our team is refreshing answers for export buyers. Reach out directly and we will respond within one business day."
+              actionLabel="Contact export team"
+              actionHref="/contact"
+              className="max-w-3xl"
+            />
+          ) : (
+            <Accordion type="single" collapsible className="max-w-3xl">
+              {faqItems.map((item, index) => (
+                <AccordionItem key={item.question} value={`faq-${index}`}>
+                  <AccordionTrigger>{item.question}</AccordionTrigger>
+                  <AccordionContent>{item.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
         </div>
       </section>
 

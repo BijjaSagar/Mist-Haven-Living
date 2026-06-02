@@ -1,0 +1,40 @@
+---
+description: Next.js UI — four states, Atelier tokens, motion
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Frontend (Mist & Haven Living)
+
+Stack: Next.js App Router, React, Tailwind v4, shadcn/ui, Framer Motion (`FadeUp`, `StaggerChildren`).
+
+## Four states (required on user-facing surfaces)
+
+| State | Pattern |
+|-------|---------|
+| Loading | Route: `app/(site)/loading.tsx` / `app/admin/loading.tsx`. Actions: disabled button + "Saving…" / skeleton. |
+| Empty | `EmptyState` — message + next action, never a blank grid. |
+| Error | Route: `error.tsx` with reset. Forms/API: inline `AdminMessage` or field errors. |
+| Success | Confirm outcome (saved, sent) before clearing loading. |
+
+```tsx
+// ❌ Only happy path
+{categories.map(...)}
+
+// ✅ Empty handled
+{categories.length === 0 ? <EmptyState ... /> : <CategoryGrid ... />}
+```
+
+## Design tokens (`app/globals.css`)
+
+Use Tailwind theme classes — `text-taupe`, `bg-pearl`, `border-hairline`, `text-sage-deep`, `font-display`, `py-section-mobile`, `btn-solid` / `btn-ghost`. No new hardcoded hex in components.
+
+## Layout & a11y
+
+- Mobile-first; tap targets ≥ 44px on interactive controls.
+- Meaningful `aria-label` / `role="status"` on loading and empty regions.
+- Respect `prefers-reduced-motion` (see globals.css); prefer existing motion helpers over new heavy animation.
+
+## Admin client editors
+
+Use `AdminMessage` + `AdminSaveButton` from `AdminShell`; show upload progress on `ImageUploadField` / `PdfUploadField`.
