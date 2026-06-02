@@ -37,12 +37,15 @@ export default async function HomePage() {
     eyebrow?: string;
     title?: string;
     subtitle?: string;
-    imageUrl?: string;
+    slides?: { imageUrl: string; caption: string }[];
   };
   const heritage = (homePage?.sections.heritage ?? {}) as {
     eyebrow?: string;
     title?: string;
     description?: string;
+    imageUrl?: string;
+  };
+  const manufacturingSection = (homePage?.sections.manufacturing ?? {}) as {
     imageUrl?: string;
   };
 
@@ -55,7 +58,7 @@ export default async function HomePage() {
           hero.subtitle ??
           "Premium cotton towels, hotel linen & private-label manufacturing — crafted in Solapur, India, and delivered with export-grade reliability across North America."
         }
-        imageUrl={hero.imageUrl}
+        slides={hero.slides}
       />
 
       <TrustStrip certifications={certifications} />
@@ -166,7 +169,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-container px-6 md:px-8">
           <ManufacturingSection
             steps={manufacturingHighlights}
-            imageUrl={heritage.imageUrl}
+            imageUrl={manufacturingSection.imageUrl}
           />
         </div>
       </section>

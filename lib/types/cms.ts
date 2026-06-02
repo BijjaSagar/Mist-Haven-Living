@@ -97,6 +97,25 @@ export type CertificationData = {
   visible: boolean;
 };
 
+export type FaqItem = {
+  question: string;
+  answer: string;
+};
+
+export type HeroSlide = {
+  imageUrl: string;
+  caption: string;
+};
+
+export type PageHeroSection = {
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  imageUrl?: string;
+  slides?: HeroSlide[];
+};
+
 export type PageContentData = {
   slug: string;
   metaTitle: string | null;

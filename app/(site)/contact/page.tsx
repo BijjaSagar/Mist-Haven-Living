@@ -1,9 +1,11 @@
+import Image from "next/image";
 import { createMetadata } from "@/lib/seo";
 import { SectionHeading } from "@/components/SectionHeading";
 import { MultiStepInquiryForm } from "@/components/MultiStepInquiryForm";
 import { ScheduleDiscussion } from "@/components/ScheduleDiscussion";
 import { CatalogCTA } from "@/components/CatalogGateModal";
 import { FadeUp } from "@/components/motion/FadeUp";
+import { imageOptsForSrc } from "@/lib/image-props";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { getProductInterestOptions } from "@/lib/data/products";
 import { getPageContent } from "@/lib/data/pages";
@@ -29,36 +31,67 @@ export default async function ContactPage() {
     getProductInterestOptions(),
     getPageContent("contact"),
   ]);
+  const hero = (page?.sections.hero ?? {}) as {
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+  };
   const catalog = (page?.sections.catalog ?? {}) as {
     pdfUrl?: string;
     pdfLabel?: string;
   };
+
+  const heroContent = (
+    <FadeUp>
+      <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
+        {hero.eyebrow ?? "Get In Touch"}
+      </p>
+      <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-[4rem]">
+        {hero.title ?? "Speak with our export team"}
+      </h1>
+      <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-muted">
+        {hero.description ??
+          "Share your product requirements, quantities, and timeline. We respond to all B2B inquiries within one business day."}
+      </p>
+      {catalog.pdfUrl ? (
+        <div className="mt-6">
+          <CatalogCTA
+            catalogPdfUrl={catalog.pdfUrl}
+            catalogPdfLabel={catalog.pdfLabel}
+          />
+        </div>
+      ) : null}
+    </FadeUp>
+  );
+
   return (
     <>
-      <section className="pt-32 pb-section-mobile md:pb-section-desktop">
-        <div className="mx-auto max-w-container px-6 md:px-8">
-          <FadeUp>
-            <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
-              Get In Touch
-            </p>
-            <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-[4rem]">
-              Speak with our export team
-            </h1>
-            <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-muted">
-              Share your product requirements, quantities, and timeline. We respond
-              to all B2B inquiries within one business day.
-            </p>
-            {catalog.pdfUrl ? (
-              <div className="mt-6">
-                <CatalogCTA
-                  catalogPdfUrl={catalog.pdfUrl}
-                  catalogPdfLabel={catalog.pdfLabel}
-                />
-              </div>
-            ) : null}
-          </FadeUp>
-        </div>
-      </section>
+      {hero.imageUrl ? (
+        <section className="relative min-h-[50vh] overflow-hidden pt-28">
+          <div className="absolute inset-0">
+            <Image
+              src={hero.imageUrl}
+              alt=""
+              fill
+              className="object-cover"
+              priority
+              sizes="100vw"
+              {...imageOptsForSrc(hero.imageUrl)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-pearl/90 via-pearl/75 to-pearl" />
+          </div>
+          <div className="relative mx-auto max-w-container px-6 pb-section-mobile md:px-8 md:pb-section-desktop">
+            {heroContent}
+          </div>
+        </section>
+      ) : (
+        <section className="pt-32 pb-section-mobile md:pb-section-desktop">
+          <div className="mx-auto max-w-container px-6 md:px-8">
+            {heroContent}
+          </div>
+        </section>
+      )}
 
       <section className="pb-section-mobile md:pb-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">

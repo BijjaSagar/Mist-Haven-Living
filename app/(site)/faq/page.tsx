@@ -1,15 +1,16 @@
+import Image from "next/image";
 import { createMetadata, faqJsonLd } from "@/lib/seo";
-import { SectionHeading } from "@/components/SectionHeading";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
+import { imageOptsForSrc } from "@/lib/image-props";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { faqItems } from "@/data/products";
 import { getPageContent } from "@/lib/data/pages";
+import type { FaqItem } from "@/lib/types/cms";
 
 export async function generateMetadata() {
   const page = await getPageContent("faq");
@@ -24,7 +25,15 @@ export async function generateMetadata() {
 
 export const revalidate = 86400;
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const page = await getPageContent("faq");
+  const hero = (page?.sections.hero ?? {}) as {
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+  };
+  const faqItems = (page?.sections.faqItems ?? []) as FaqItem[];
   const jsonLd = faqJsonLd(faqItems);
 
   return (
@@ -34,22 +43,53 @@ export default function FaqPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <section className="pt-32 pb-section-mobile md:pb-section-desktop">
-        <div className="mx-auto max-w-container px-6 md:px-8">
-          <FadeUp>
-            <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
-              FAQ
-            </p>
-            <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-[4rem]">
-              Export buyer questions, answered
-            </h1>
-            <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-muted">
-              MOQs, sampling, lead times, shipping, payment, customization, and
-              certifications—everything procurement teams ask before their first order.
-            </p>
-          </FadeUp>
-        </div>
-      </section>
+      {hero.imageUrl ? (
+        <section className="relative min-h-[50vh] overflow-hidden pt-28">
+          <div className="absolute inset-0">
+            <Image
+              src={hero.imageUrl}
+              alt=""
+              fill
+              className="object-cover"
+              priority
+              sizes="100vw"
+              {...imageOptsForSrc(hero.imageUrl)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-pearl/90 via-pearl/75 to-pearl" />
+          </div>
+          <div className="relative mx-auto max-w-container px-6 pb-section-mobile md:px-8 md:pb-section-desktop">
+            <FadeUp>
+              <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
+                {hero.eyebrow ?? "FAQ"}
+              </p>
+              <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-[4rem]">
+                {hero.title ?? "Export buyer questions, answered"}
+              </h1>
+              <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-muted">
+                {hero.description ??
+                  "MOQs, sampling, lead times, shipping, payment, customization, and certifications—everything procurement teams ask before their first order."}
+              </p>
+            </FadeUp>
+          </div>
+        </section>
+      ) : (
+        <section className="pt-32 pb-section-mobile md:pb-section-desktop">
+          <div className="mx-auto max-w-container px-6 md:px-8">
+            <FadeUp>
+              <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
+                {hero.eyebrow ?? "FAQ"}
+              </p>
+              <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-[4rem]">
+                {hero.title ?? "Export buyer questions, answered"}
+              </h1>
+              <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-muted">
+                {hero.description ??
+                  "MOQs, sampling, lead times, shipping, payment, customization, and certifications—everything procurement teams ask before their first order."}
+              </p>
+            </FadeUp>
+          </div>
+        </section>
+      )}
 
       <section className="pb-section-mobile md:pb-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">

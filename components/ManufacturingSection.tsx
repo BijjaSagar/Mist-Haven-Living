@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { SectionHeading } from "@/components/SectionHeading";
+import { imageOptsForSrc } from "@/lib/image-props";
+import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
 type Step = {
@@ -17,22 +19,30 @@ type ManufacturingSectionProps = {
 
 export function ManufacturingSection({
   steps,
-  imageUrl = "https://picsum.photos/seed/mist-factory/900/720",
+  imageUrl,
 }: ManufacturingSectionProps) {
   return (
-    <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-14">
-      <FadeUp>
-        <div className="relative aspect-[5/4] overflow-hidden border border-hairline bg-oat">
-          <Image
-            src={imageUrl}
-            alt="Mist & Haven Living manufacturing facility in Solapur"
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
-        </div>
-      </FadeUp>
-      <FadeUp delay={0.1}>
+    <div
+      className={cn(
+        "grid items-center gap-12 lg:gap-14",
+        imageUrl ? "lg:grid-cols-2" : "max-w-3xl",
+      )}
+    >
+      {imageUrl ? (
+        <FadeUp>
+          <div className="relative aspect-[5/4] overflow-hidden border border-hairline bg-oat">
+            <Image
+              src={imageUrl}
+              alt="Mist & Haven Living manufacturing facility in Solapur"
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              {...imageOptsForSrc(imageUrl)}
+            />
+          </div>
+        </FadeUp>
+      ) : null}
+      <FadeUp delay={imageUrl ? 0.1 : 0}>
         <SectionHeading
           eyebrow="Manufacturing Strength"
           title="From Solapur, to the world."

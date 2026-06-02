@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { PageContentData } from "@/lib/types/cms";
+import type { FaqItem, HeroSlide, PageContentData } from "@/lib/types/cms";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,17 @@ import {
 } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { PdfUploadField } from "@/components/admin/PdfUploadField";
+import { HeroSlidesEditor } from "@/components/admin/HeroSlidesEditor";
+import { FaqItemsEditor } from "@/components/admin/FaqItemsEditor";
+
+const HERO_IMAGE_PAGES = new Set([
+  "about",
+  "manufacturing",
+  "private-label",
+  "faq",
+  "contact",
+  "products",
+]);
 
 export function PagesEditor({ initial }: { initial: PageContentData[] }) {
   const [pages, setPages] = useState(initial);
@@ -30,27 +41,28 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
     );
   }
 
-  function updateHeroField(key: string, value: string) {
+  function getSection<T extends Record<string, unknown>>(key: string): T {
+    return (active?.sections[key] ?? {}) as T;
+  }
+
+  function updateSection(key: string, patch: Record<string, unknown>) {
     const sections = {
       ...active.sections,
-      hero: {
-        ...(active.sections.hero as Record<string, string>),
-        [key]: value,
-      },
+      [key]: { ...getSection(key), ...patch },
     };
     updateActive("sections", sections);
   }
 
-  function updateSectionImage(
-    sectionKey: "hero" | "heritage",
-    imageUrl: string,
-  ) {
-    const section = (active.sections[sectionKey] ?? {}) as Record<string, string>;
-    const sections = {
-      ...active.sections,
-      [sectionKey]: { ...section, imageUrl },
-    };
-    updateActive("sections", sections);
+  function updateHeroField(key: string, value: string) {
+    updateSection("hero", { [key]: value });
+  }
+
+  function updateSectionImage(sectionKey: string, imageUrl: string) {
+    updateSection(sectionKey, { imageUrl });
+  }
+
+  function updateTopLevelArray<T>(key: string, value: T[]) {
+    updateActive("sections", { ...active.sections, [key]: value });
   }
 
   async function handleSave() {
@@ -70,26 +82,21 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
     setSaving(false);
   }
 
-  const hero = (active?.sections.hero ?? {}) as Record<string, string>;
-  const heritage = (active?.sections.heritage ?? {}) as Record<string, string>;
-  const specs = (active?.sections.specs ?? {}) as Record<string, string>;
-  const catalog = (active?.sections.catalog ?? {}) as Record<string, string>;
+  const hero = getSection<Record<string, unknown>>("hero");
+  const heritage = getSection<Record<string, string>>("heritage");
+  const intro = getSection<Record<string, string>>("intro");
+  const manufacturing = getSection<Record<string, string>>("manufacturing");
+  const facility = getSection<Record<string, string>>("facility");
+  const packaging = getSection<Record<string, string>>("packaging");
+  const specs = getSection<Record<string, string>>("specs");
+  const catalog = getSection<Record<string, string>>("catalog");
+  const heroSlides = (hero.slides as HeroSlide[] | undefined) ?? [];
+  const faqItems = (active?.sections.faqItems ?? []) as FaqItem[];
 
-  function updateSpecsField(key: string, value: string) {
-    const sections = {
-      ...active.sections,
-      specs: { ...specs, [key]: value },
-    };
-    updateActive("sections", sections);
-  }
-
-  function updateCatalogField(key: string, value: string) {
-    const sections = {
-      ...active.sections,
-      catalog: { ...catalog, [key]: value },
-    };
-    updateActive("sections", sections);
-  }
+  const showHeroText =
+    activeSlug === "home" ||
+    activeSlug === "about" ||
+    HERO_IMAGE_PAGES.has(activeSlug);
 
   return (
     <div className="space-y-6">
@@ -138,22 +145,18 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
                   className="mt-1"
                   rows={2}
                 />
-                <p className="mt-1 font-body text-xs text-muted">
-                  Focus phrases for your reference (not shown to Google as
-                  keywords tag)
-                </p>
               </div>
             </div>
           </AdminCard>
 
-          {(activeSlug === "home" || activeSlug === "about") && (
+          {showHeroText && (
             <AdminCard>
               <h2 className="mb-4 font-display text-xl text-taupe">Hero</h2>
               <div className="space-y-4">
                 <div>
                   <Label>Eyebrow</Label>
                   <Input
-                    value={hero.eyebrow ?? ""}
+                    value={(hero.eyebrow as string) ?? ""}
                     onChange={(e) => updateHeroField("eyebrow", e.target.value)}
                     className="mt-1"
                   />
@@ -161,16 +164,16 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
                 <div>
                   <Label>Title</Label>
                   <Input
-                    value={hero.title ?? ""}
+                    value={(hero.title as string) ?? ""}
                     onChange={(e) => updateHeroField("title", e.target.value)}
                     className="mt-1"
                   />
                 </div>
-                {hero.subtitle !== undefined && (
+                {(hero.subtitle !== undefined || activeSlug === "home") && (
                   <div>
                     <Label>Subtitle</Label>
                     <Textarea
-                      value={hero.subtitle ?? ""}
+                      value={(hero.subtitle as string) ?? ""}
                       onChange={(e) =>
                         updateHeroField("subtitle", e.target.value)
                       }
@@ -179,26 +182,220 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
                     />
                   </div>
                 )}
-                {hero.imageUrl !== undefined && (
+                {(hero.description !== undefined ||
+                  HERO_IMAGE_PAGES.has(activeSlug)) && (
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea
+                      value={(hero.description as string) ?? ""}
+                      onChange={(e) =>
+                        updateHeroField("description", e.target.value)
+                      }
+                      className="mt-1"
+                      rows={3}
+                    />
+                  </div>
+                )}
+                {HERO_IMAGE_PAGES.has(activeSlug) && (
                   <ImageUploadField
-                    label="Hero image"
-                    value={hero.imageUrl ?? ""}
+                    label="Hero background image"
+                    value={(hero.imageUrl as string) ?? ""}
                     onChange={(url) => updateSectionImage("hero", url)}
-                    hint="Homepage hero background. Save page after upload."
+                    uploadFolder={`pages/${activeSlug}-hero`}
+                    hint="Full-width hero background. Save page after upload."
                   />
                 )}
               </div>
             </AdminCard>
           )}
 
-          {activeSlug === "home" && heritage.imageUrl !== undefined && (
+          {activeSlug === "home" && (
+            <>
+              <AdminCard>
+                <HeroSlidesEditor
+                  slides={heroSlides}
+                  onChange={(slides) => updateSection("hero", { slides })}
+                />
+              </AdminCard>
+              <AdminCard>
+                <h2 className="mb-4 font-display text-xl text-taupe">
+                  Heritage block
+                </h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Eyebrow</Label>
+                    <Input
+                      value={heritage.eyebrow ?? ""}
+                      onChange={(e) =>
+                        updateSection("heritage", { eyebrow: e.target.value })
+                      }
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Title</Label>
+                    <Input
+                      value={heritage.title ?? ""}
+                      onChange={(e) =>
+                        updateSection("heritage", { title: e.target.value })
+                      }
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea
+                      value={heritage.description ?? ""}
+                      onChange={(e) =>
+                        updateSection("heritage", {
+                          description: e.target.value,
+                        })
+                      }
+                      className="mt-1"
+                      rows={3}
+                    />
+                  </div>
+                  <ImageUploadField
+                    label="Heritage image"
+                    value={heritage.imageUrl ?? ""}
+                    onChange={(url) => updateSectionImage("heritage", url)}
+                    uploadFolder="pages/home-heritage"
+                  />
+                </div>
+              </AdminCard>
+              <AdminCard>
+                <h2 className="mb-4 font-display text-xl text-taupe">
+                  Manufacturing preview
+                </h2>
+                <ImageUploadField
+                  label="Manufacturing section image"
+                  value={manufacturing.imageUrl ?? ""}
+                  onChange={(url) => updateSectionImage("manufacturing", url)}
+                  uploadFolder="pages/home-manufacturing"
+                  hint="Image in the homepage manufacturing block."
+                />
+              </AdminCard>
+            </>
+          )}
+
+          {activeSlug === "about" && (
             <AdminCard>
-              <h2 className="mb-4 font-display text-xl text-taupe">Heritage</h2>
+              <h2 className="mb-4 font-display text-xl text-taupe">
+                Intro section
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <Label>Title</Label>
+                  <Input
+                    value={intro.title ?? ""}
+                    onChange={(e) =>
+                      updateSection("intro", { title: e.target.value })
+                    }
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Body</Label>
+                  <Textarea
+                    value={intro.body ?? ""}
+                    onChange={(e) =>
+                      updateSection("intro", { body: e.target.value })
+                    }
+                    className="mt-1"
+                    rows={4}
+                  />
+                </div>
+                <ImageUploadField
+                  label="Heritage / team image"
+                  value={intro.imageUrl ?? ""}
+                  onChange={(url) => updateSectionImage("intro", url)}
+                  uploadFolder="pages/about-intro"
+                />
+              </div>
+            </AdminCard>
+          )}
+
+          {activeSlug === "manufacturing" && (
+            <AdminCard>
+              <h2 className="mb-4 font-display text-xl text-taupe">
+                Facility banner
+              </h2>
               <ImageUploadField
-                label="Heritage image"
-                value={heritage.imageUrl ?? ""}
-                onChange={(url) => updateSectionImage("heritage", url)}
-                hint="Manufacturing / heritage block on homepage. Save page after upload."
+                label="Wide facility image"
+                value={facility.imageUrl ?? ""}
+                onChange={(url) => updateSectionImage("facility", url)}
+                uploadFolder="pages/manufacturing-facility"
+                hint="Full-width banner below the hero."
+              />
+            </AdminCard>
+          )}
+
+          {activeSlug === "private-label" && (
+            <>
+              <AdminCard>
+                <h2 className="mb-4 font-display text-xl text-taupe">
+                  Packaging image
+                </h2>
+                <ImageUploadField
+                  label="Private label packaging photo"
+                  value={packaging.imageUrl ?? ""}
+                  onChange={(url) => updateSectionImage("packaging", url)}
+                  uploadFolder="pages/private-label-packaging"
+                />
+              </AdminCard>
+              <AdminCard>
+                <h2 className="mb-4 font-display text-xl text-taupe">
+                  Specifications & download
+                </h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Section title</Label>
+                    <Input
+                      value={specs.title ?? ""}
+                      onChange={(e) =>
+                        updateSection("specs", { title: e.target.value })
+                      }
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea
+                      value={specs.description ?? ""}
+                      onChange={(e) =>
+                        updateSection("specs", { description: e.target.value })
+                      }
+                      className="mt-1"
+                      rows={3}
+                    />
+                  </div>
+                  <PdfUploadField
+                    label="Specification PDF"
+                    value={specs.pdfUrl ?? ""}
+                    onChange={(url) => updateSection("specs", { pdfUrl: url })}
+                    uploadFolder="pdfs/private-label"
+                  />
+                  <div>
+                    <Label>Download button label</Label>
+                    <Input
+                      value={specs.pdfLabel ?? ""}
+                      onChange={(e) =>
+                        updateSection("specs", { pdfLabel: e.target.value })
+                      }
+                      className="mt-1"
+                      placeholder="Download specification sheet (PDF)"
+                    />
+                  </div>
+                </div>
+              </AdminCard>
+            </>
+          )}
+
+          {activeSlug === "faq" && (
+            <AdminCard>
+              <FaqItemsEditor
+                items={faqItems}
+                onChange={(items) => updateTopLevelArray("faqItems", items)}
               />
             </AdminCard>
           )}
@@ -208,72 +405,22 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
               <h2 className="mb-4 font-display text-xl text-taupe">
                 Product catalog download
               </h2>
-              <p className="mb-4 font-body text-sm text-muted">
-                Shown on the contact page after a visitor completes the catalog
-                lead form. Save page after uploading the PDF.
-              </p>
               <div className="space-y-4">
                 <PdfUploadField
                   label="Product catalog PDF"
                   value={catalog.pdfUrl ?? ""}
-                  onChange={(url) => updateCatalogField("pdfUrl", url)}
+                  onChange={(url) => updateSection("catalog", { pdfUrl: url })}
                   uploadFolder="pdfs/product-catalog"
-                  hint="Download link on /contact (and catalog CTAs site-wide)"
                 />
                 <div>
                   <Label>Download button label</Label>
                   <Input
                     value={catalog.pdfLabel ?? ""}
-                    onChange={(e) => updateCatalogField("pdfLabel", e.target.value)}
+                    onChange={(e) =>
+                      updateSection("catalog", { pdfLabel: e.target.value })
+                    }
                     className="mt-1"
                     placeholder="Download Product Catalog"
-                  />
-                </div>
-              </div>
-            </AdminCard>
-          )}
-
-          {activeSlug === "private-label" && (
-            <AdminCard>
-              <h2 className="mb-4 font-display text-xl text-taupe">
-                Specifications & download
-              </h2>
-              <p className="mb-4 font-body text-sm text-muted">
-                Shown on the private label page as the specification download block.
-                Save page after uploading the PDF.
-              </p>
-              <div className="space-y-4">
-                <div>
-                  <Label>Section title</Label>
-                  <Input
-                    value={specs.title ?? ""}
-                    onChange={(e) => updateSpecsField("title", e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Description</Label>
-                  <Textarea
-                    value={specs.description ?? ""}
-                    onChange={(e) => updateSpecsField("description", e.target.value)}
-                    className="mt-1"
-                    rows={3}
-                  />
-                </div>
-                <PdfUploadField
-                  label="Specification PDF"
-                  value={specs.pdfUrl ?? ""}
-                  onChange={(url) => updateSpecsField("pdfUrl", url)}
-                  uploadFolder="pdfs/private-label"
-                  hint="Download link on /private-label"
-                />
-                <div>
-                  <Label>Download button label</Label>
-                  <Input
-                    value={specs.pdfLabel ?? ""}
-                    onChange={(e) => updateSpecsField("pdfLabel", e.target.value)}
-                    className="mt-1"
-                    placeholder="Download specification sheet (PDF)"
                   />
                 </div>
               </div>

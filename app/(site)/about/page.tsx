@@ -6,6 +6,7 @@ import { StatStrip } from "@/components/StatStrip";
 import { CTABand } from "@/components/CTABand";
 import { ContactEmails } from "@/components/ContactEmails";
 import { FadeUp } from "@/components/motion/FadeUp";
+import { imageOptsForSrc } from "@/lib/image-props";
 import { getStats } from "@/lib/data/stats";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { getPageContent } from "@/lib/data/pages";
@@ -33,38 +34,71 @@ export default async function AboutPage() {
   const hero = (aboutPage?.sections.hero ?? {}) as {
     eyebrow?: string;
     title?: string;
+    imageUrl?: string;
   };
   const intro = (aboutPage?.sections.intro ?? {}) as {
     title?: string;
     body?: string;
+    imageUrl?: string;
   };
+
   return (
     <>
-      <section className="pt-32 pb-section-mobile md:pb-section-desktop">
-        <div className="mx-auto max-w-container px-6 md:px-8">
-          <FadeUp>
-            <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
-              {hero.eyebrow ?? "Our Story"}
-            </p>
-            <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-6xl">
-              {hero.title ?? "Where heritage meets export excellence"}
-            </h1>
-          </FadeUp>
-        </div>
-      </section>
+      {hero.imageUrl ? (
+        <section className="relative min-h-[50vh] overflow-hidden pt-28">
+          <div className="absolute inset-0">
+            <Image
+              src={hero.imageUrl}
+              alt=""
+              fill
+              className="object-cover"
+              priority
+              sizes="100vw"
+              {...imageOptsForSrc(hero.imageUrl)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-pearl/90 via-pearl/75 to-pearl" />
+          </div>
+          <div className="relative mx-auto max-w-container px-6 pb-section-mobile md:px-8 md:pb-section-desktop">
+            <FadeUp>
+              <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
+                {hero.eyebrow ?? "Our Story"}
+              </p>
+              <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-6xl">
+                {hero.title ?? "Where heritage meets export excellence"}
+              </h1>
+            </FadeUp>
+          </div>
+        </section>
+      ) : (
+        <section className="pt-32 pb-section-mobile md:pb-section-desktop">
+          <div className="mx-auto max-w-container px-6 md:px-8">
+            <FadeUp>
+              <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
+                {hero.eyebrow ?? "Our Story"}
+              </p>
+              <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-6xl">
+                {hero.title ?? "Where heritage meets export excellence"}
+              </h1>
+            </FadeUp>
+          </div>
+        </section>
+      )}
 
       <section className="pb-section-mobile md:pb-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">
           <div className="grid gap-12 lg:grid-cols-12">
             <FadeUp className="lg:col-span-5">
               <div className="relative aspect-[3/4] overflow-hidden bg-oat">
-                <Image
-                  src="https://picsum.photos/seed/about-factory/800/1067"
-                  alt="Mist & Haven Living team"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 40vw"
-                />
+                {intro.imageUrl ? (
+                  <Image
+                    src={intro.imageUrl}
+                    alt="Mist & Haven Living team"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 40vw"
+                    {...imageOptsForSrc(intro.imageUrl)}
+                  />
+                ) : null}
               </div>
             </FadeUp>
             <FadeUp delay={0.1} className="lg:col-span-7 lg:pl-8">

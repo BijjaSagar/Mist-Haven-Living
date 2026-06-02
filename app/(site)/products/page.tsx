@@ -1,8 +1,10 @@
+import Image from "next/image";
 import { createMetadata } from "@/lib/seo";
 import { SectionHeading } from "@/components/SectionHeading";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { CTABand } from "@/components/CTABand";
+import { imageOptsForSrc } from "@/lib/image-props";
 import { getProductCategories } from "@/lib/data/products";
 import { getPageContent } from "@/lib/data/pages";
 
@@ -20,26 +22,59 @@ export async function generateMetadata() {
 export const revalidate = 86400;
 
 export default async function ProductsPage() {
-  const productCategories = await getProductCategories();
+  const [productCategories, page] = await Promise.all([
+    getProductCategories(),
+    getPageContent("products"),
+  ]);
+  const hero = (page?.sections.hero ?? {}) as {
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+  };
+
+  const heroContent = (
+    <FadeUp>
+      <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
+        {hero.eyebrow ?? "Export Catalogue"}
+      </p>
+      <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-6xl">
+        {hero.title ?? "Premium textiles for every channel"}
+      </h1>
+      <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-muted">
+        {hero.description ??
+          "Twelve product categories engineered for hospitality, retail, spa, and private label buyers. Each specification page includes GSM ranges, sizes, materials, customization, and packaging options."}
+      </p>
+    </FadeUp>
+  );
+
   return (
     <>
-      <section className="pt-32 pb-12 md:pb-16">
-        <div className="mx-auto max-w-container px-6 md:px-8">
-          <FadeUp>
-            <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
-              Export Catalogue
-            </p>
-            <h1 className="max-w-3xl font-display text-4xl text-taupe md:text-5xl lg:text-6xl">
-              Premium textiles for every channel
-            </h1>
-            <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-muted">
-              Twelve product categories engineered for hospitality, retail, spa,
-              and private label buyers. Each specification page includes GSM ranges,
-              sizes, materials, customization, and packaging options.
-            </p>
-          </FadeUp>
-        </div>
-      </section>
+      {hero.imageUrl ? (
+        <section className="relative min-h-[50vh] overflow-hidden pt-28">
+          <div className="absolute inset-0">
+            <Image
+              src={hero.imageUrl}
+              alt=""
+              fill
+              className="object-cover"
+              priority
+              sizes="100vw"
+              {...imageOptsForSrc(hero.imageUrl)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-pearl/90 via-pearl/75 to-pearl" />
+          </div>
+          <div className="relative mx-auto max-w-container px-6 pb-12 md:px-8 md:pb-16">
+            {heroContent}
+          </div>
+        </section>
+      ) : (
+        <section className="pt-32 pb-12 md:pb-16">
+          <div className="mx-auto max-w-container px-6 md:px-8">
+            {heroContent}
+          </div>
+        </section>
+      )}
 
       <section className="pb-section-mobile md:pb-section-desktop">
         <div className="mx-auto max-w-container px-6 md:px-8">

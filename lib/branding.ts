@@ -27,6 +27,15 @@ export function sanitizeLegacyBrandingJson(value: unknown): unknown {
   return value;
 }
 
+export function mergeSectionField(fallback: unknown, db: unknown): unknown {
+  if (Array.isArray(fallback) || Array.isArray(db)) {
+    if (Array.isArray(db) && db.length > 0) return db;
+    if (Array.isArray(fallback) && fallback.length > 0) return fallback;
+    return Array.isArray(db) ? db : fallback;
+  }
+  return mergeStringField(fallback, db);
+}
+
 export function mergeStringField(fallback: unknown, db: unknown): unknown {
   if (containsLegacyBrand(db)) {
     return typeof fallback === "string"
@@ -73,14 +82,14 @@ export function deepMergeSections(
       for (const [field, dbFieldValue] of Object.entries(
         dbValue as Record<string, unknown>,
       )) {
-        merged[field] = mergeStringField(
+        merged[field] = mergeSectionField(
           (fallbackValue as Record<string, unknown>)[field],
           dbFieldValue,
         );
       }
       result[key] = merged;
     } else {
-      result[key] = mergeStringField(fallbackValue, dbValue);
+      result[key] = mergeSectionField(fallbackValue, dbValue);
     }
   }
 

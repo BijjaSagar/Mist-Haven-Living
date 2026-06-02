@@ -13,7 +13,11 @@ import {
 import {
   DEFAULT_HOME_SECTIONS,
   DEFAULT_ABOUT_SECTIONS,
-  STATIC_PAGES,
+  DEFAULT_MANUFACTURING_SECTIONS,
+  DEFAULT_PRIVATE_LABEL_SECTIONS,
+  DEFAULT_FAQ_SECTIONS,
+  DEFAULT_CONTACT_SECTIONS,
+  DEFAULT_PRODUCTS_SECTIONS,
 } from "../lib/data/pages";
 import { siteConfig } from "../lib/utils";
 import { DEFAULT_COLORS } from "../lib/data/site-settings";
@@ -151,7 +155,7 @@ async function main() {
       metaTitle: "Manufacturing",
       metaDescription:
         "Vertical textile manufacturing from yarn selection to export packaging. ISO-certified facility in Solapur, India serving USA and Canada buyers.",
-      sections: {},
+      sections: DEFAULT_MANUFACTURING_SECTIONS,
     },
     {
       slug: "certifications",
@@ -165,43 +169,38 @@ async function main() {
       metaTitle: "Private Label",
       metaDescription:
         "Launch or scale your towel and linen brand with full private label manufacturing—from product development to retail-ready packaging. Export to USA and Canada.",
-      sections: STATIC_PAGES["private-label"].sections,
+      sections: DEFAULT_PRIVATE_LABEL_SECTIONS,
     },
     {
       slug: "contact",
       metaTitle: "Contact",
       metaDescription:
         "Contact Mist & Haven Living export team for B2B textile inquiries. USA and Canada buyers welcome. Response within one business day.",
-      sections: STATIC_PAGES.contact.sections,
+      sections: DEFAULT_CONTACT_SECTIONS,
     },
     {
       slug: "faq",
       metaTitle: "FAQ",
       metaDescription:
         "Frequently asked questions about MOQs, samples, lead times, shipping, payment terms, customization, and certifications for Mist & Haven Living export buyers.",
-      sections: {},
+      sections: DEFAULT_FAQ_SECTIONS,
     },
     {
       slug: "products",
       metaTitle: "Products",
       metaDescription:
         "Explore our full range of premium B2B textile products—bath towels, hotel linen, spa towels, private label, and more for USA and Canada export.",
-      sections: {},
+      sections: DEFAULT_PRODUCTS_SECTIONS,
     },
   ];
 
   for (const page of pages) {
-    const refreshBrandedSections =
-      page.slug === "home" || page.slug === "about";
     await prisma.pageContent.upsert({
       where: { slug: page.slug },
-      update: refreshBrandedSections
-        ? {
-            sections: page.sections as Prisma.InputJsonValue,
-            metaTitle: page.metaTitle,
-            metaDescription: page.metaDescription,
-          }
-        : {},
+      update: {
+        metaTitle: page.metaTitle,
+        metaDescription: page.metaDescription,
+      },
       create: {
         ...page,
         sections: page.sections as Prisma.InputJsonValue,

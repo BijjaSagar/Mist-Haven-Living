@@ -8,28 +8,14 @@ import { imageOptsForSrc } from "@/lib/image-props";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { HeroSlide } from "@/lib/types/cms";
 
 type HeroSectionProps = {
   eyebrow?: string;
   title?: string;
   subtitle?: string;
-  imageUrl?: string;
+  slides?: HeroSlide[];
 };
-
-const SLIDES = [
-  {
-    image: "https://picsum.photos/seed/mist-bath/900/1125",
-    caption: "Premium Bath Towels",
-  },
-  {
-    image: "https://picsum.photos/seed/mist-hotel/900/1125",
-    caption: "Hotel & Spa Linen",
-  },
-  {
-    image: "https://picsum.photos/seed/mist-private/900/1125",
-    caption: "Private-Label Programs",
-  },
-] as const;
 
 const SLIDE_INTERVAL_MS = 5500;
 
@@ -37,26 +23,26 @@ export function HeroSection({
   eyebrow = "Home Textile Manufacturing · USA & Canada",
   title = "Luxury in Every Thread.",
   subtitle = "Premium cotton towels, hotel linen & private-label manufacturing — crafted in Solapur, India, and delivered with export-grade reliability across North America.",
-  imageUrl,
+  slides = [],
 }: HeroSectionProps) {
   const titleParts = title.match(/^(.+?)\s+(in)\s+(.+)$/i);
   const shouldReduceMotion = useReducedMotion();
   const [activeSlide, setActiveSlide] = useState(0);
   const frameRef = useRef<HTMLDivElement>(null);
 
-  const slides = imageUrl
-    ? [{ image: imageUrl, caption: SLIDES[0].caption }, ...SLIDES.slice(1)]
-    : SLIDES;
+  const carouselSlides = slides.filter(
+    (slide) => slide.imageUrl.trim() !== "",
+  );
 
   useEffect(() => {
-    if (shouldReduceMotion) return;
+    if (shouldReduceMotion || carouselSlides.length === 0) return;
 
     const timer = window.setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % slides.length);
+      setActiveSlide((prev) => (prev + 1) % carouselSlides.length);
     }, SLIDE_INTERVAL_MS);
 
     return () => window.clearInterval(timer);
-  }, [shouldReduceMotion, slides.length]);
+  }, [shouldReduceMotion, carouselSlides.length]);
 
   useEffect(() => {
     if (shouldReduceMotion) return;
@@ -127,9 +113,9 @@ export function HeroSection({
               aria-hidden="true"
             />
             <div className="relative aspect-[4/5] overflow-hidden border border-hairline bg-oat">
-              {slides.map((slide, index) => (
+              {carouselSlides.length === 0 ? null : carouselSlides.map((slide, index) => (
                 <div
-                  key={slide.caption}
+                  key={`${slide.imageUrl}-${index}`}
                   className={cn(
                     "absolute inset-0 transition-opacity duration-700 ease-in-out motion-reduce:transition-none",
                     index === activeSlide ? "opacity-100" : "opacity-0",
@@ -137,21 +123,23 @@ export function HeroSection({
                   aria-hidden={index !== activeSlide}
                 >
                   <Image
-                    src={slide.image}
+                    src={slide.imageUrl}
                     alt={slide.caption}
                     fill
-                    {...imageOptsForSrc(slide.image)}
+                    {...imageOptsForSrc(slide.imageUrl)}
                     className="object-cover"
                     priority={index === 0}
                     sizes="(max-width: 1024px) 90vw, 45vw"
                   />
                 </div>
               ))}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-taupe/55 to-transparent px-5 pb-5 pt-16">
-                <p className="font-body text-[11px] uppercase tracking-[0.22em] text-pearl">
-                  {slides[activeSlide].caption}
-                </p>
-              </div>
+              {carouselSlides.length > 0 ? (
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-taupe/55 to-transparent px-5 pb-5 pt-16">
+                  <p className="font-body text-[11px] uppercase tracking-[0.22em] text-pearl">
+                    {carouselSlides[activeSlide]?.caption}
+                  </p>
+                </div>
+              ) : null}
             </div>
             <div className="absolute -bottom-2 left-0 max-w-[230px] border border-hairline bg-white p-5 shadow-[0_30px_60px_-34px_rgba(74,67,57,0.55)] md:-left-8 md:bottom-10 md:p-6">
               <p className="font-display text-[2.125rem] leading-none text-taupe">

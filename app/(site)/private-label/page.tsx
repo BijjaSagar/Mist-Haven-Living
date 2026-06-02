@@ -8,6 +8,7 @@ import { ProcessSteps } from "@/components/ProcessSteps";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { Button } from "@/components/ui/button";
+import { imageOptsForSrc } from "@/lib/image-props";
 import { getCategoryBySlug } from "@/lib/data/products";
 import { getPageContent } from "@/lib/data/pages";
 
@@ -103,8 +104,18 @@ type PrivateLabelSpecs = {
 
 export default async function PrivateLabelPage() {
   const page = await getPageContent("private-label");
+  const hero = (page?.sections.hero ?? {}) as {
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+  };
+  const packaging = (page?.sections.packaging ?? {}) as {
+    imageUrl?: string;
+  };
   const specs = (page?.sections?.specs ?? {}) as PrivateLabelSpecs;
   const category = await getCategoryBySlug("private-labeling");
+
   const jsonLd = serviceJsonLd(
     "Private Label Textile Manufacturing",
     "Full private label programs for towel and linen brands exporting to USA and Canada.",
@@ -118,30 +129,44 @@ export default async function PrivateLabelPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <section className="relative min-h-[70vh] overflow-hidden pt-28">
-        <div className="absolute inset-0">
-          <Image
-            src="https://picsum.photos/seed/private-label-hero/1920/1000"
-            alt="Private label textile manufacturing"
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-pearl/95 via-pearl/85 to-pearl/50" />
-        </div>
-        <div className="relative mx-auto max-w-container px-6 py-section-mobile md:px-8 md:py-section-desktop">
+      <section
+        className={
+          hero.imageUrl
+            ? "relative min-h-[70vh] overflow-hidden pt-28"
+            : "pt-32 pb-section-mobile md:pb-section-desktop"
+        }
+      >
+        {hero.imageUrl ? (
+          <div className="absolute inset-0">
+            <Image
+              src={hero.imageUrl}
+              alt="Private label textile manufacturing"
+              fill
+              className="object-cover"
+              priority
+              sizes="100vw"
+              {...imageOptsForSrc(hero.imageUrl)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-pearl/95 via-pearl/85 to-pearl/50" />
+          </div>
+        ) : null}
+        <div
+          className={
+            hero.imageUrl
+              ? "relative mx-auto max-w-container px-6 py-section-mobile md:px-8 md:py-section-desktop"
+              : "mx-auto max-w-container px-6 md:px-8"
+          }
+        >
           <FadeUp className="max-w-2xl">
             <p className="mb-4 font-body text-xs uppercase tracking-[0.22em] text-sage-deep">
-              Private Label · High Priority
+              {hero.eyebrow ?? "Private Label · High Priority"}
             </p>
             <h1 className="font-display text-4xl text-taupe md:text-5xl lg:text-6xl">
-              Your brand. Our manufacturing excellence.
+              {hero.title ?? "Your brand. Our manufacturing excellence."}
             </h1>
             <p className="mt-6 font-body text-lg leading-relaxed text-muted">
-              Partner with Mist & Haven Living to launch, scale, or refresh your towel
-              and linen brand. End-to-end private label—from first sample to
-              retail-ready cartons shipped to USA and Canada.
+              {hero.description ??
+                "Partner with Mist & Haven Living to launch, scale, or refresh your towel and linen brand. End-to-end private label—from first sample to retail-ready cartons shipped to USA and Canada."}
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Button asChild size="lg">
@@ -191,13 +216,16 @@ export default async function PrivateLabelPage() {
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <FadeUp>
               <div className="relative aspect-square overflow-hidden bg-oat">
-                <Image
-                  src="https://picsum.photos/seed/private-label-packaging/800/800"
-                  alt="Private label packaging"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
+                {packaging.imageUrl ? (
+                  <Image
+                    src={packaging.imageUrl}
+                    alt="Private label packaging"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    {...imageOptsForSrc(packaging.imageUrl)}
+                  />
+                ) : null}
               </div>
             </FadeUp>
             <FadeUp delay={0.1}>
