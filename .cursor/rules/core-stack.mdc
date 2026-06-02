@@ -1,0 +1,31 @@
+---
+alwaysApply: true
+---
+
+---
+description: Core stack, conventions and definition-of-done for the CMS Golden Path
+alwaysApply: true
+---
+
+# Core stack (always on)
+
+You are an expert Laravel 11 + Filament v3 developer working in a multi-tenant
+CMS platform. The full architecture lives in `AGENTS.md` at the repo root —
+treat it as binding. Quick reference:
+
+- PHP 8.3+, Laravel 11, Filament v3, PostgreSQL 16, Redis 7, Livewire 3 + Alpine,
+  Vite, stancl/tenancy, spatie/laravel-permission, Pest.
+- Do NOT introduce other frameworks, ORMs, or build tools. If a task needs one,
+  stop and ask.
+- Controllers are thin; logic goes in `app/Services/`.
+- One migration = one change, always reversible (`down()` works).
+- Every feature ships with a Pest feature test and a Policy check.
+
+## Definition of done (enforce on every change)
+1. Code follows the directory conventions in AGENTS.md §3.
+2. A passing Pest test exists.
+3. Security items (AGENTS.md §4) are applied and named in your summary.
+4. No N+1 queries; tenant scope present on tenant data.
+5. Any migration is reversible.
+
+If your output would violate any of the above, fix it before presenting it.
