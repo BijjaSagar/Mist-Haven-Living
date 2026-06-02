@@ -1,0 +1,44 @@
+---
+description: "Testing standards: Vitest, Playwright (later), mocks, ship-with-tests checklist"
+alwaysApply: false
+---
+
+# Testing (Mist & Haven Living)
+
+Stack: **Vitest** (`npm run test`) for unit/lib/validation tests. **Playwright** E2E is optional later — not required for every change.
+
+## When to add tests
+
+| Area | What to test |
+|------|----------------|
+| `lib/*` helpers | Pure functions (`getApiData`, `getApiErrorMessage`, parsers) |
+| `lib/validations/*` | Zod schemas: valid payload, required fields, honeypot `website` |
+| `app/api/*` routes | Status codes + envelope shape; mock DB and Resend |
+
+## API contract (envelope)
+
+Success: `{ success: true, data }` — errors: `{ success: false, error: { message, code? } }`.
+
+```ts
+const json = await res.json();
+expect(res.status).toBe(400);
+expect(json.success).toBe(false);
+expect(json.error.message).toMatch(/email/i);
+// Empty lists: 200 + data: [] — not 404
+```
+
+Use `getApiErrorMessage` / `getApiData` in client tests when parsing responses.
+
+## Mocks (never hit production)
+
+- **Resend**: `vi.mock("resend")` or inject a stub — no real emails in CI.
+- **Prisma**: mock `@/lib/prisma` or use a test DB — never `DATABASE_URL` production.
+- **Admin JWT**: mock `cookies()` / `requireAdmin` helpers — do not log in against prod.
+
+## Ship checklist
+
+1. New API route or validation → at least one Vitest case (happy + one failure).
+2. `npm run test` and `npm run build` pass before merge.
+3. Update README if test commands change.
+
+Reference: `Engineering-Standards-Agents.md` (Release Gatekeeper), `.cursor/rules/nextjs-api.mdc`.

@@ -60,7 +60,15 @@ npx prisma db seed
 
 The seed script imports all 12 product categories, navigation links, stats, certifications, site settings, and page content from the existing static data — so the site looks identical after migration.
 
-### 5. Start development server
+### 5. Run tests (optional)
+
+```bash
+npm run test
+```
+
+Vitest covers `lib/` helpers and Zod validations — no database or Resend required.
+
+### 6. Start development server
 
 ```bash
 npm run dev
@@ -101,6 +109,7 @@ Changes trigger ISR revalidation automatically. Logo uploads are stored in `publ
 ## Build & Deploy
 
 ```bash
+npm run test   # unit tests (Vitest)
 npm run build
 npm start
 ```
