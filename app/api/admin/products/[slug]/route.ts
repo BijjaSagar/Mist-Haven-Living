@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   isUnauthorized,
@@ -6,6 +6,7 @@ import {
   revalidateSite,
 } from "@/lib/admin/api-helpers";
 import { mapProduct } from "@/lib/data/products";
+import { apiError, apiSuccess } from "@/lib/api-response";
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
@@ -16,9 +17,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   const { slug } = await context.params;
   const product = await prisma.productCategory.findUnique({ where: { slug } });
   if (!product) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return apiError("Not found", 404, "NOT_FOUND");
   }
-  return NextResponse.json(mapProduct(product));
+  return apiSuccess(mapProduct(product));
 }
 
 export async function PUT(request: NextRequest, context: RouteContext) {
@@ -55,14 +56,14 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       },
     });
     await revalidateSite();
-    return NextResponse.json(mapProduct(product));
+    return apiSuccess(mapProduct(product));
   } catch (error) {
     const message =
       error instanceof Error &&
       /Unknown column|galleryImages/i.test(error.message)
         ? "Database schema is out of date. Run: npx prisma migrate deploy"
         : "Failed to update product";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError(message, 500, "UPDATE_FAILED");
   }
 }
 
@@ -75,8 +76,8 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
     await prisma.productCategory.delete({ where: { slug } });
     await revalidateSite();
-    return NextResponse.json({ success: true });
+    return apiSuccess({ deleted: true });
   } catch {
-    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
+    return apiError("Failed to delete product", 500, "DELETE_FAILED");
   }
 }

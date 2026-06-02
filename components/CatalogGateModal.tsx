@@ -16,6 +16,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { getApiErrorMessage } from "@/lib/api-response";
 import {
   catalogLeadSchema,
   buyerTypeOptions,
@@ -69,7 +70,7 @@ export function CatalogGateModal({
         }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Submission failed");
+      if (!res.ok) throw new Error(getApiErrorMessage(json));
       setUnlocked(true);
     } catch (err) {
       setError(

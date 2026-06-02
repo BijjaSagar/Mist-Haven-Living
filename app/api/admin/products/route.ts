@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   isUnauthorized,
@@ -6,6 +6,7 @@ import {
   revalidateSite,
 } from "@/lib/admin/api-helpers";
 import { mapProduct } from "@/lib/data/products";
+import { apiError, apiSuccess } from "@/lib/api-response";
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -14,7 +15,7 @@ export async function GET() {
   const products = await prisma.productCategory.findMany({
     orderBy: { sortOrder: "asc" },
   });
-  return NextResponse.json(products.map(mapProduct));
+  return apiSuccess(products.map(mapProduct));
 }
 
 export async function POST(request: NextRequest) {
@@ -47,8 +48,8 @@ export async function POST(request: NextRequest) {
       },
     });
     await revalidateSite();
-    return NextResponse.json(mapProduct(product));
+    return apiSuccess(mapProduct(product), { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
+    return apiError("Failed to create product", 500, "CREATE_FAILED");
   }
 }

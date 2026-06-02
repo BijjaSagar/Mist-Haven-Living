@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { inquirySchema } from "@/lib/validations/inquiry";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getCategoryBySlug } from "@/lib/data/products";
@@ -9,6 +8,7 @@ import {
 } from "@/lib/data/inquiries";
 import { sendInquiryNotificationEmail } from "@/lib/inquiry/send-notification";
 import { isDbConfigured } from "@/lib/db";
+import { apiError, apiSuccess } from "@/lib/api-response";
 
 function resolveSource(
   productInterest: string,
@@ -29,9 +29,10 @@ export async function POST(request: Request) {
       "unknown";
 
     if (!checkRateLimit(ip)) {
-      return NextResponse.json(
-        { error: "Too many requests. Please try again later.", code: "RATE_LIMITED" },
-        { status: 429 },
+      return apiError(
+        "Too many requests. Please try again later.",
+        429,
+        "RATE_LIMITED",
       );
     }
 
@@ -39,42 +40,33 @@ export async function POST(request: Request) {
     const parsed = inquirySchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid form data",
-          code: "VALIDATION_ERROR",
-          details: parsed.error.flatten(),
-        },
-        { status: 400 },
-      );
+      return apiError("Invalid form data", 400, "VALIDATION_ERROR", {
+        details: parsed.error.flatten(),
+      });
     }
 
     const data = parsed.data;
 
     if (data.website) {
-      return NextResponse.json({ success: true });
+      return apiSuccess({ accepted: true });
     }
 
     const emailConfig = await getInquiryEmailConfig();
 
     if (!emailConfig.inquiryEnabled) {
-      return NextResponse.json(
-        {
-          error: "Inquiry form is temporarily unavailable",
-          code: "INQUIRY_DISABLED",
-        },
-        { status: 503 },
+      return apiError(
+        "Inquiry form is temporarily unavailable",
+        503,
+        "INQUIRY_DISABLED",
       );
     }
 
     if (!isDbConfigured()) {
       console.error("Inquiry submission failed: DATABASE_URL is not configured");
-      return NextResponse.json(
-        {
-          error: "Unable to save inquiry. Database is not configured.",
-          code: "DATABASE_NOT_CONFIGURED",
-        },
-        { status: 503 },
+      return apiError(
+        "Unable to save inquiry. Database is not configured.",
+        503,
+        "DATABASE_NOT_CONFIGURED",
       );
     }
 
@@ -134,25 +126,22 @@ export async function POST(request: Request) {
         detail: emailResult.detail,
       });
 
-      return NextResponse.json({
-        success: true,
+      return apiSuccess({
+        emailSent: false,
         warning:
           "Your inquiry was received and saved. Email notification could not be sent — our team will still follow up.",
-        emailSent: false,
       });
     }
 
-    return NextResponse.json({ success: true, emailSent: true });
+    return apiSuccess({ emailSent: true });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     console.error("Inquiry submission error:", { detail, error });
-    return NextResponse.json(
-      {
-        error: "Failed to save inquiry. Please try again or contact us directly.",
-        code: "SUBMISSION_FAILED",
-        ...(process.env.NODE_ENV === "development" ? { detail } : {}),
-      },
-      { status: 500 },
+    return apiError(
+      "Failed to save inquiry. Please try again or contact us directly.",
+      500,
+      "SUBMISSION_FAILED",
+      process.env.NODE_ENV === "development" ? { details: detail } : undefined,
     );
   }
 }

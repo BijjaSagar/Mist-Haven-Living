@@ -10,6 +10,7 @@ import {
 } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { ProductGalleryField } from "@/components/admin/ProductGalleryField";
+import { getApiErrorMessage } from "@/lib/api-response";
 
 const productUploadFolder = (slug: string) => `products/${slug}`;
 
@@ -76,9 +77,7 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
       res.ok
         ? { text: "Product saved.", type: "success" }
         : {
-            text:
-              ((await res.json().catch(() => null)) as { error?: string } | null)
-                ?.error ?? "Failed to save.",
+            text: getApiErrorMessage(await res.json().catch(() => null)),
             type: "error",
           },
     );

@@ -15,6 +15,7 @@ import {
 } from "@/lib/validations/inquiry";
 import { productInterestOptions as staticOptions } from "@/data/products";
 import { cn } from "@/lib/utils";
+import { getApiData, getApiErrorMessage } from "@/lib/api-response";
 import { InquiryUnavailable } from "@/components/InquiryUnavailable";
 
 type InquiryFormProps = {
@@ -65,10 +66,11 @@ export function InquiryForm({
       });
       const json = await res.json();
       if (!res.ok) {
-        throw new Error(json.error ?? "Submission failed");
+        throw new Error(getApiErrorMessage(json));
       }
-      if (json.warning) {
-        console.warn("Inquiry submitted with warning:", json.warning);
+      const result = getApiData<{ warning?: string }>(json);
+      if (result.warning) {
+        console.warn("Inquiry submitted with warning:", result.warning);
       }
       setSubmitted(true);
     } catch (err) {

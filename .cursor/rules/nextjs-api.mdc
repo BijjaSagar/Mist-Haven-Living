@@ -1,0 +1,34 @@
+---
+description: Next.js App Router API route JSON conventions
+globs: app/api/**/*.ts, lib/api-response.ts, lib/admin/api-helpers.ts
+---
+
+# API routes (Mist & Haven Living)
+
+Use `apiSuccess` / `apiError` from `@/lib/api-response` for new or migrated endpoints.
+
+## Envelope
+
+| Outcome | Status | Body |
+|---------|--------|------|
+| Success | 200 (201 create) | `{ success: true, data, meta? }` |
+| Error | 4xx/5xx | `{ success: false, error: { message, code?, details? } }` |
+
+## Conventions
+
+- **Empty lists**: `200` + `data: []` — never `404` for “no rows”.
+- **Missing resource**: `404` + `error.message` (single item by id/slug).
+- **Validation**: `400` with `code: "VALIDATION_ERROR"` and `error.details` (Zod flatten).
+- **Auth**: `401` unauthorized, `403` forbidden — use `requireAdmin` / `requireAdminRole`.
+- **Do not leak** stack traces in production; log server-side only.
+
+## Client parsing
+
+```ts
+import { getApiErrorMessage, getApiData } from "@/lib/api-response";
+const json = await res.json();
+if (!res.ok) throw new Error(getApiErrorMessage(json));
+const payload = getApiData(json);
+```
+
+Legacy routes may still return raw arrays or `{ error: string }`; migrate incrementally.
