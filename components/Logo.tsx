@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { imageOptsForSrc } from "@/lib/image-props";
 import { cn } from "@/lib/utils";
 
 const LOGO_WIDTH = 1024;
@@ -43,6 +44,7 @@ export function Logo({
         width={LOGO_WIDTH}
         height={LOGO_HEIGHT}
         priority={priority}
+        {...imageOptsForSrc(src)}
         className="h-auto w-[96px] sm:w-[108px] md:w-[118px]"
       />
     </Link>

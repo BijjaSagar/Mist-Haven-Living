@@ -4,6 +4,7 @@ import { CatalogCTA } from "@/components/CatalogGateModal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { getProductInterestOptions } from "@/lib/data/products";
+import { getPageContent } from "@/lib/data/pages";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { ArrowRight } from "lucide-react";
 
@@ -19,6 +20,12 @@ export async function CTABand({
   variant = "full",
 }: CTABandProps) {
   if (variant === "centered") {
+    const page = await getPageContent("contact");
+    const catalog = (page?.sections.catalog ?? {}) as {
+      pdfUrl?: string;
+      pdfLabel?: string;
+    };
+
     return (
       <section className="bg-taupe-dark py-section-mobile text-center md:py-24">
         <div className="mx-auto max-w-container px-6 md:px-8">
@@ -44,6 +51,8 @@ export async function CTABand({
               <CatalogCTA
                 appearance="ghost"
                 className="border-pearl/50 text-pearl hover:border-pearl hover:bg-pearl hover:text-taupe"
+                catalogPdfUrl={catalog.pdfUrl ?? ""}
+                catalogPdfLabel={catalog.pdfLabel}
               />
             </div>
           </FadeUp>

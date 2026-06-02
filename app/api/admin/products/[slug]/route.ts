@@ -38,6 +38,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         eyebrow: body.eyebrow,
         heroImage: body.heroImage,
         cardImage: body.cardImage,
+        galleryImages: body.galleryImages ?? [],
         features: body.features,
         materials: body.materials,
         sizes: body.sizes,

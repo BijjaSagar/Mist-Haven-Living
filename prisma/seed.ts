@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import {
   productCategories,
@@ -13,6 +13,7 @@ import {
 import {
   DEFAULT_HOME_SECTIONS,
   DEFAULT_ABOUT_SECTIONS,
+  STATIC_PAGES,
 } from "../lib/data/pages";
 import { siteConfig } from "../lib/utils";
 import { DEFAULT_COLORS } from "../lib/data/site-settings";
@@ -89,6 +90,7 @@ async function main() {
         eyebrow: product.eyebrow,
         heroImage: product.heroImage,
         cardImage: product.cardImage,
+        galleryImages: [],
         features: product.features,
         materials: product.materials,
         sizes: product.sizes,
@@ -163,14 +165,14 @@ async function main() {
       metaTitle: "Private Label",
       metaDescription:
         "Launch or scale your towel and linen brand with full private label manufacturing—from product development to retail-ready packaging. Export to USA and Canada.",
-      sections: {},
+      sections: STATIC_PAGES["private-label"].sections,
     },
     {
       slug: "contact",
       metaTitle: "Contact",
       metaDescription:
         "Contact Mist & Haven Living export team for B2B textile inquiries. USA and Canada buyers welcome. Response within one business day.",
-      sections: {},
+      sections: STATIC_PAGES.contact.sections,
     },
     {
       slug: "faq",
@@ -195,12 +197,15 @@ async function main() {
       where: { slug: page.slug },
       update: refreshBrandedSections
         ? {
-            sections: page.sections,
+            sections: page.sections as Prisma.InputJsonValue,
             metaTitle: page.metaTitle,
             metaDescription: page.metaDescription,
           }
         : {},
-      create: page,
+      create: {
+        ...page,
+        sections: page.sections as Prisma.InputJsonValue,
+      },
     });
   }
 

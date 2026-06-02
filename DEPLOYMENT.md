@@ -643,16 +643,25 @@ You should no longer see the schema-out-of-date error.
 
 ## 7. File uploads
 
-Admin **Settings → Branding**, **Products** (hero/card), and **Pages** (home hero & heritage) use **Upload image**, which `POST`s to `/api/admin/upload` (admin session required). Files are saved under `public/uploads/` and referenced as `/uploads/<filename>` in the database after you click **Save**.
+Admin uploads use `POST /api/admin/upload` (admin session required). Files live on disk under **`public/uploads/`** (referenced in the DB as `/uploads/...` after you click **Save** on the product or page).
 
-On Hostinger's persistent Node.js server, these files **persist across restarts** — unlike Vercel serverless where the filesystem is ephemeral. They are **not** included in `next-build.zip`; back up `public/uploads/` separately if you redeploy from scratch.
+| Admin area | What to upload | On-disk path |
+|------------|----------------|--------------|
+| **Settings → Branding** | Logo, favicon | `public/uploads/` |
+| **Products → [category]** | Hero, card, gallery images | `public/uploads/products/{slug}/` |
+| **Pages → private-label** | Specification PDF | `public/uploads/pdfs/private-label/` |
+| **Pages → home** | Hero & heritage images | `public/uploads/` (or custom folder) |
 
-Ensure the `public/uploads` directory is writable by the Node.js process. Create it if missing:
+**Persistence:** On Hostinger's Node.js app, `public/uploads/` (including nested `products/` and `pdfs/` folders) **survives app restarts**. Uploads are **not** inside `next-build.zip`. `scripts/server-deploy.sh` backs up and restores `.next/standalone/public/uploads/` when redeploying — keep that directory on the server; do not delete it during deploys.
+
+Ensure uploads are writable:
 
 ```bash
-mkdir -p public/uploads
-chmod 755 public/uploads
+mkdir -p public/uploads/products public/uploads/pdfs/private-label
+chmod -R 755 public/uploads
 ```
+
+After schema changes that add `galleryImages`, run `npx prisma migrate deploy` on the server.
 
 Default logos in `/public/logo.png` work without any uploads.
 

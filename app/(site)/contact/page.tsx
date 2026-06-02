@@ -24,10 +24,15 @@ export async function generateMetadata() {
 export const revalidate = 86400;
 
 export default async function ContactPage() {
-  const [settings, productInterestOptions] = await Promise.all([
+  const [settings, productInterestOptions, page] = await Promise.all([
     getSiteSettings(),
     getProductInterestOptions(),
+    getPageContent("contact"),
   ]);
+  const catalog = (page?.sections.catalog ?? {}) as {
+    pdfUrl?: string;
+    pdfLabel?: string;
+  };
   return (
     <>
       <section className="pt-32 pb-section-mobile md:pb-section-desktop">
@@ -43,9 +48,14 @@ export default async function ContactPage() {
               Share your product requirements, quantities, and timeline. We respond
               to all B2B inquiries within one business day.
             </p>
-            <div className="mt-6">
-              <CatalogCTA />
-            </div>
+            {catalog.pdfUrl ? (
+              <div className="mt-6">
+                <CatalogCTA
+                  catalogPdfUrl={catalog.pdfUrl}
+                  catalogPdfLabel={catalog.pdfLabel}
+                />
+              </div>
+            ) : null}
           </FadeUp>
         </div>
       </section>

@@ -63,6 +63,7 @@ model ProductCategory {
   eyebrow          String
   heroImage        String
   cardImage        String
+  galleryImages    Json     @default("[]")
   features         Json
   materials        Json
   sizes            Json

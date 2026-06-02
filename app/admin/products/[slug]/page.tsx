@@ -3,14 +3,14 @@ import Link from "next/link";
 import { requireAdminPage } from "@/app/admin/layout";
 import { AdminPageHeader } from "@/components/admin/AdminShell";
 import { ProductEditor } from "@/components/admin/ProductEditor";
-import { getCategoryBySlug } from "@/lib/data/products";
+import { getCategoryBySlugAdmin } from "@/lib/data/products";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
 export default async function AdminProductEditPage({ params }: PageProps) {
   await requireAdminPage();
   const { slug } = await params;
-  const product = await getCategoryBySlug(slug);
+  const product = await getCategoryBySlugAdmin(slug);
   if (!product) notFound();
 
   return (

@@ -25,9 +25,16 @@ import {
 type CatalogGateModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  catalogPdfUrl: string;
+  catalogPdfLabel?: string;
 };
 
-export function CatalogGateModal({ open, onOpenChange }: CatalogGateModalProps) {
+export function CatalogGateModal({
+  open,
+  onOpenChange,
+  catalogPdfUrl,
+  catalogPdfLabel = "Download Product Catalog",
+}: CatalogGateModalProps) {
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,9 +106,14 @@ export function CatalogGateModal({ open, onOpenChange }: CatalogGateModalProps) 
               Your catalog is ready
             </p>
             <Button asChild className="mt-6">
-              <a href="/catalog/mist-haven-product-catalog.pdf" download>
+              <a
+                href={catalogPdfUrl}
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Download className="h-4 w-4" />
-                Download PDF Catalog
+                {catalogPdfLabel}
               </a>
             </Button>
           </div>
@@ -174,13 +186,19 @@ type CatalogCTAProps = {
   className?: string;
   /** Use mockup-style btn-ghost instead of shadcn Button */
   appearance?: "button" | "ghost";
+  catalogPdfUrl: string;
+  catalogPdfLabel?: string;
 };
 
 export function CatalogCTA({
   className,
   appearance = "button",
+  catalogPdfUrl,
+  catalogPdfLabel,
 }: CatalogCTAProps) {
   const [open, setOpen] = useState(false);
+
+  if (!catalogPdfUrl) return null;
 
   return (
     <>
@@ -197,7 +215,12 @@ export function CatalogCTA({
           Get Product Catalog
         </Button>
       )}
-      <CatalogGateModal open={open} onOpenChange={setOpen} />
+      <CatalogGateModal
+        open={open}
+        onOpenChange={setOpen}
+        catalogPdfUrl={catalogPdfUrl}
+        catalogPdfLabel={catalogPdfLabel}
+      />
     </>
   );
 }

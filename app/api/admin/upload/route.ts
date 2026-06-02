@@ -5,6 +5,24 @@ import {
   isUnauthorized,
   requireAdmin,
 } from "@/lib/admin/api-helpers";
+import { resolveUploadDir, sanitizeUploadSegment } from "@/lib/uploads";
+
+const IMAGE_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/svg+xml",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+];
+
+const PDF_TYPES = ["application/pdf"];
+
+function safeFilename(original: string, fallbackExt: string): string {
+  const ext = original.split(".").pop()?.toLowerCase() ?? fallbackExt;
+  const safeExt = ext.replace(/[^a-z0-9]/g, "") || fallbackExt;
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
+}
 
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin();
@@ -17,17 +35,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const allowed = [
-      "image/png",
-      "image/jpeg",
-      "image/webp",
-      "image/svg+xml",
-      "image/x-icon",
-      "image/vnd.microsoft.icon",
-    ];
+    const kind = (formData.get("kind") as string | null)?.toLowerCase() ?? "image";
+    const folder = (formData.get("folder") as string | null)?.trim() || undefined;
+
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
     const isIco = ext === "ico";
-    if (!allowed.includes(file.type) && !(isIco && file.type === "application/octet-stream")) {
+    const isPdf = ext === "pdf" || PDF_TYPES.includes(file.type);
+
+    if (kind === "pdf" || isPdf) {
+      if (!PDF_TYPES.includes(file.type) && ext !== "pdf") {
+        return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "File too large (max 15MB)" },
+          { status: 400 },
+        );
+      }
+      const pdfFolder =
+        folder ?? `pdfs/${sanitizeUploadSegment(formData.get("label") as string ?? "documents")}`;
+      const { diskPath, publicPrefix } = resolveUploadDir(pdfFolder);
+      await mkdir(diskPath, { recursive: true });
+      const filename = safeFilename(file.name, "pdf");
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await writeFile(path.join(diskPath, filename), buffer);
+      return NextResponse.json({ url: `${publicPrefix}/${filename}` });
+    }
+
+    if (
+      !IMAGE_TYPES.includes(file.type) &&
+      !(isIco && file.type === "application/octet-stream")
+    ) {
       return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
     }
 
@@ -35,14 +73,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File too large (max 5MB)" }, { status: 400 });
     }
 
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext || "png"}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
+    const { diskPath, publicPrefix } = resolveUploadDir(folder);
+    await mkdir(diskPath, { recursive: true });
 
+    const filename = safeFilename(file.name, "png");
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(path.join(uploadDir, filename), buffer);
+    await writeFile(path.join(diskPath, filename), buffer);
 
-    return NextResponse.json({ url: `/uploads/${filename}` });
+    return NextResponse.json({ url: `${publicPrefix}/${filename}` });
   } catch {
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }

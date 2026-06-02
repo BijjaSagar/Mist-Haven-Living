@@ -11,6 +11,7 @@ import {
   AdminCard,
 } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
+import { PdfUploadField } from "@/components/admin/PdfUploadField";
 
 export function PagesEditor({ initial }: { initial: PageContentData[] }) {
   const [pages, setPages] = useState(initial);
@@ -71,6 +72,24 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
 
   const hero = (active?.sections.hero ?? {}) as Record<string, string>;
   const heritage = (active?.sections.heritage ?? {}) as Record<string, string>;
+  const specs = (active?.sections.specs ?? {}) as Record<string, string>;
+  const catalog = (active?.sections.catalog ?? {}) as Record<string, string>;
+
+  function updateSpecsField(key: string, value: string) {
+    const sections = {
+      ...active.sections,
+      specs: { ...specs, [key]: value },
+    };
+    updateActive("sections", sections);
+  }
+
+  function updateCatalogField(key: string, value: string) {
+    const sections = {
+      ...active.sections,
+      catalog: { ...catalog, [key]: value },
+    };
+    updateActive("sections", sections);
+  }
 
   return (
     <div className="space-y-6">
@@ -181,6 +200,83 @@ export function PagesEditor({ initial }: { initial: PageContentData[] }) {
                 onChange={(url) => updateSectionImage("heritage", url)}
                 hint="Manufacturing / heritage block on homepage. Save page after upload."
               />
+            </AdminCard>
+          )}
+
+          {activeSlug === "contact" && (
+            <AdminCard>
+              <h2 className="mb-4 font-display text-xl text-taupe">
+                Product catalog download
+              </h2>
+              <p className="mb-4 font-body text-sm text-muted">
+                Shown on the contact page after a visitor completes the catalog
+                lead form. Save page after uploading the PDF.
+              </p>
+              <div className="space-y-4">
+                <PdfUploadField
+                  label="Product catalog PDF"
+                  value={catalog.pdfUrl ?? ""}
+                  onChange={(url) => updateCatalogField("pdfUrl", url)}
+                  uploadFolder="pdfs/product-catalog"
+                  hint="Download link on /contact (and catalog CTAs site-wide)"
+                />
+                <div>
+                  <Label>Download button label</Label>
+                  <Input
+                    value={catalog.pdfLabel ?? ""}
+                    onChange={(e) => updateCatalogField("pdfLabel", e.target.value)}
+                    className="mt-1"
+                    placeholder="Download Product Catalog"
+                  />
+                </div>
+              </div>
+            </AdminCard>
+          )}
+
+          {activeSlug === "private-label" && (
+            <AdminCard>
+              <h2 className="mb-4 font-display text-xl text-taupe">
+                Specifications & download
+              </h2>
+              <p className="mb-4 font-body text-sm text-muted">
+                Shown on the private label page as the specification download block.
+                Save page after uploading the PDF.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <Label>Section title</Label>
+                  <Input
+                    value={specs.title ?? ""}
+                    onChange={(e) => updateSpecsField("title", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea
+                    value={specs.description ?? ""}
+                    onChange={(e) => updateSpecsField("description", e.target.value)}
+                    className="mt-1"
+                    rows={3}
+                  />
+                </div>
+                <PdfUploadField
+                  label="Specification PDF"
+                  value={specs.pdfUrl ?? ""}
+                  onChange={(url) => updateSpecsField("pdfUrl", url)}
+                  uploadFolder="pdfs/private-label"
+                  hint="Download link on /private-label"
+                />
+                <div>
+                  <Label>Download button label</Label>
+                  <Input
+                    value={specs.pdfLabel ?? ""}
+                    onChange={(e) => updateSpecsField("pdfLabel", e.target.value)}
+                    className="mt-1"
+                    placeholder="Download specification sheet (PDF)"
+                  />
+                </div>
+              </div>
             </AdminCard>
           )}
 

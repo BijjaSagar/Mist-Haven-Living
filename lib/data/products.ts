@@ -8,9 +8,16 @@ import {
 import type { ProductCategoryData } from "@/lib/types/cms";
 
 function withSeoFields(
-  category: Omit<ProductCategoryData, "metaTitle" | "metaDescription">,
+  category: Omit<ProductCategoryData, "metaTitle" | "metaDescription" | "galleryImages"> & {
+    galleryImages?: string[];
+  },
 ): ProductCategoryData {
-  return { ...category, metaTitle: null, metaDescription: null };
+  return {
+    ...category,
+    metaTitle: null,
+    metaDescription: null,
+    galleryImages: category.galleryImages ?? [],
+  };
 }
 
 function mapProduct(row: ProductCategory): ProductCategoryData {
@@ -24,6 +31,7 @@ function mapProduct(row: ProductCategory): ProductCategoryData {
     eyebrow: row.eyebrow,
     heroImage: row.heroImage,
     cardImage: row.cardImage,
+    galleryImages: (row.galleryImages as string[] | null) ?? [],
     features: row.features as string[],
     materials: row.materials as string[],
     sizes: row.sizes as ProductCategoryData["sizes"],
@@ -77,6 +85,27 @@ export async function getCategoryBySlug(
   try {
     const row = await prisma.productCategory.findUnique({ where: { slug } });
     if (!row || !row.visible) {
+      const category = staticGetBySlug(slug);
+      return category ? withSeoFields(category) : undefined;
+    }
+    return mapProduct(row);
+  } catch {
+    const category = staticGetBySlug(slug);
+    return category ? withSeoFields(category) : undefined;
+  }
+}
+
+/** Admin editor: includes hidden products. */
+export async function getCategoryBySlugAdmin(
+  slug: string,
+): Promise<ProductCategoryData | undefined> {
+  if (!isDbConfigured()) {
+    const category = staticGetBySlug(slug);
+    return category ? withSeoFields(category) : undefined;
+  }
+  try {
+    const row = await prisma.productCategory.findUnique({ where: { slug } });
+    if (!row) {
       const category = staticGetBySlug(slug);
       return category ? withSeoFields(category) : undefined;
     }

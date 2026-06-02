@@ -78,14 +78,27 @@ const STATIC_PAGES: Record<string, PageContentData> = {
     metaTitle: "Private Label",
     metaDescription:
       "Launch or scale your towel and linen brand with full private label manufacturing—from product development to retail-ready packaging. Export to USA and Canada.",
-    sections: {},
+    sections: {
+      specs: {
+        title: "Private label specifications",
+        description:
+          "Download our private label capability sheet with GSM ranges, customization options, MOQs, lead times, and packaging formats for North American buyers.",
+        pdfUrl: "",
+        pdfLabel: "Download specification sheet (PDF)",
+      },
+    },
   },
   contact: {
     slug: "contact",
     metaTitle: "Contact",
     metaDescription:
       "Contact Mist & Haven Living export team for B2B textile inquiries. USA and Canada buyers welcome. Response within one business day.",
-    sections: {},
+    sections: {
+      catalog: {
+        pdfUrl: "",
+        pdfLabel: "Download Product Catalog",
+      },
+    },
   },
   faq: {
     slug: "faq",

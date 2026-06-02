@@ -5,33 +5,47 @@ import Link from "next/link";
 import type { ProductCategoryData } from "@/lib/types/cms";
 import { AdminCard } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
+import { ProductGalleryField } from "@/components/admin/ProductGalleryField";
+
+const productUploadFolder = (slug: string) => `products/${slug}`;
 
 export function ProductsList({ products }: { products: ProductCategoryData[] }) {
   return (
-    <AdminCard>
-      <div className="divide-y divide-hairline">
+    <AdminCard className="p-0">
+      <ul className="divide-y divide-hairline">
         {products.map((product) => (
-          <Link
-            key={product.slug}
-            href={`/admin/products/${product.slug}`}
-            className="flex items-center justify-between py-4 transition-colors hover:bg-oat/50"
-          >
-            <div>
-              <p className="font-display text-lg text-taupe">{product.name}</p>
-              <p className="font-body text-sm text-muted">{product.slug}</p>
-            </div>
-            <span className="font-body text-sm text-sage-deep">Edit →</span>
-          </Link>
+          <li key={product.slug}>
+            <Link
+              href={`/admin/products/${product.slug}`}
+              className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-oat/50"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-base text-taupe">
+                  {product.name}
+                </p>
+                <p className="truncate font-body text-xs text-muted">
+                  {product.slug}
+                </p>
+              </div>
+              <span className="shrink-0 font-body text-sm text-sage-deep">
+                Edit →
+              </span>
+            </Link>
+          </li>
         ))}
-      </div>
+      </ul>
     </AdminCard>
   );
 }
 
 export function ProductEditor({ product }: { product: ProductCategoryData }) {
-  const [data, setData] = useState(product);
+  const [data, setData] = useState({
+    ...product,
+    galleryImages: product.galleryImages ?? [],
+  });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const folder = productUploadFolder(product.slug);
 
   async function handleSave() {
     setSaving(true);
@@ -79,13 +93,22 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
             label="Hero image"
             value={data.heroImage}
             onChange={(heroImage) => setData({ ...data, heroImage })}
-            hint="Product detail page hero. Save product after upload."
+            uploadFolder={folder}
+            hint="Product detail hero. Save after upload."
           />
           <ImageUploadField
             label="Card image"
             value={data.cardImage}
             onChange={(cardImage) => setData({ ...data, cardImage })}
-            hint="Grid/list thumbnail. Save product after upload."
+            uploadFolder={folder}
+            hint="Grid thumbnail. Save after upload."
+          />
+        </div>
+        <div className="mt-4">
+          <ProductGalleryField
+            images={data.galleryImages}
+            onChange={(galleryImages) => setData({ ...data, galleryImages })}
+            productSlug={product.slug}
           />
         </div>
         <div className="mt-4">

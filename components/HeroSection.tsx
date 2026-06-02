@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
+import { imageOptsForSrc } from "@/lib/image-props";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -139,6 +140,7 @@ export function HeroSection({
                     src={slide.image}
                     alt={slide.caption}
                     fill
+                    {...imageOptsForSrc(slide.image)}
                     className="object-cover"
                     priority={index === 0}
                     sizes="(max-width: 1024px) 90vw, 45vw"

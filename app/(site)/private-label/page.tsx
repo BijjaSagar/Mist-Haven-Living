@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Download } from "lucide-react";
 import { createMetadata, serviceJsonLd } from "@/lib/seo";
 import { SectionHeading } from "@/components/SectionHeading";
 import { FeatureGrid } from "@/components/FeatureGrid";
@@ -93,7 +94,16 @@ const privateLabelSteps = [
   },
 ];
 
+type PrivateLabelSpecs = {
+  title?: string;
+  description?: string;
+  pdfUrl?: string;
+  pdfLabel?: string;
+};
+
 export default async function PrivateLabelPage() {
+  const page = await getPageContent("private-label");
+  const specs = (page?.sections?.specs ?? {}) as PrivateLabelSpecs;
   const category = await getCategoryBySlug("private-labeling");
   const jsonLd = serviceJsonLd(
     "Private Label Textile Manufacturing",
@@ -217,6 +227,42 @@ export default async function PrivateLabelPage() {
           </div>
         </div>
       </section>
+
+      {(specs.title || specs.description || specs.pdfUrl) && (
+        <section className="border-t border-hairline bg-white py-section-mobile md:py-section-desktop">
+          <div className="mx-auto max-w-container px-6 md:px-8">
+            <FadeUp>
+              <div className="mx-auto max-w-2xl text-center">
+                <SectionHeading
+                  eyebrow="Specifications"
+                  title={specs.title ?? "Private label specifications"}
+                  description={
+                    specs.description ??
+                    "Capability sheet with GSM ranges, customization, MOQs, and lead times."
+                  }
+                  className="mb-8"
+                />
+                {specs.pdfUrl ? (
+                  <Button asChild size="lg">
+                    <a href={specs.pdfUrl} download target="_blank" rel="noopener noreferrer">
+                      <Download className="h-4 w-4" />
+                      {specs.pdfLabel ?? "Download specification sheet (PDF)"}
+                    </a>
+                  </Button>
+                ) : (
+                  <p className="font-body text-sm text-muted">
+                    Specification PDF coming soon.{" "}
+                    <Link href="/contact#inquiry" className="text-sage-deep hover:underline">
+                      Contact us
+                    </Link>{" "}
+                    for a copy.
+                  </p>
+                )}
+              </div>
+            </FadeUp>
+          </div>
+        </section>
+      )}
 
       <CTABand prefilledProduct="private-labeling" />
     </>

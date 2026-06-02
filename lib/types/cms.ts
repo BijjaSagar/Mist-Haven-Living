@@ -14,6 +14,7 @@ export type ProductCategoryData = {
   eyebrow: string;
   heroImage: string;
   cardImage: string;
+  galleryImages: string[];
   features: string[];
   materials: string[];
   sizes: ProductSize[];

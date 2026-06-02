@@ -5,22 +5,21 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-type ImageUploadFieldProps = {
+type PdfUploadFieldProps = {
   label: string;
   value: string;
   onChange: (url: string) => void;
   hint?: string;
-  /** e.g. `products/bath-towels` → public/uploads/products/bath-towels/ */
   uploadFolder?: string;
 };
 
-export function ImageUploadField({
+export function PdfUploadField({
   label,
   value,
   onChange,
   hint,
-  uploadFolder,
-}: ImageUploadFieldProps) {
+  uploadFolder = "pdfs/private-label",
+}: PdfUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +29,7 @@ export function ImageUploadField({
     setError(null);
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("kind", "pdf");
     if (uploadFolder) formData.append("folder", uploadFolder);
     try {
       const res = await fetch("/api/admin/upload", {
@@ -57,25 +57,22 @@ export function ImageUploadField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="mt-1"
-        placeholder="/uploads/… or https://…"
+        placeholder="/uploads/pdfs/…"
       />
       {value ? (
-        <div className="mt-2 overflow-hidden rounded-md border border-hairline bg-oat/40 p-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={value}
-            alt=""
-            className="max-h-24 max-w-full object-contain"
-          />
-        </div>
+        <p className="mt-2 font-body text-xs text-muted">
+          <a href={value} target="_blank" rel="noopener noreferrer" className="text-sage-deep hover:underline">
+            Preview PDF
+          </a>
+        </p>
       ) : null}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <input
           ref={inputRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon,.ico"
+          accept="application/pdf,.pdf"
           className="sr-only"
-          id={`upload-${label.replace(/\s+/g, "-")}`}
+          id={`pdf-upload-${label.replace(/\s+/g, "-")}`}
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) void handleFile(file);
@@ -88,7 +85,7 @@ export function ImageUploadField({
           disabled={uploading}
           onClick={() => inputRef.current?.click()}
         >
-          {uploading ? "Uploading…" : "Upload image"}
+          {uploading ? "Uploading…" : "Upload PDF"}
         </Button>
         {value ? (
           <Button
