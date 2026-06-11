@@ -2,8 +2,53 @@ import { describe, expect, it } from "vitest";
 import {
   cmsImageSrc,
   resolveCmsImage,
+  resolveProductCardImage,
   sanitizeCmsImagePath,
 } from "./image-props";
+
+describe("resolveProductCardImage", () => {
+  it("prefers uploaded cardImage over picsum", () => {
+    expect(
+      resolveProductCardImage({
+        cardImage: "/uploads/products/bath-towels/1781184477170-card.jpeg",
+        heroImage: "https://picsum.photos/seed/bath-towels/1400/900",
+      }),
+    ).toBe("/uploads/products/bath-towels/1781184477170-card.jpeg");
+  });
+
+  it("falls back to uploaded hero when card is picsum", () => {
+    expect(
+      resolveProductCardImage({
+        cardImage: "https://picsum.photos/seed/bath-towels-card/800/600",
+        heroImage: "/uploads/products/bath-towels/1781184477170-hero.jpeg",
+      }),
+    ).toBe("/uploads/products/bath-towels/1781184477170-hero.jpeg");
+  });
+
+  it("falls back to gallery upload when card and hero are picsum", () => {
+    expect(
+      resolveProductCardImage({
+        cardImage: "https://picsum.photos/seed/bath-towels-card/800/600",
+        heroImage: "https://picsum.photos/seed/bath-towels/1400/900",
+        galleryImages: [
+          "https://picsum.photos/seed/gallery/600/600",
+          "/uploads/products/bath-towels/1781184477170-gallery.jpeg",
+        ],
+      }),
+    ).toBe("/uploads/products/bath-towels/1781184477170-gallery.jpeg");
+  });
+
+  it("returns picsum only when no uploads exist", () => {
+    const picsum = "https://picsum.photos/seed/bath-towels-card/800/600";
+    expect(
+      resolveProductCardImage({
+        cardImage: picsum,
+        heroImage: "https://picsum.photos/seed/bath-towels/1400/900",
+        galleryImages: [],
+      }),
+    ).toBe(picsum);
+  });
+});
 
 describe("sanitizeCmsImagePath", () => {
   it("removes corrupted ISO time suffix merged into path", () => {

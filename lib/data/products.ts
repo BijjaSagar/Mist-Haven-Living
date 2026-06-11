@@ -1,4 +1,5 @@
 import type { ProductCategory } from "@prisma/client";
+import { unstable_noStore as noStore } from "next/cache";
 import { prisma, isDbConfigured } from "@/lib/db";
 import {
   productCategories as staticCategories,
@@ -29,11 +30,24 @@ function withSeoFields(
     galleryImages?: string[];
   },
 ): ProductCategoryData {
+  const galleryImages = normalizeGalleryImages(category.galleryImages);
+  const cardImage = resolveProductCardImage({
+    cardImage: category.cardImage,
+    heroImage: category.heroImage,
+    galleryImages,
+  });
+
+  console.log("[withSeoFields] resolved static category images", {
+    slug: category.slug,
+    cardImage,
+  });
+
   return {
     ...category,
     metaTitle: null,
     metaDescription: null,
-    galleryImages: normalizeGalleryImages(category.galleryImages),
+    galleryImages,
+    cardImage,
   };
 }
 
@@ -77,6 +91,10 @@ function mapProduct(row: ProductCategory): ProductCategoryData {
 }
 
 export async function getProductCategories(): Promise<ProductCategoryData[]> {
+  // Never bake static picsum placeholders at CI build time — fetch from DB at runtime.
+  noStore();
+  console.log("[getProductCategories] noStore — runtime DB fetch (skip CI static bake-in)");
+
   if (!isDbConfigured()) {
     console.log("[getProductCategories] DATABASE_URL unset — static fallback");
     return staticCategories.map(withSeoFields);
@@ -116,6 +134,8 @@ export async function getAllProductCategoriesAdmin(): Promise<
 export async function getCategoryBySlug(
   slug: string,
 ): Promise<ProductCategoryData | undefined> {
+  noStore();
+
   if (!isDbConfigured()) {
     const category = staticGetBySlug(slug);
     return category ? withSeoFields(category) : undefined;
@@ -155,6 +175,8 @@ export async function getCategoryBySlugAdmin(
 }
 
 export async function getAllCategorySlugs(): Promise<string[]> {
+  noStore();
+
   if (!isDbConfigured()) return staticGetAllSlugs();
   try {
     const rows = await prisma.productCategory.findMany({
