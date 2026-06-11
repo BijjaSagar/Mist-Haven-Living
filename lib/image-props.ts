@@ -54,46 +54,108 @@ export function resolveProductCardImage(category: ProductImageFields): string {
 /** Timestamp embedded in upload filenames: `/uploads/.../1718123456789-abc123.png` */
 const UPLOAD_FILENAME_TS_RE = /\/(\d{13})-[a-z0-9]+\.[a-z0-9]+$/i;
 
+/** Legacy bug: ISO time fragment merged into path instead of `?v=` query. */
+const CORRUPTED_PATH_TS_RE =
+  /_\d{2}(?:%3A|:)\d{2}(?:%3A|:)\d{2}(?:\.\d+)?Z$/i;
+
 export type CacheVersion = string | number | Date | null | undefined;
 
 function normalizeCacheVersion(version: CacheVersion): string | null {
   if (version == null || version === "") return null;
   if (version instanceof Date) return String(version.getTime());
-  return String(version);
+  const raw = String(version).trim();
+  if (!raw) return null;
+  // ISO-8601 → epoch ms so ?v= never contains colons (some proxies corrupt them into the path).
+  if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+    const ms = Date.parse(raw);
+    if (!Number.isNaN(ms)) {
+      console.log("[cmsImageSrc] normalized ISO cacheVersion to epoch ms", {
+        raw,
+        ms,
+      });
+      return String(ms);
+    }
+  }
+  return raw;
+}
+
+/** Strip corrupted cache-bust suffixes and existing `?v=` before re-appending. */
+export function sanitizeCmsImagePath(src: string): string {
+  const qIndex = src.indexOf("?");
+  let pathname = qIndex >= 0 ? src.slice(0, qIndex) : src;
+
+  if (CORRUPTED_PATH_TS_RE.test(pathname)) {
+    const cleaned = pathname.replace(CORRUPTED_PATH_TS_RE, "");
+    console.log("[cmsImageSrc] stripped corrupted path suffix", {
+      before: pathname,
+      after: cleaned,
+    });
+    pathname = cleaned;
+  }
+
+  return pathname;
+}
+
+function splitPathAndQuery(src: string): { pathname: string; params: URLSearchParams } {
+  const qIndex = src.indexOf("?");
+  const pathname = qIndex >= 0 ? src.slice(0, qIndex) : src;
+  const params = new URLSearchParams(qIndex >= 0 ? src.slice(qIndex + 1) : "");
+  return { pathname, params };
 }
 
 /**
  * Append `?v=` for CMS-managed local images so browsers/CDNs re-fetch after admin saves.
  * Upload paths already include a millisecond timestamp in the filename; static paths
  * (e.g. `/logo.png`) rely on the DB `updatedAt` passed as `cacheVersion`.
+ * Cache bust is ALWAYS a query param — never merged into the path.
  */
 export function cmsImageSrc(src: string, cacheVersion?: CacheVersion): string {
   if (!src || src.startsWith("http://") || src.startsWith("https://")) {
     return src;
   }
-  if (src.includes("?v=")) return src;
 
+  const pathname = sanitizeCmsImagePath(src);
+  const { params } = splitPathAndQuery(src);
+
+  if (params.has("v")) {
+    const existing = params.get("v") ?? "";
+    const normalized = normalizeCacheVersion(existing) ?? existing;
+    if (normalized !== existing) {
+      params.set("v", normalized);
+    }
+    const query = params.toString();
+    console.log("[cmsImageSrc] existing v= param", { pathname, query });
+    return query ? `${pathname}?${query}` : pathname;
+  }
+
+  const filenameTs = UPLOAD_FILENAME_TS_RE.exec(pathname)?.[1] ?? null;
   const version =
+    filenameTs ??
     normalizeCacheVersion(cacheVersion) ??
-    UPLOAD_FILENAME_TS_RE.exec(src)?.[1] ??
     null;
 
-  if (!version) return src;
+  if (!version) {
+    console.log("[cmsImageSrc] no cache version", { pathname });
+    return pathname;
+  }
 
-  const separator = src.includes("?") ? "&" : "?";
-  return `${src}${separator}v=${encodeURIComponent(version)}`;
+  params.set("v", version);
+  const out = `${pathname}?${params.toString()}`;
+  console.log("[cmsImageSrc] appended v=", { pathname, version, out });
+  return out;
 }
 
 export function imageOptsForSrc(src: string): { unoptimized?: boolean } {
-  return isUploadedAsset(src) ? { unoptimized: true } : {};
+  return isUploadedAsset(sanitizeCmsImagePath(src)) ? { unoptimized: true } : {};
 }
 
 export function resolveCmsImage(
   src: string,
   cacheVersion?: CacheVersion,
 ): { src: string; unoptimized?: boolean } {
+  const pathname = sanitizeCmsImagePath(src);
   return {
-    src: cmsImageSrc(src, cacheVersion),
-    ...imageOptsForSrc(src),
+    src: cmsImageSrc(pathname, cacheVersion),
+    ...imageOptsForSrc(pathname),
   };
 }

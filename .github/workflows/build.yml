@@ -67,31 +67,47 @@ jobs:
               bash scripts/server-deploy.sh next-build.zip
             else
               echo "WARN: scripts/server-deploy.sh missing — inline deploy with upload backup"
-              STANDALONE=".next/standalone"
-              BACKUP=""
-              if [[ -d "$STANDALONE/public/uploads" ]] && [[ -n "$(ls -A "$STANDALONE/public/uploads" 2>/dev/null || true)" ]]; then
-                BACKUP="$(mktemp -d)"
-                cp -a "$STANDALONE/public/uploads/." "$BACKUP/"
-              elif [[ -d public/uploads ]] && [[ -n "$(ls -A public/uploads 2>/dev/null || true)" ]]; then
-                BACKUP="$(mktemp -d)"
-                cp -a public/uploads/. "$BACKUP/"
+              if [[ -f server.js ]] && [[ -d public ]]; then
+                STANDALONE="."
+                echo "→ Flat standalone layout"
+              else
+                STANDALONE=".next/standalone"
               fi
+              BACKUP=""
+              for dir in "$STANDALONE/public/uploads" public/uploads nodejs/public/uploads; do
+                if [[ -d "$dir" ]] && [[ -n "$(ls -A "$dir" 2>/dev/null || true)" ]]; then
+                  if [[ -z "$BACKUP" ]]; then BACKUP="$(mktemp -d)"; fi
+                  cp -an "$dir/." "$BACKUP/" 2>/dev/null || cp -a "$dir/." "$BACKUP/"
+                  echo "→ Backed up $dir"
+                fi
+              done
               mkdir -p "$STANDALONE"
               unzip -o next-build.zip -d "$STANDALONE/"
               if [[ -n "$BACKUP" ]]; then
                 mkdir -p "$STANDALONE/public/uploads"
                 cp -an "$BACKUP/." "$STANDALONE/public/uploads/" 2>/dev/null || cp -a "$BACKUP/." "$STANDALONE/public/uploads/"
                 rm -rf "$BACKUP"
+                echo "→ Restored public/uploads"
               fi
               mkdir -p "$STANDALONE/public/uploads"
-              if [[ -d public/uploads ]]; then
+              if [[ -d public/uploads ]] && [[ "$STANDALONE" != "." ]]; then
                 cp -an public/uploads/. "$STANDALONE/public/uploads/" 2>/dev/null || cp -a public/uploads/. "$STANDALONE/public/uploads/" 2>/dev/null || true
               fi
-              mkdir -p ~/public_html
-              rm -rf ~/public_html/uploads
-              ln -sfn "$(pwd)/$STANDALONE/public/uploads" ~/public_html/uploads
-              mkdir -p ~/public_html/_next
-              rm -rf ~/public_html/_next/static
-              ln -sfn "$(pwd)/$STANDALONE/.next/static" ~/public_html/_next/static
+              PUBLIC_HTML="${PUBLIC_HTML:-}"
+              if [[ -z "$PUBLIC_HTML" ]] && [[ -d ../public_html ]]; then
+                PUBLIC_HTML="$(cd .. && pwd)/public_html"
+              elif [[ -z "$PUBLIC_HTML" ]] && [[ -d ~/public_html ]]; then
+                PUBLIC_HTML="$HOME/public_html"
+              fi
+              if [[ -n "$PUBLIC_HTML" ]] && [[ -d "$PUBLIC_HTML" ]]; then
+                UPLOADS_TARGET="$(cd "$STANDALONE/public/uploads" && pwd)"
+                mkdir -p "$PUBLIC_HTML"
+                rm -rf "$PUBLIC_HTML/uploads"
+                ln -sfn "$UPLOADS_TARGET" "$PUBLIC_HTML/uploads"
+                echo "→ Symlink $PUBLIC_HTML/uploads → $UPLOADS_TARGET"
+                mkdir -p "$PUBLIC_HTML/_next"
+                rm -rf "$PUBLIC_HTML/_next/static"
+                ln -sfn "$(pwd)/$STANDALONE/.next/static" "$PUBLIC_HTML/_next/static"
+              fi
             fi
             echo "Done. Restart Node.js app in hPanel if the site does not update."

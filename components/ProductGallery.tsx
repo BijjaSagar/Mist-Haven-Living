@@ -58,11 +58,6 @@ export function ProductGallery({
       const src = gridImages[gridIndex];
       const slideIndex = lightboxSlides.indexOf(src);
       const index = slideIndex >= 0 ? slideIndex : gridIndex;
-      console.log("[ProductGallery] openLightbox", {
-        gridIndex,
-        slideIndex: index,
-        total: lightboxSlides.length,
-      });
       setActiveIndex(index);
       setLightboxOpen(true);
     },
@@ -72,10 +67,7 @@ export function ProductGallery({
   const goTo = useCallback(
     (delta: number) => {
       setActiveIndex((current) => {
-        const next =
-          (current + delta + lightboxSlides.length) % lightboxSlides.length;
-        console.log("[ProductGallery] goTo", { from: current, to: next, delta });
-        return next;
+        return (current + delta + lightboxSlides.length) % lightboxSlides.length;
       });
     },
     [lightboxSlides.length],

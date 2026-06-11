@@ -10,7 +10,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-STANDALONE_PUBLIC="$ROOT/.next/standalone/public"
+# Flat layout (server.js at app root) or nested (.next/standalone/public).
+if [[ -f "$ROOT/server.js" ]] && [[ -d "$ROOT/public" ]]; then
+  STANDALONE_PUBLIC="$ROOT/public"
+  echo "→ setup-hostinger-uploads: flat layout public/"
+else
+  STANDALONE_PUBLIC="$ROOT/.next/standalone/public"
+fi
+
 LEGACY_UPLOADS="$ROOT/public/uploads"
 TARGET="$STANDALONE_PUBLIC/uploads"
 
