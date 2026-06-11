@@ -5,6 +5,7 @@ import {
   getCategoryBySlug as staticGetBySlug,
   getAllCategorySlugs as staticGetAllSlugs,
 } from "@/data/products";
+import { resolveProductCardImage } from "@/lib/image-props";
 import type { ProductCategoryData } from "@/lib/types/cms";
 
 function normalizeGalleryImages(value: unknown): string[] {
@@ -37,6 +38,20 @@ function withSeoFields(
 }
 
 function mapProduct(row: ProductCategory): ProductCategoryData {
+  const galleryImages = normalizeGalleryImages(row.galleryImages);
+  const cardImage = resolveProductCardImage({
+    cardImage: row.cardImage,
+    heroImage: row.heroImage,
+    galleryImages,
+  });
+
+  console.log("[mapProduct] resolved images", {
+    slug: row.slug,
+    dbCardImage: row.cardImage,
+    resolvedCardImage: cardImage,
+    updatedAt: row.updatedAt.toISOString(),
+  });
+
   return {
     slug: row.slug,
     name: row.name,
@@ -46,8 +61,8 @@ function mapProduct(row: ProductCategory): ProductCategoryData {
     description: row.description,
     eyebrow: row.eyebrow,
     heroImage: row.heroImage,
-    cardImage: row.cardImage,
-    galleryImages: normalizeGalleryImages(row.galleryImages),
+    cardImage,
+    galleryImages,
     features: row.features as string[],
     materials: row.materials as string[],
     sizes: row.sizes as ProductCategoryData["sizes"],
@@ -63,6 +78,7 @@ function mapProduct(row: ProductCategory): ProductCategoryData {
 
 export async function getProductCategories(): Promise<ProductCategoryData[]> {
   if (!isDbConfigured()) {
+    console.log("[getProductCategories] DATABASE_URL unset — static fallback");
     return staticCategories.map(withSeoFields);
   }
   try {
@@ -70,9 +86,14 @@ export async function getProductCategories(): Promise<ProductCategoryData[]> {
       where: { visible: true },
       orderBy: { sortOrder: "asc" },
     });
-    if (rows.length === 0) return staticCategories.map(withSeoFields);
+    console.log("[getProductCategories] fetched rows", { count: rows.length });
+    if (rows.length === 0) {
+      console.log("[getProductCategories] empty DB — static fallback");
+      return staticCategories.map(withSeoFields);
+    }
     return rows.map(mapProduct);
-  } catch {
+  } catch (error) {
+    console.error("[getProductCategories] query failed — static fallback", error);
     return staticCategories.map(withSeoFields);
   }
 }

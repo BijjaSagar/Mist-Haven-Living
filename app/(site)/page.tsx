@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { HeroSection } from "@/components/HeroSection";
 import { TrustStrip } from "@/components/TrustStrip";
@@ -21,6 +22,8 @@ import { getProductCategories } from "@/lib/data/products";
 import { getStats } from "@/lib/data/stats";
 import { getCertifications } from "@/lib/data/certifications";
 import { getPageContent } from "@/lib/data/pages";
+import { resolveCmsImage } from "@/lib/image-props";
+import { cn } from "@/lib/utils";
 
 export const revalidate = 86400;
 
@@ -49,6 +52,12 @@ export default async function HomePage() {
     imageUrl?: string;
   };
 
+  const heritageImageUrl = heritage.imageUrl?.trim() ?? "";
+  console.log("[HomePage] heritage section", {
+    imageUrl: heritageImageUrl || null,
+    updatedAt: homePage?.updatedAt,
+  });
+
   return (
     <>
       <HeroSection
@@ -64,42 +73,96 @@ export default async function HomePage() {
 
       <TrustStrip certifications={certifications} />
 
-      {/* About */}
+      {/* About / Heritage */}
       <section
         id="about"
         className="scroll-mt-28 py-section-mobile md:py-section-desktop"
       >
         <div className="mx-auto max-w-container px-6 md:px-8">
-          <div className="grid items-start gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-            <FadeUp>
-              <SectionHeading
-                eyebrow={heritage.eyebrow ?? "Our Story"}
-                title={
-                  heritage.title ??
-                  "A premium textile manufacturer, built for North American buyers."
-                }
-              />
-            </FadeUp>
-            <FadeUp delay={0.1}>
-              <div className="font-body text-base leading-relaxed text-muted md:text-[16.5px]">
-                <p>
-                  Mist & Haven Living is a premium textile manufacturing and export
-                  company headquartered in Solapur, Maharashtra — one of the
-                  world&apos;s renowned towel-manufacturing hubs.
-                </p>
-                <p className="mt-4">
-                  {heritage.description ??
-                    "We supply high-quality cotton towels, bath linen, hospitality textiles, and private-label solutions to importers, distributors, retailers, hospitality buyers, and brands across the United States and Canada — with consistent quality and reliable global delivery support."}
-                </p>
-                <Link
-                  href="/about"
-                  className="mt-6 inline-flex items-center gap-2 border-b border-sage-deep pb-1 font-body text-[12.5px] uppercase tracking-[0.14em] text-taupe transition-colors hover:text-sage-deep"
-                >
-                  Read our full story
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </FadeUp>
+          <div
+            className={cn(
+              "grid items-start gap-12 lg:gap-16",
+              heritageImageUrl
+                ? "lg:grid-cols-2 lg:items-center"
+                : "lg:grid-cols-[0.8fr_1.2fr]",
+            )}
+          >
+            {heritageImageUrl ? (
+              <FadeUp>
+                <div className="relative aspect-[4/3] overflow-hidden border border-hairline bg-oat">
+                  <Image
+                    alt={
+                      heritage.title
+                        ? `${heritage.title} — Mist & Haven Living`
+                        : "Mist & Haven Living heritage in Solapur, India"
+                    }
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    {...resolveCmsImage(
+                      heritageImageUrl,
+                      homePage?.updatedAt,
+                    )}
+                  />
+                </div>
+              </FadeUp>
+            ) : null}
+            {heritageImageUrl ? (
+              <FadeUp delay={0.1}>
+                <SectionHeading
+                  eyebrow={heritage.eyebrow ?? "Our Heritage"}
+                  title={
+                    heritage.title ??
+                    "Crafted in Solapur, India"
+                  }
+                />
+                <div className="mt-6 font-body text-base leading-relaxed text-muted md:text-[16.5px]">
+                  <p>
+                    {heritage.description ??
+                      "For over four decades, Mist & Haven Living has been at the heart of India's premier terry towel manufacturing region—bringing institutional-grade quality and boutique-level finishing to North American buyers."}
+                  </p>
+                  <Link
+                    href="/about"
+                    className="mt-6 inline-flex items-center gap-2 border-b border-sage-deep pb-1 font-body text-[12.5px] uppercase tracking-[0.14em] text-taupe transition-colors hover:text-sage-deep"
+                  >
+                    Read our full story
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </FadeUp>
+            ) : (
+              <>
+                <FadeUp>
+                  <SectionHeading
+                    eyebrow={heritage.eyebrow ?? "Our Story"}
+                    title={
+                      heritage.title ??
+                      "A premium textile manufacturer, built for North American buyers."
+                    }
+                  />
+                </FadeUp>
+                <FadeUp delay={0.1}>
+                  <div className="font-body text-base leading-relaxed text-muted md:text-[16.5px]">
+                    <p>
+                      Mist & Haven Living is a premium textile manufacturing and
+                      export company headquartered in Solapur, Maharashtra — one
+                      of the world&apos;s renowned towel-manufacturing hubs.
+                    </p>
+                    <p className="mt-4">
+                      {heritage.description ??
+                        "We supply high-quality cotton towels, bath linen, hospitality textiles, and private-label solutions to importers, distributors, retailers, hospitality buyers, and brands across the United States and Canada — with consistent quality and reliable global delivery support."}
+                    </p>
+                    <Link
+                      href="/about"
+                      className="mt-6 inline-flex items-center gap-2 border-b border-sage-deep pb-1 font-body text-[12.5px] uppercase tracking-[0.14em] text-taupe transition-colors hover:text-sage-deep"
+                    >
+                      Read our full story
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </FadeUp>
+              </>
+            )}
           </div>
         </div>
       </section>

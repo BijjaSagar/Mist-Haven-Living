@@ -7,6 +7,50 @@ export function isUploadedAsset(src: string): boolean {
   );
 }
 
+/** Seed / demo URLs that should not override CMS uploads on product cards. */
+export function isPlaceholderImage(src: string): boolean {
+  return /^https:\/\/(fastly\.)?picsum\.photos\//i.test(src.trim());
+}
+
+type ProductImageFields = {
+  cardImage: string;
+  heroImage: string;
+  galleryImages?: string[];
+};
+
+/**
+ * Pick the best image for product grid cards.
+ * Prefers uploaded `cardImage`; falls back to hero/gallery when card is empty or picsum.
+ */
+export function resolveProductCardImage(category: ProductImageFields): string {
+  const { cardImage, heroImage, galleryImages = [] } = category;
+  const card = cardImage?.trim() ?? "";
+  const hero = heroImage?.trim() ?? "";
+
+  console.log("[resolveProductCardImage]", {
+    card,
+    hero,
+    galleryCount: galleryImages.length,
+  });
+
+  if (card && isUploadedAsset(card)) return card;
+  if (card && !isPlaceholderImage(card)) return card;
+  if (hero && isUploadedAsset(hero)) {
+    console.log("[resolveProductCardImage] using heroImage fallback", { hero });
+    return hero;
+  }
+  const galleryUpload = galleryImages.find(
+    (src) => typeof src === "string" && isUploadedAsset(src.trim()),
+  );
+  if (galleryUpload) {
+    console.log("[resolveProductCardImage] using gallery fallback", {
+      galleryUpload,
+    });
+    return galleryUpload;
+  }
+  return card || hero;
+}
+
 /** Timestamp embedded in upload filenames: `/uploads/.../1718123456789-abc123.png` */
 const UPLOAD_FILENAME_TS_RE = /\/(\d{13})-[a-z0-9]+\.[a-z0-9]+$/i;
 

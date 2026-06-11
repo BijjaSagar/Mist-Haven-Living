@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HoverScaleImage } from "@/components/motion/HoverScaleImage";
+import { resolveProductCardImage } from "@/lib/image-props";
 import { cn } from "@/lib/utils";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import type { ProductCategoryData } from "@/lib/types/cms";
@@ -18,6 +19,13 @@ export function ProductCard({
   variant = "default",
 }: ProductCardProps) {
   const isCompact = variant === "compact";
+  const cardImageSrc = resolveProductCardImage(category);
+
+  console.log("[ProductCard] render", {
+    slug: category.slug,
+    cardImageSrc,
+    updatedAt: category.updatedAt,
+  });
 
   return (
     <Link
@@ -31,7 +39,7 @@ export function ProductCard({
       )}
     >
       <HoverScaleImage
-        src={category.cardImage}
+        src={cardImageSrc}
         cacheVersion={category.updatedAt}
         alt={category.name}
         fill

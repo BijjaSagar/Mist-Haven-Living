@@ -10,7 +10,7 @@ import {
 } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { ProductGalleryField } from "@/components/admin/ProductGalleryField";
-import { getApiErrorMessage } from "@/lib/api-response";
+import { getApiErrorMessage, getApiData } from "@/lib/api-response";
 
 const productUploadFolder = (slug: string) => `products/${slug}`;
 
@@ -73,14 +73,27 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    setMessage(
-      res.ok
-        ? { text: "Product saved.", type: "success" }
-        : {
-            text: getApiErrorMessage(await res.json().catch(() => null)),
-            type: "error",
-          },
-    );
+    const body = await res.json().catch(() => null);
+    if (res.ok) {
+      const saved = getApiData<ProductCategoryData>(body);
+      if (saved) {
+        console.log("[ProductEditor] saved product", {
+          slug: saved.slug,
+          cardImage: saved.cardImage,
+          updatedAt: saved.updatedAt,
+        });
+        setData({
+          ...saved,
+          galleryImages: saved.galleryImages ?? [],
+        });
+      }
+      setMessage({ text: "Product saved.", type: "success" });
+    } else {
+      setMessage({
+        text: getApiErrorMessage(body),
+        type: "error",
+      });
+    }
     setSaving(false);
   }
 
