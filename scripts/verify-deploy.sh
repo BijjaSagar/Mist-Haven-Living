@@ -114,6 +114,23 @@ if [[ -n "$SAMPLE_CHUNK" ]]; then
   fi
 fi
 
+# CMS uploads referenced in live HTML (hero, logo, manufacturing, about)
+UPLOAD_URLS="$(grep -oE 'src="/uploads/[^"]+"' /tmp/mist-verify-home.html 2>/dev/null | sed 's/src="//;s/"$//' | sort -u || true)"
+if [[ -n "${UPLOAD_URLS:-}" ]]; then
+  echo ""
+  echo "=== CMS uploads on homepage ==="
+  while IFS= read -r UPLOAD_PATH; do
+    [[ -z "$UPLOAD_PATH" ]] && continue
+    UPLOAD_CODE="$(curl -sSI -o /dev/null -w '%{http_code}' "$SITE_URL$UPLOAD_PATH" || echo 000)"
+    if [[ "$UPLOAD_CODE" == "200" ]]; then
+      echo "OK   $SITE_URL$UPLOAD_PATH → HTTP 200"
+    else
+      echo "FAIL: $SITE_URL$UPLOAD_PATH → HTTP $UPLOAD_CODE (file missing on server — run setup-hostinger-uploads.sh or re-upload in admin)" >&2
+      fail=1
+    fi
+  done <<< "$UPLOAD_URLS"
+fi
+
 rm -f /tmp/mist-verify-home.html
 
 if [[ "$fail" -ne 0 ]]; then

@@ -9,6 +9,8 @@ cd "$ROOT"
 
 ZIP="${1:-${DEPLOY_ZIP:-next-build.zip}}"
 STANDALONE=".next/standalone"
+STANDALONE_UPLOADS="$STANDALONE/public/uploads"
+LEGACY_UPLOADS="$ROOT/public/uploads"
 UPLOADS_BACKUP=""
 
 if [[ ! -f "$ZIP" ]]; then
@@ -17,10 +19,14 @@ if [[ ! -f "$ZIP" ]]; then
   exit 1
 fi
 
-if [[ -d "$STANDALONE/public/uploads" ]] && [[ -n "$(ls -A "$STANDALONE/public/uploads" 2>/dev/null || true)" ]]; then
+if [[ -d "$STANDALONE_UPLOADS" ]] && [[ -n "$(ls -A "$STANDALONE_UPLOADS" 2>/dev/null || true)" ]]; then
   UPLOADS_BACKUP="$(mktemp -d)"
-  cp -a "$STANDALONE/public/uploads/." "$UPLOADS_BACKUP/"
-  echo "→ Backed up existing public/uploads"
+  cp -a "$STANDALONE_UPLOADS/." "$UPLOADS_BACKUP/"
+  echo "→ Backed up $STANDALONE_UPLOADS"
+elif [[ -d "$LEGACY_UPLOADS" ]] && [[ -n "$(ls -A "$LEGACY_UPLOADS" 2>/dev/null || true)" ]]; then
+  UPLOADS_BACKUP="$(mktemp -d)"
+  cp -a "$LEGACY_UPLOADS/." "$UPLOADS_BACKUP/"
+  echo "→ Backed up legacy $LEGACY_UPLOADS (pre-standalone path)"
 fi
 
 echo "→ Extracting $ZIP into $STANDALONE/"

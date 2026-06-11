@@ -63,5 +63,35 @@ jobs:
             APP="${{ secrets.HOSTINGER_APP_PATH || '~/domains/mistandhaven.com/app' }}"
             cd "$APP"
             git pull origin main || true
-            bash scripts/server-deploy.sh next-build.zip
+            if [[ -f scripts/server-deploy.sh ]]; then
+              bash scripts/server-deploy.sh next-build.zip
+            else
+              echo "WARN: scripts/server-deploy.sh missing — inline deploy with upload backup"
+              STANDALONE=".next/standalone"
+              BACKUP=""
+              if [[ -d "$STANDALONE/public/uploads" ]] && [[ -n "$(ls -A "$STANDALONE/public/uploads" 2>/dev/null || true)" ]]; then
+                BACKUP="$(mktemp -d)"
+                cp -a "$STANDALONE/public/uploads/." "$BACKUP/"
+              elif [[ -d public/uploads ]] && [[ -n "$(ls -A public/uploads 2>/dev/null || true)" ]]; then
+                BACKUP="$(mktemp -d)"
+                cp -a public/uploads/. "$BACKUP/"
+              fi
+              mkdir -p "$STANDALONE"
+              unzip -o next-build.zip -d "$STANDALONE/"
+              if [[ -n "$BACKUP" ]]; then
+                mkdir -p "$STANDALONE/public/uploads"
+                cp -an "$BACKUP/." "$STANDALONE/public/uploads/" 2>/dev/null || cp -a "$BACKUP/." "$STANDALONE/public/uploads/"
+                rm -rf "$BACKUP"
+              fi
+              mkdir -p "$STANDALONE/public/uploads"
+              if [[ -d public/uploads ]]; then
+                cp -an public/uploads/. "$STANDALONE/public/uploads/" 2>/dev/null || cp -a public/uploads/. "$STANDALONE/public/uploads/" 2>/dev/null || true
+              fi
+              mkdir -p ~/public_html
+              rm -rf ~/public_html/uploads
+              ln -sfn "$(pwd)/$STANDALONE/public/uploads" ~/public_html/uploads
+              mkdir -p ~/public_html/_next
+              rm -rf ~/public_html/_next/static
+              ln -sfn "$(pwd)/$STANDALONE/.next/static" ~/public_html/_next/static
+            fi
             echo "Done. Restart Node.js app in hPanel if the site does not update."

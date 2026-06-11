@@ -782,6 +782,80 @@ The included `ecosystem.config.js` runs `.next/standalone/server.js` (same as `n
 
 ## Troubleshooting
 
+### CMS images broken (hero, logo, manufacturing, about)
+
+**Symptoms:** Broken image icon on the homepage hero (right carousel), manufacturing section, about page team photo, or custom logo. Browser shows `src="/uploads/..."` with a broken icon. Product category cards using `picsum.photos` may still work.
+
+**Diagnose (from your Mac or SSH):**
+
+```bash
+# 1. List upload URLs in live HTML
+curl -s https://mistandhaven.com/ | grep -oE 'src="/uploads/[^"]+"' | sort -u
+curl -s https://mistandhaven.com/about | grep -oE 'src="/uploads/[^"]+"' | sort -u
+
+# 2. HTTP status for each path (replace with URLs from step 1)
+curl -sSI -o /dev/null -w 'HTTP %{http_code}\n' \
+  'https://mistandhaven.com/uploads/pages/home-hero/FILENAME.jpeg'
+```
+
+**Known broken URLs (2026-06-11 audit — all returned HTTP 404):**
+
+| Page | URL path |
+|---|---|
+| Logo (header) | `/uploads/1781170392036-jvzx172qm4e.png` |
+| Home hero slide 1 | `/uploads/pages/home-hero/1780896363565-55tzqi6cmwi.jpeg` |
+| Home hero slide 2 | `/uploads/pages/home-hero/1780896595681-8q3mrfqj23v.jpeg` |
+| Home hero slide 3 | `/uploads/pages/home-hero/1780896713482-i2qoxecl9qf.png` |
+| Home manufacturing | `/uploads/pages/home-manufacturing/1781168582844-1i4xjcdvwyl.jpeg` |
+| About hero | `/uploads/pages/about-hero/1781168763190-uwcgm0xw97.jpeg` |
+| About team | `/uploads/pages/about-intro/1781169691876-inyjye5om5.jpeg` |
+
+The `?v=` cache-bust query string is **not** the cause — the same paths 404 without `?v=`.
+
+**Root cause:** The MySQL database stores correct `/uploads/...` paths (admin uploads succeeded), but the **files are not on disk** where the standalone server serves them from:
+
+```
+.next/standalone/public/uploads/
+```
+
+Common reasons:
+
+1. **Redeploy wiped uploads** — `next-build.zip` does not include CMS uploads; if backup/restore did not run, only `.gitkeep` remains after unzip.
+2. **Legacy path** — files were written to `public/uploads/` at app root before the standalone fix; never merged into `.next/standalone/public/uploads/`.
+3. **`~/nodejs` layout without scripts** — GitHub auto-deploy may not run `scripts/server-deploy.sh` / `setup-hostinger-uploads.sh` if the app root has no git clone with `scripts/`.
+
+**Not the cause:** `cmsImageSrc` / `?v=` (works correctly), `next/image` remotePatterns (uploads use `unoptimized: true`), or picsum placeholder URLs (those use `/_next/image?url=https://picsum.photos/...` and load fine).
+
+**Fix on server (SSH — from hPanel Application root, e.g. `~/nodejs` or `~/domains/mistandhaven.com/app`):**
+
+```bash
+cd ~/nodejs   # or your Application root
+
+# If you have the full git repo with scripts/:
+bash scripts/setup-hostinger-uploads.sh
+
+# Manual merge if scripts/ missing (layout B):
+mkdir -p .next/standalone/public/uploads
+cp -an public/uploads/. .next/standalone/public/uploads/ 2>/dev/null || \
+  cp -a public/uploads/. .next/standalone/public/uploads/ 2>/dev/null || true
+
+# Symlink public_html/uploads (Hostinger layout B):
+mkdir -p ~/public_html
+rm -rf ~/public_html/uploads
+ln -sfn "$(pwd)/.next/standalone/public/uploads" ~/public_html/uploads
+
+# Verify file count and a known URL
+find .next/standalone/public/uploads -type f | wc -l
+curl -sSI -o /dev/null -w 'upload HTTP %{http_code}\n' \
+  'https://mistandhaven.com/uploads/pages/home-hero/1780896363565-55tzqi6cmwi.jpeg'
+```
+
+Expect **HTTP 200**. If file count is **0**, uploads were lost — re-upload images in **Admin → Pages / Settings** and click **Save** on each page.
+
+**Prevent on future deploys:** Use `bash scripts/server-deploy.sh next-build.zip` (backs up standalone + legacy uploads before unzip). After deploy, run `npm run verify:deploy` locally with `CHECK_LIVE=1` to probe live `/uploads/*` URLs.
+
+**Heritage block:** The homepage heritage section is text-only in the current template — `heritage.imageUrl` is editable in Admin but not rendered on `/`. Upload a manufacturing or about image if that section should show a photo.
+
 ### CSS broken / unstyled site (hero only, plain white page)
 
 **Symptoms:** Full-bleed images or raw HTML links; no header, fonts, or Tailwind layout. Browser Network tab shows **404** for `/_next/static/css/...` or `/_next/static/chunks/...`.

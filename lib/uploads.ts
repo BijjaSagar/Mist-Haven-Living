@@ -21,12 +21,16 @@ export function resolvePublicDir(): string {
   const cwd = process.cwd();
 
   if (process.env.PUBLIC_DIR?.trim()) {
-    return process.env.PUBLIC_DIR.trim();
+    const dir = process.env.PUBLIC_DIR.trim();
+    console.log("[uploads] resolvePublicDir from PUBLIC_DIR", { dir });
+    return dir;
   }
 
   const standaloneMarker = path.join(cwd, ".next", "standalone", "server.js");
   if (existsSync(standaloneMarker)) {
-    return path.join(cwd, ".next", "standalone", "public");
+    const dir = path.join(cwd, ".next", "standalone", "public");
+    console.log("[uploads] resolvePublicDir standalone (app root cwd)", { cwd, dir });
+    return dir;
   }
 
   // Flat standalone bundle (server.js at app root next to public/)
@@ -34,10 +38,14 @@ export function resolvePublicDir(): string {
     existsSync(path.join(cwd, "server.js")) &&
     existsSync(path.join(cwd, "public"))
   ) {
-    return path.join(cwd, "public");
+    const dir = path.join(cwd, "public");
+    console.log("[uploads] resolvePublicDir flat standalone cwd", { cwd, dir });
+    return dir;
   }
 
-  return path.join(cwd, "public");
+  const dir = path.join(cwd, "public");
+  console.log("[uploads] resolvePublicDir default public/", { cwd, dir });
+  return dir;
 }
 
 /** Resolve upload directory under public/uploads from a folder like `products/bath-towels`. */
