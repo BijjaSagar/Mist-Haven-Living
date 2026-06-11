@@ -222,6 +222,15 @@ GitHub builds and uploads the zip to your server over SSH, then runs `scripts/se
 
 **Going forward:** push to `main` → GitHub Actions builds → deploy job uploads zip → server extracts → **Restart** the Node.js app in hPanel if the site doesn’t update within a minute.
 
+### After pull (quick reference)
+
+- **`git pull` alone does not update the live site** — the running app is the pre-built `.next/standalone/` bundle (`next-build.zip`), not source on disk.
+- **`HOSTINGER_AUTO_DEPLOY=true`:** GitHub uploads the zip and runs `scripts/server-deploy.sh` on the server — **no SSH commands required**; only **hPanel → Node.js Web Apps → Restart** if the site does not refresh within ~1 minute (optional: **Websites → Performance / CDN → Clear cache** for stale images).
+- **Manual deploy:** SSH to app root → `bash scripts/server-deploy.sh next-build.zip` → Restart Node in hPanel (use `export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"` only if you run `npm`/`npx` commands).
+- **`npx prisma migrate deploy`:** only when `prisma/migrations/` changed — **not** needed for code-only releases (e.g. image cache fix `4bf81d0`).
+- **`setup-hostinger-uploads.sh` / `setup-hostinger-static.sh`:** run automatically inside `server-deploy.sh` (idempotent); one-time manual symlink steps apply only for **`~/nodejs`** layout without the full git repo (see section 0).
+
+
 ### Option B — Manual redeploy from server (no SSH secrets)
 
 Use this if you prefer not to store SSH keys in GitHub.
