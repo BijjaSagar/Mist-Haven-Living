@@ -895,45 +895,46 @@ curl -sSI -o /dev/null -w 'HTTP %{http_code}\n' \
 
 The `?v=` cache-bust query string is **not** the cause — the same paths 404 without `?v=`.
 
-**Root cause:** The MySQL database stores correct `/uploads/...` paths (admin uploads succeeded), but the **files are not on disk** where the standalone server serves them from:
+**Root cause:** Upload API writes to persistent storage (`../uploads-data` on Hostinger), but the deploy zip only ships `public/uploads/.gitkeep`. Without a symlink, Next.js static serving cannot find files — DB paths are correct, disk files may exist, but `/uploads/*` returns **HTTP 404**.
 
+**Code fix (v2026-06):** `app/uploads/[...path]/route.ts` serves CMS files from the same persistent directory as the upload API when static `public/uploads/` is empty. Admin previews use `/api/admin/cms-asset` (auth required).
+
+**Still recommended on server:** Symlinks for Apache direct serving and faster static delivery:
+
+```bash
+cd ~/nodejs   # Hostinger Application root (server.js + public/)
+bash scripts/setup-hostinger-uploads.sh
+# Restart Node app in hPanel
+bash scripts/health-check-uploads.sh https://mistandhaven.com
 ```
-.next/standalone/public/uploads/
-```
 
-Common reasons:
+Common reasons files still 404 after deploy:
 
-1. **Redeploy wiped uploads** — `next-build.zip` does not include CMS uploads; if backup/restore did not run, only `.gitkeep` remains after unzip.
-2. **Legacy path** — files were written to `public/uploads/` at app root before the standalone fix; never merged into `.next/standalone/public/uploads/`.
-3. **`~/nodejs` layout without scripts** — GitHub auto-deploy may not run `scripts/server-deploy.sh` / `setup-hostinger-uploads.sh` if the app root has no git clone with `scripts/`.
+1. **Redeploy wiped `public/uploads/` symlink** — run `bash scripts/server-deploy.sh` (re-runs upload setup) or `setup-hostinger-uploads.sh` manually.
+2. **Legacy path** — files were written before persistent storage; merge with `setup-hostinger-uploads.sh`.
+3. **`~/nodejs` layout without scripts** — GitHub auto-deploy may skip upload setup if `scripts/` is missing from deploy bundle.
+4. **Persistent dir empty** — re-upload in Admin or restore backup into `../uploads-data`.
 
 **Not the cause:** `cmsImageSrc` / `?v=` (works correctly), `next/image` remotePatterns (uploads use `unoptimized: true`), or picsum placeholder URLs (those use `/_next/image?url=https://picsum.photos/...` and load fine).
 
-**Fix on server (SSH — from hPanel Application root, e.g. `~/nodejs` or `~/domains/mistandhaven.com/app`):**
+**Fix on server (SSH — from hPanel Application root, e.g. `~/nodejs`):**
 
 ```bash
-cd ~/nodejs   # or your Application root
+cd ~/nodejs
 
-# If you have the full git repo with scripts/:
+# Symlink persistent storage → public/uploads + public_html/uploads
 bash scripts/setup-hostinger-uploads.sh
 
-# Manual merge if scripts/ missing (layout B):
-mkdir -p .next/standalone/public/uploads
-cp -an public/uploads/. .next/standalone/public/uploads/ 2>/dev/null || \
-  cp -a public/uploads/. .next/standalone/public/uploads/ 2>/dev/null || true
+# Verify persistent file count (should be > 0 after admin uploads)
+find ../uploads-data -type f | wc -l
 
-# Symlink public_html/uploads (Hostinger layout B):
-mkdir -p ~/public_html
-rm -rf ~/public_html/uploads
-ln -sfn "$(pwd)/.next/standalone/public/uploads" ~/public_html/uploads
-
-# Verify file count and a known URL
-find .next/standalone/public/uploads -type f | wc -l
+# Restart Node.js app in hPanel, then verify live URLs
 curl -sSI -o /dev/null -w 'upload HTTP %{http_code}\n' \
-  'https://mistandhaven.com/uploads/pages/home-hero/1780896363565-55tzqi6cmwi.jpeg'
+  'https://mistandhaven.com/uploads/pages/home-hero/FILENAME.jpeg'
+bash scripts/health-check-uploads.sh https://mistandhaven.com
 ```
 
-Expect **HTTP 200**. If file count is **0**, uploads were lost — re-upload images in **Admin → Pages / Settings** and click **Save** on each page.
+Expect **HTTP 200**. After deploying the route-handler fix, `/uploads/*` should return 200 even before symlinks if files exist in `../uploads-data`. Symlinks remain recommended for Apache.
 
 **Prevent on future deploys:** Use `bash scripts/server-deploy.sh next-build.zip` (backs up standalone + legacy uploads before unzip). After deploy, run `npm run verify:deploy` locally with `CHECK_LIVE=1` to probe live `/uploads/*` URLs.
 

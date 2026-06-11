@@ -159,3 +159,42 @@ export function resolveCmsImage(
     ...imageOptsForSrc(pathname),
   };
 }
+
+/**
+ * Admin preview URLs read from the same persistent storage as POST /api/admin/upload,
+ * so thumbnails work even when public/uploads is not symlinked on the server.
+ */
+export function adminCmsImageSrc(
+  src: string,
+  cacheVersion?: CacheVersion,
+): string {
+  const trimmed = src?.trim() ?? "";
+  if (!trimmed) return trimmed;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  const normalized = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  const pathname = sanitizeCmsImagePath(normalized);
+
+  if (!isUploadedAsset(pathname)) {
+    return cmsImageSrc(pathname, cacheVersion);
+  }
+
+  const cached = cmsImageSrc(pathname, cacheVersion);
+  const qIndex = cached.indexOf("?");
+  const pathOnly = qIndex >= 0 ? cached.slice(0, qIndex) : cached;
+  const params = new URLSearchParams({ path: pathOnly });
+
+  if (qIndex >= 0) {
+    const existing = new URLSearchParams(cached.slice(qIndex + 1));
+    existing.forEach((value, key) => params.set(key, value));
+  }
+
+  const out = `/api/admin/cms-asset?${params.toString()}`;
+  console.log("[adminCmsImageSrc] mapped upload to admin asset API", {
+    src: trimmed,
+    out,
+  });
+  return out;
+}

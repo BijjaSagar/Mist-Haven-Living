@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { getApiData, getApiErrorMessage } from "@/lib/api-response";
+import { adminCmsImageSrc } from "@/lib/image-props";
 
 type ProductGalleryFieldProps = {
   images: string[];
@@ -85,7 +86,17 @@ export function ProductGalleryField({
               className="overflow-hidden rounded-md border border-hairline bg-oat/40 p-2"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="aspect-[4/3] w-full object-cover" />
+              <img
+                src={adminCmsImageSrc(url)}
+                alt=""
+                className="aspect-[4/3] w-full object-cover"
+                onError={() => {
+                  console.error("[ProductGalleryField] preview failed", {
+                    url,
+                    src: adminCmsImageSrc(url),
+                  });
+                }}
+              />
               <div className="mt-2 flex flex-wrap gap-1">
                 <Button
                   type="button"

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getApiData, getApiErrorMessage } from "@/lib/api-response";
-import { cmsImageSrc } from "@/lib/image-props";
+import { adminCmsImageSrc } from "@/lib/image-props";
 
 type ImageUploadFieldProps = {
   label: string;
@@ -71,9 +71,23 @@ export function ImageUploadField({
         <div className="mt-2 overflow-hidden rounded-md border border-hairline bg-oat/40 p-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={cmsImageSrc(value)}
+            src={adminCmsImageSrc(value)}
             alt=""
             className="max-h-24 max-w-full object-contain"
+            onLoad={() => {
+              console.log("[ImageUploadField] preview loaded", {
+                label,
+                value,
+                src: adminCmsImageSrc(value),
+              });
+            }}
+            onError={() => {
+              console.error("[ImageUploadField] preview failed", {
+                label,
+                value,
+                src: adminCmsImageSrc(value),
+              });
+            }}
           />
         </div>
       ) : null}
