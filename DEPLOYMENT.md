@@ -60,6 +60,75 @@ ls ~/public_html 2>/dev/null || echo "No ~/public_html folder"
 
 Use **one** path everywhere: hPanel Application root, SSH `cd`, zip upload, and GitHub secret `HOSTINGER_APP_PATH`.
 
+### Finding your app root on SSH (when `cd` fails)
+
+Do **not** assume `~/nodejs`. On many **mistandhaven.com** accounts the live app is **`~/domains/mistandhaven.com/nodejs`**, not account-root `~/nodejs` and not `~/domains/mistandhaven.com/` (domain folder alone has no `scripts/`).
+
+**Step 1 — discovery (copy/paste from SSH home):**
+
+```bash
+cd ~
+pwd
+whoami
+echo "=== home top level ==="
+ls -la ~
+echo "=== mistandhaven.com domain folder ==="
+ls -la ~/domains/mistandhaven.com 2>/dev/null || echo "No domains/mistandhaven.com"
+echo "=== common app folders (if any) ==="
+for d in ~/nodejs ~/domains/mistandhaven.com/nodejs ~/domains/mistandhaven.com/app; do
+  if [ -d "$d" ]; then
+    echo "--- $d ---"
+    ls -la "$d" | head -20
+    test -f "$d/package.json" && echo "  has package.json"
+    test -f "$d/server.js" && echo "  has server.js"
+    test -d "$d/.next" && echo "  has .next/"
+    test -f "$d/.next/standalone/server.js" && echo "  has .next/standalone/server.js"
+    test -d "$d/scripts" && echo "  has scripts/"
+  else
+    echo "--- $d --- (missing)"
+  fi
+done
+echo "=== find server.js under home (max depth 8) ==="
+find ~ -maxdepth 8 -type f -name 'server.js' 2>/dev/null | head -30
+echo "=== find package.json named Mist / next (sample) ==="
+find ~ -maxdepth 6 -type f -name 'package.json' 2>/dev/null | while read -r f; do
+  grep -q '"next"' "$f" 2>/dev/null && echo "$f"
+done | head -15
+echo "=== find .next/standalone ==="
+find ~ -maxdepth 8 -type d -path '*/.next/standalone' 2>/dev/null | head -15
+echo "=== find uploads dirs (any path) ==="
+find ~ -maxdepth 10 -type d -name uploads 2>/dev/null | head -30
+echo "=== file counts in likely upload targets ==="
+for u in   ~/domains/mistandhaven.com/nodejs/.next/standalone/public/uploads   ~/domains/mistandhaven.com/nodejs/public/uploads   ~/domains/mistandhaven.com/app/.next/standalone/public/uploads   ~/nodejs/.next/standalone/public/uploads; do
+  if [ -d "$u" ]; then
+    echo "$u: $(find "$u" -type f 2>/dev/null | wc -l | tr -d ' ') files"
+  fi
+done
+```
+
+**Step 2 — pick app root from results:**
+
+| Discovery | App root (`cd` here) | `public_html` for symlinks |
+|---|---|---|
+| `~/domains/mistandhaven.com/nodejs` has `package.json` / `.next` | **`~/domains/mistandhaven.com/nodejs`** | **`~/domains/mistandhaven.com/public_html`** |
+| `~/domains/mistandhaven.com/app` has `scripts/` + `package.json` | **`~/domains/mistandhaven.com/app`** | **`~/domains/mistandhaven.com/public_html`** |
+| `~/nodejs` has `server.js` (no `domains/...`) | **`~/nodejs`** | **`~/public_html`** (account root) |
+
+Set **hPanel → Websites → Node.js Web Apps → Application root** to the **same** path (often shown as `/home/uXXXX/domains/mistandhaven.com/nodejs` — that is the full path to the folder above).
+
+**GitHub Actions deploy path:** In the repo, secret **`HOSTINGER_APP_PATH`** must equal hPanel Application root. If auto-deploy succeeded but you cannot find files, search for `next-build.zip` or recent `.next` changes:
+
+```bash
+find ~ -maxdepth 8 -name 'next-build.zip' 2>/dev/null
+find ~ -maxdepth 8 -type f -path '*/.next/BUILD_ID' 2>/dev/null | head -10
+```
+
+**Empty `public_html/`:** Normal for a **Node-only** site until you symlink static assets. Apache document root can be empty while the site still works via the Node proxy. You still want symlinks for **`_next/static`** (CSS) and optionally **`uploads`** (see section 7). Empty `public_html` does **not** mean the Node app lives inside `public_html` — the app is almost always **`nodejs/`** or **`app/`** beside it.
+
+**No `scripts/setup-hostinger-uploads.sh`:** Expected in **`domains/.../nodejs`** (GitHub deploy strip). From the discovered app root, use the **manual merge** block in section 7 (troubleshooting → CMS images), or clone the full repo to **`~/domains/mistandhaven.com/app`** only for migrations/scripts while keeping hPanel pointed at **`nodejs/`**.
+
+**No uploads anywhere (all find counts = 0):** The database may still reference `/uploads/...` URLs, but files were never on disk or were wiped by a deploy without backup. Re-upload in **Admin → Pages / Settings / Products** and click **Save** on each item; then `mkdir -p .next/standalone/public/uploads` and restart the Node app.
+
 ### Recovery path A — keep `~/nodejs` (recommended if GitHub already deploys there)
 
 1. **hPanel → Websites → Node.js Web Apps →** your app → set **Application root** to `~/nodejs`
