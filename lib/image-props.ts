@@ -51,6 +51,28 @@ export function resolveProductCardImage(category: ProductImageFields): string {
   return card || hero;
 }
 
+/**
+ * When saving a product, persist the best card thumbnail if the editor still has
+ * a seed/empty `cardImage` but hero or gallery uploads exist.
+ */
+export function coalesceCardImageForSave(fields: ProductImageFields): string {
+  const card = fields.cardImage?.trim() ?? "";
+  if (card && isUploadedAsset(card)) return card;
+  if (card && !isPlaceholderImage(card)) return card;
+
+  const resolved = resolveProductCardImage(fields);
+  if (isUploadedAsset(resolved)) {
+    console.log("[coalesceCardImageForSave] upgrading cardImage on save", {
+      from: card || "(empty)",
+      to: resolved,
+    });
+    return resolved;
+  }
+
+  console.log("[coalesceCardImageForSave] keeping seed cardImage", { card });
+  return card;
+}
+
 /** Timestamp embedded in upload filenames: `/uploads/.../1718123456789-abc123.png` */
 const UPLOAD_FILENAME_TS_RE = /\/(\d{13})-[a-z0-9]+\.[a-z0-9]+$/i;
 

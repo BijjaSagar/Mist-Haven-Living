@@ -6,6 +6,7 @@ import {
   revalidateSite,
 } from "@/lib/admin/api-helpers";
 import { mapProduct } from "@/lib/data/products";
+import { coalesceCardImageForSave } from "@/lib/image-props";
 import { apiError, apiSuccess } from "@/lib/api-response";
 import { withApiHandler, type RouteContext } from "@/lib/api-route";
 
@@ -32,6 +33,22 @@ export const PUT = withApiHandler(
 
     try {
       const body = await request.json();
+      const galleryImages = Array.isArray(body.galleryImages)
+        ? body.galleryImages
+        : [];
+      const cardImage = coalesceCardImageForSave({
+        cardImage: body.cardImage ?? "",
+        heroImage: body.heroImage ?? "",
+        galleryImages,
+      });
+
+      console.log("[admin/products PUT] persisting product images", {
+        slug,
+        cardImage,
+        heroImage: body.heroImage,
+        galleryCount: galleryImages.length,
+      });
+
       const product = await prisma.productCategory.update({
         where: { slug },
         data: {
@@ -40,8 +57,8 @@ export const PUT = withApiHandler(
           description: body.description,
           eyebrow: body.eyebrow,
           heroImage: body.heroImage,
-          cardImage: body.cardImage,
-          galleryImages: Array.isArray(body.galleryImages) ? body.galleryImages : [],
+          cardImage,
+          galleryImages,
           features: body.features,
           materials: body.materials,
           sizes: body.sizes,

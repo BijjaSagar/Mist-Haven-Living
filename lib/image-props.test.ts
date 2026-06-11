@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   cmsImageSrc,
+  coalesceCardImageForSave,
   resolveCmsImage,
   resolveProductCardImage,
   sanitizeCmsImagePath,
@@ -47,6 +48,31 @@ describe("resolveProductCardImage", () => {
         galleryImages: [],
       }),
     ).toBe(picsum);
+  });
+});
+
+describe("coalesceCardImageForSave", () => {
+  it("upgrades picsum cardImage to first gallery upload on save", () => {
+    expect(
+      coalesceCardImageForSave({
+        cardImage: "https://picsum.photos/seed/bath-towels-card/800/600",
+        heroImage: "https://picsum.photos/seed/bath-towels/1400/900",
+        galleryImages: [
+          "/uploads/products/bath-towels/1781203583220-qc8z5zylep.jpeg",
+        ],
+      }),
+    ).toBe("/uploads/products/bath-towels/1781203583220-qc8z5zylep.jpeg");
+  });
+
+  it("keeps explicit uploaded cardImage", () => {
+    const card = "/uploads/products/bath-towels/1781184477170-card.jpeg";
+    expect(
+      coalesceCardImageForSave({
+        cardImage: card,
+        heroImage: "/uploads/products/bath-towels/1781203578660-hero.jpeg",
+        galleryImages: ["/uploads/products/bath-towels/1781203583220-gallery.jpeg"],
+      }),
+    ).toBe(card);
   });
 });
 

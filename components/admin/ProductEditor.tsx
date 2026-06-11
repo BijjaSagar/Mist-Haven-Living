@@ -11,6 +11,7 @@ import {
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { ProductGalleryField } from "@/components/admin/ProductGalleryField";
 import { getApiErrorMessage, getApiData } from "@/lib/api-response";
+import { resolveProductCardImage } from "@/lib/image-props";
 
 const productUploadFolder = (slug: string) => `products/${slug}`;
 
@@ -64,6 +65,18 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
     type: "success" | "error";
   } | null>(null);
   const folder = productUploadFolder(product.slug);
+  const listingCardPreview = resolveProductCardImage({
+    cardImage: data.cardImage,
+    heroImage: data.heroImage,
+    galleryImages: data.galleryImages,
+  });
+
+  console.log("[ProductEditor] listing card preview", {
+    slug: product.slug,
+    listingCardPreview,
+    cardImage: data.cardImage,
+    galleryCount: data.galleryImages.length,
+  });
 
   async function handleSave() {
     setSaving(true);
@@ -134,13 +147,22 @@ export function ProductEditor({ product }: { product: ProductCategoryData }) {
             hint="Product detail hero. Save after upload."
           />
           <ImageUploadField
-            label="Card image"
+            label="Card image (listing thumbnail)"
             value={data.cardImage}
             onChange={(cardImage) => setData({ ...data, cardImage })}
             uploadFolder={folder}
-            hint="Grid thumbnail. Save after upload."
+            hint="Shown on /products and homepage Product Portfolio. Optional if hero or gallery has uploads — those are used automatically on save."
           />
         </div>
+        <p className="mt-3 font-body text-xs text-muted">
+          Listing preview uses:{" "}
+          <span className="font-mono text-taupe">{listingCardPreview}</span>
+          {listingCardPreview !== data.cardImage ? (
+            <span className="ml-1 text-sage-deep">
+              (from hero/gallery until you upload a dedicated card image)
+            </span>
+          ) : null}
+        </p>
         <div className="mt-4">
           <ProductGalleryField
             images={data.galleryImages}
