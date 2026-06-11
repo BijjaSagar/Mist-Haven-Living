@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CMS Image Quick Reference — Mist &amp; Haven Living</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 9px;
+      line-height: 1.35;
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+    }
+    h1 { font-size: 16px; margin: 0 0 6px; }
+    h2 { font-size: 11px; margin: 10px 0 4px; page-break-after: avoid; }
+    p, ul { margin: 4px 0; }
+    ul { padding-left: 16px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 4px 0 8px;
+      page-break-inside: auto;
+    }
+    tr { page-break-inside: avoid; page-break-after: auto; }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 3px 5px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #f0f0f0; font-weight: 600; }
+    .note { font-style: italic; color: #444; margin: 2px 0 6px; }
+    .totals { font-weight: 600; margin-top: 6px; }
+    hr { border: none; border-top: 1px solid #ddd; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>CMS Image Quick Reference — Mist &amp; Haven Living</h1>
+
+  <h2>Global upload rules</h2>
+  <ul>
+    <li><strong>Images:</strong> max <strong>5 MB</strong> — PNG, JPEG, WebP, SVG, ICO · POST /api/admin/upload (admin only)</li>
+    <li><strong>PDFs</strong> (catalogs/spec sheets): max <strong>15 MB</strong> — not for photos</li>
+    <li><strong>After upload:</strong> click <strong>Save</strong> on the form so the URL is stored</li>
+  </ul>
+
+  <h2>Settings (3)</h2>
+  <table>
+    <thead><tr><th>Image name</th><th>Where (Admin)</th><th>Page</th><th>Size (W×H)</th><th>Max MB</th><th>Format</th></tr></thead>
+    <tbody>
+      <tr><td>Logo (default)</td><td>Settings → Branding</td><td>Header (light bg)</td><td>1024×682</td><td>5</td><td>PNG, WebP, SVG</td></tr>
+      <tr><td>Logo (light)</td><td>Settings → Branding</td><td>Footer / dark bg</td><td>1024×682</td><td>5</td><td>PNG, WebP, SVG</td></tr>
+      <tr><td>Favicon</td><td>Settings → Branding</td><td>Browser tab</td><td>32×32</td><td>5</td><td>ICO, PNG</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Home (5)</h2>
+  <table>
+    <thead><tr><th>Image name</th><th>Where (Admin)</th><th>Page</th><th>Size (W×H)</th><th>Max MB</th><th>Format</th></tr></thead>
+    <tbody>
+      <tr><td>Hero slide image ×3</td><td>Pages → home → Hero slides</td><td>Homepage carousel</td><td>900×1125</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Heritage image</td><td>Pages → home → Heritage block</td><td>Admin only — not on homepage yet</td><td>900×675</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Manufacturing image</td><td>Pages → home → Manufacturing preview</td><td>Homepage “Manufacturing Strength”</td><td>1000×800</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Hero: 3 default slides; add/remove in admin. Upload folder: pages/home-hero.</p>
+
+  <h2>Pages (8)</h2>
+  <table>
+    <thead><tr><th>Image name</th><th>Where (Admin)</th><th>Page</th><th>Size (W×H)</th><th>Max MB</th><th>Format</th></tr></thead>
+    <tbody>
+      <tr><td>Hero background</td><td>Pages → about → Hero</td><td>/about hero</td><td>1920×800</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Heritage / team</td><td>Pages → about → Intro</td><td>/about intro</td><td>800×1067</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero background</td><td>Pages → manufacturing → Hero</td><td>/manufacturing hero</td><td>1920×800</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Facility banner</td><td>Pages → manufacturing → Facility</td><td>/manufacturing banner</td><td>1400×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero background</td><td>Pages → private-label → Hero</td><td>/private-label hero</td><td>1920×1000</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Packaging photo</td><td>Pages → private-label → Packaging</td><td>/private-label block</td><td>800×800</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero background</td><td>Pages → faq → Hero</td><td>/faq hero</td><td>1920×800</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero background</td><td>Pages → contact → Hero</td><td>/contact hero</td><td>1920×800</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Certifications page: no CMS images.</p>
+
+  <h2>Products — listing + 12 categories (hero + card)</h2>
+  <p><strong>Listing hero:</strong> Pages → products → Hero → /products (1920×800, 5 MB, PNG/JPEG/WebP).</p>
+  <p class="note">Categories — Admin: /admin/products/{slug} · Upload folder: products/{slug} · Gallery: optional, unlimited 1200×900 (4∶3) per category — not listed below.</p>
+  <table>
+    <thead><tr><th>Image name</th><th>Where (Admin)</th><th>Page</th><th>Size (W×H)</th><th>Max MB</th><th>Format</th></tr></thead>
+    <tbody>
+      <tr><td>Hero / Card</td><td>Products → bath-towels</td><td>/products/bath-towels</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → hand-towels</td><td>/products/hand-towels</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → face-towels</td><td>/products/face-towels</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → bath-mats</td><td>/products/bath-mats</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → hotel-linen</td><td>/products/hotel-linen</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → bath-robes</td><td>/products/bath-robes</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → kitchen-towels</td><td>/products/kitchen-towels</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → beach-towels</td><td>/products/beach-towels</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → pool-towels</td><td>/products/pool-towels</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → spa-towels</td><td>/products/spa-towels</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → private-labeling</td><td>/products/private-labeling</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+      <tr><td>Hero / Card</td><td>Products → promotional-towels</td><td>/products/promotional-towels</td><td>1400×900 / 800×600</td><td>5</td><td>PNG, JPEG, WebP</td></tr>
+    </tbody>
+  </table>
+
+  <p class="totals">Totals: 3 settings + 5 home + 8 page images + 1 products listing hero + 24 category (hero+card) = 40 fixed fields + optional gallery images.</p>
+</body>
+</html>
