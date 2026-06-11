@@ -25,7 +25,8 @@ import { getPageContent } from "@/lib/data/pages";
 import { resolveCmsImage } from "@/lib/image-props";
 import { cn } from "@/lib/utils";
 
-export const revalidate = 86400;
+/** Product cards must reflect DB uploads at runtime, not CI build-time picsum seeds. */
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [productCategories, companyStats, certifications, homePage] =

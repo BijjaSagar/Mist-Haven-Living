@@ -11,6 +11,7 @@
     "postbuild": "mkdir -p .next/standalone/.next && cp -r public .next/standalone/public && cp -r .next/static .next/standalone/.next/static",
     "package:deploy": "bash scripts/package-standalone.sh",
     "verify:deploy": "bash scripts/verify-deploy.sh",
+    "health-check:uploads": "bash scripts/health-check-uploads.sh",
     "start": "next start -p ${PORT:-3000}",
     "start:standalone": "node .next/standalone/server.js",
     "postinstall": "prisma generate",

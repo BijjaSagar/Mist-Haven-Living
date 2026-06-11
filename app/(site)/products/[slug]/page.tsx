@@ -39,7 +39,8 @@ export async function generateMetadata({ params }: PageProps) {
   });
 }
 
-export const revalidate = 86400;
+/** Gallery and hero images come from DB at request time. */
+export const dynamic = "force-dynamic";
 
 export default async function ProductCategoryPage({ params }: PageProps) {
   const { slug } = await params;

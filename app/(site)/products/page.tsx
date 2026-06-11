@@ -19,7 +19,8 @@ export async function generateMetadata() {
   });
 }
 
-export const revalidate = 86400;
+/** Always fetch product categories from DB at runtime — never ISR-cache CI picsum placeholders. */
+export const dynamic = "force-dynamic";
 
 export default async function ProductsPage() {
   const [productCategories, page] = await Promise.all([

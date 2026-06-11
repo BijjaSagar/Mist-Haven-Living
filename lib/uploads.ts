@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { existsSync, lstatSync, realpathSync } from "fs";
 import path from "path";
 
 /** Safe path segment for upload subfolders (product slug, etc.). */
@@ -10,6 +10,17 @@ export function sanitizeUploadSegment(segment: string): string {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
   return cleaned || "misc";
+}
+
+/**
+ * Flat Hostinger deploy: server.js + public/ at app root (e.g. ~/domains/.../nodejs).
+ * Uploads must live OUTSIDE this folder so deploy zip never wipes CMS files.
+ */
+export function isFlatStandaloneDeploy(cwd = process.cwd()): boolean {
+  return (
+    existsSync(path.join(cwd, "server.js")) &&
+    existsSync(path.join(cwd, "public"))
+  );
 }
 
 /**
@@ -34,10 +45,7 @@ export function resolvePublicDir(): string {
   }
 
   // Flat standalone bundle (server.js at app root next to public/)
-  if (
-    existsSync(path.join(cwd, "server.js")) &&
-    existsSync(path.join(cwd, "public"))
-  ) {
+  if (isFlatStandaloneDeploy(cwd)) {
     const dir = path.join(cwd, "public");
     console.log("[uploads] resolvePublicDir flat standalone cwd", { cwd, dir });
     return dir;
@@ -48,13 +56,66 @@ export function resolvePublicDir(): string {
   return dir;
 }
 
-/** Resolve upload directory under public/uploads from a folder like `products/bath-towels`. */
+/**
+ * Persistent CMS upload storage — survives deploy zip overwrites.
+ *
+ * Priority: PERSISTENT_UPLOADS_PATH → UPLOADS_DIR → (Hostinger) ../uploads-data
+ * → dev default public/uploads.
+ */
+export function resolveUploadsStorageDir(): string {
+  const envPath =
+    process.env.PERSISTENT_UPLOADS_PATH?.trim() ||
+    process.env.UPLOADS_DIR?.trim();
+  if (envPath) {
+    const resolved = path.resolve(envPath);
+    console.log("[uploads] resolveUploadsStorageDir from env", { resolved });
+    return resolved;
+  }
+
+  const publicDir = resolvePublicDir();
+  const publicUploads = path.join(publicDir, "uploads");
+
+  if (existsSync(publicUploads)) {
+    try {
+      const stat = lstatSync(publicUploads);
+      if (stat.isSymbolicLink()) {
+        const target = realpathSync(publicUploads);
+        console.log("[uploads] resolveUploadsStorageDir via public/uploads symlink", {
+          publicUploads,
+          target,
+        });
+        return target;
+      }
+    } catch (error) {
+      console.error("[uploads] resolveUploadsStorageDir symlink read failed", {
+        publicUploads,
+        error,
+      });
+    }
+  }
+
+  if (isFlatStandaloneDeploy()) {
+    const persistent = path.resolve(publicDir, "..", "uploads-data");
+    console.log("[uploads] resolveUploadsStorageDir flat standalone default", {
+      persistent,
+    });
+    return persistent;
+  }
+
+  console.log("[uploads] resolveUploadsStorageDir dev public/uploads", {
+    publicUploads,
+  });
+  return publicUploads;
+}
+
+/** Resolve upload directory from a folder like `products/bath-towels`. */
 export function resolveUploadDir(folder?: string): {
   diskPath: string;
   publicPrefix: string;
 } {
-  const base = path.join(resolvePublicDir(), "uploads");
+  const base = resolveUploadsStorageDir();
   if (!folder?.trim()) {
+    console.log("[uploads] resolveUploadDir root", { diskPath: base });
     return { diskPath: base, publicPrefix: "/uploads" };
   }
 
@@ -65,5 +126,6 @@ export function resolveUploadDir(folder?: string): {
 
   const diskPath = path.join(base, ...parts);
   const publicPrefix = `/uploads/${parts.join("/")}`;
+  console.log("[uploads] resolveUploadDir", { folder, diskPath, publicPrefix });
   return { diskPath, publicPrefix };
 }

@@ -779,7 +779,21 @@ When the app runs with **`npm run start:standalone`**, Next.js serves static fil
 
 **Cache / stale images:** Saving settings, pages, or products triggers `revalidateSite()` (page + layout ISR). Upload filenames are always unique; rendered URLs include a `?v=` cache-bust param. `/uploads/*` responses use `Cache-Control: public, max-age=3600, must-revalidate` (see `next.config.ts`). If the live site still shows an old hero or logo after save, restart the Node app and purge Hostinger CDN cache once.
 
-**Persistence:** Uploads are **not** inside `next-build.zip`. `scripts/server-deploy.sh` backs up and restores `.next/standalone/public/uploads/` when redeploying. New uploads after this fix go directly to the standalone public folder.
+**Persistence:** Uploads are **not** inside `next-build.zip`. They live in **`../uploads-data`** (sibling of the app root, e.g. `~/domains/mistandhaven.com/uploads-data`) — **outside** the deploy folder so every push cannot wipe CMS files. `scripts/server-deploy.sh` symlinks `public/uploads` → `../uploads-data` after each deploy.
+
+**One-time server setup (SSH from app root, e.g. `~/domains/mistandhaven.com/nodejs`):**
+
+```bash
+cd ~/domains/mistandhaven.com/nodejs   # your hPanel Application root
+bash scripts/setup-hostinger-uploads.sh
+# Creates ../uploads-data, symlinks public/uploads + public_html/uploads
+# Restart Node.js app in hPanel
+bash scripts/health-check-uploads.sh https://mistandhaven.com
+```
+
+Optional env override in hPanel: `PERSISTENT_UPLOADS_PATH=/home/uXXXX/domains/mistandhaven.com/uploads-data`
+
+**Critical:** `DATABASE_URL` must be set in hPanel Node.js environment variables. Without it, `/products` falls back to picsum placeholder cards even when uploads exist on disk.
 
 ### One-time fix: migrate uploads already on the server
 

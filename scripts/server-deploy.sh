@@ -3,7 +3,7 @@
 # Usage (from app root, e.g. ~/domains/mistandhaven.com/nodejs):
 #   bash scripts/server-deploy.sh [path/to/next-build.zip]
 #
-# Uploads under public/uploads/ are NEVER wiped — backed up before unzip and restored after.
+# CMS uploads live in ../uploads-data (OUTSIDE deploy dir) — this script never deletes that folder.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -21,49 +21,29 @@ else
   echo "→ Nested standalone layout: $STANDALONE"
 fi
 
-STANDALONE_UPLOADS="$STANDALONE/public/uploads"
-LEGACY_UPLOADS="$ROOT/public/uploads"
-UPLOADS_BACKUP=""
+DOMAIN_DIR="$(cd "$ROOT/.." && pwd)"
+PERSISTENT="${PERSISTENT_UPLOADS_PATH:-${UPLOADS_DIR:-$DOMAIN_DIR/uploads-data}}"
+mkdir -p "$PERSISTENT"
+echo "→ Persistent uploads (never wiped): $PERSISTENT"
 
-collect_uploads_backup() {
-  local candidates=(
-    "$STANDALONE_UPLOADS"
-    "$LEGACY_UPLOADS"
-    "$ROOT/nodejs/public/uploads"
-  )
-  local dir backup="" count=0
-
-  for dir in "${candidates[@]}"; do
-    [[ -d "$dir" ]] || continue
-    [[ -n "$(ls -A "$dir" 2>/dev/null || true)" ]] || continue
-    if [[ -z "$backup" ]]; then
-      backup="$(mktemp -d)"
-      UPLOADS_BACKUP="$backup"
-    fi
-    echo "→ Merging uploads from $dir into backup"
-    cp -an "$dir/." "$backup/" 2>/dev/null || cp -a "$dir/." "$backup/"
-    count=$((count + 1))
-  done
-
-  if [[ -n "$backup" ]]; then
-    local files
-    files="$(find "$backup" -type f 2>/dev/null | wc -l | tr -d ' ')"
-    echo "→ Backed up uploads from $count location(s) ($files files)"
-  fi
-}
-
-collect_uploads_backup
+# Merge any existing deploy-dir uploads into persistent storage BEFORE unzip overwrites them.
+if [[ -f "$ROOT/scripts/setup-hostinger-uploads.sh" ]]; then
+  echo "→ Pre-deploy: merge legacy uploads into persistent storage"
+  bash "$ROOT/scripts/setup-hostinger-uploads.sh" || true
+fi
 
 echo "→ Extracting $ZIP into $STANDALONE/"
 mkdir -p "$STANDALONE"
 unzip -o "$ZIP" -d "$STANDALONE/"
 
-if [[ -n "$UPLOADS_BACKUP" ]]; then
-  mkdir -p "$STANDALONE/public/uploads"
-  cp -an "$UPLOADS_BACKUP/." "$STANDALONE/public/uploads/" 2>/dev/null || \
-    cp -a "$UPLOADS_BACKUP/." "$STANDALONE/public/uploads/"
-  rm -rf "$UPLOADS_BACKUP"
-  echo "→ Restored public/uploads → $STANDALONE/public/uploads"
+# Deploy zip includes public/uploads/.gitkeep — replace with symlink to persistent dir.
+if [[ -f "$STANDALONE/public/uploads/.gitkeep" ]] || [[ -d "$STANDALONE/public/uploads" ]]; then
+  if [[ -L "$STANDALONE/public/uploads" ]]; then
+    echo "→ public/uploads already symlinked"
+  else
+    echo "→ Removing deploy-dir public/uploads (zip placeholder) — will symlink to persistent"
+    rm -rf "$STANDALONE/public/uploads"
+  fi
 fi
 
 if [[ ! -f "$STANDALONE/server.js" ]]; then
@@ -78,18 +58,19 @@ if [[ -z "$CSS" ]]; then
 fi
 
 CHUNKS="$(find "$STANDALONE/.next/static/chunks" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')"
-UPLOAD_FILES="$(find "$STANDALONE/public/uploads" -type f 2>/dev/null | wc -l | tr -d ' ')"
 echo "→ OK server.js"
 echo "→ OK CSS: $(basename "$CSS")"
 echo "→ OK chunks: $CHUNKS JS files"
-echo "→ OK uploads: $UPLOAD_FILES files in $STANDALONE/public/uploads"
 
 echo ""
-echo "→ Syncing admin uploads into standalone public/..."
+echo "→ Linking persistent uploads + public_html symlinks..."
 bash "$ROOT/scripts/setup-hostinger-uploads.sh" || {
-  echo "WARN: uploads sync skipped — run manually if /uploads/* returns 404:" >&2
+  echo "WARN: uploads setup skipped — run manually:" >&2
   echo "  bash scripts/setup-hostinger-uploads.sh" >&2
 }
+
+UPLOAD_FILES="$(find "$PERSISTENT" -type f 2>/dev/null | wc -l | tr -d ' ')"
+echo "→ OK persistent uploads: $UPLOAD_FILES files in $PERSISTENT"
 
 echo ""
 echo "→ Linking public_html/_next/static (Apache serves /_next/static from document root)..."
@@ -100,10 +81,9 @@ bash "$ROOT/scripts/setup-hostinger-static.sh" || {
 
 echo ""
 echo "Next steps:"
-echo "  1. If schema changed: npx prisma migrate deploy  (from app root with prisma/migrations/)"
-echo "  2. hPanel → Websites → Node.js Web Apps → your app → Restart"
-echo "  3. Start command must be: node server.js  (flat) or npm run start:standalone  (nested)"
-echo "  4. Verify: https://mistandhaven.com/_next/static/css/$(basename "$CSS")"
-echo "  5. Verify uploads: find $STANDALONE/public/uploads -type f | head"
-echo "  6. Product cards: after restart, re-save any product in Admin → Products"
-echo "     (or hard-refresh /) so homepage ISR picks up DB card images — not CI picsum seeds"
+echo "  1. hPanel → Node.js Web Apps → Environment: confirm DATABASE_URL is set (required for product cards)"
+echo "  2. If schema changed: npx prisma migrate deploy  (from app root with prisma/migrations/)"
+echo "  3. hPanel → Node.js Web Apps → your app → Restart"
+echo "  4. Verify CSS: https://mistandhaven.com/_next/static/css/$(basename "$CSS")"
+echo "  5. Verify uploads: bash scripts/health-check-uploads.sh https://mistandhaven.com"
+echo "  6. Product cards load from DB at runtime — hard-refresh /products after restart"
