@@ -26,19 +26,30 @@ export function isUnauthorized(
   return result instanceof NextResponse;
 }
 
+const SITE_PAGE_PATHS = [
+  "/",
+  "/about",
+  "/products",
+  "/manufacturing",
+  "/certifications",
+  "/private-label",
+  "/faq",
+  "/contact",
+] as const;
+
+/**
+ * Bust ISR for all public routes after admin saves.
+ * Layout revalidation is required so Header/Footer (logo, nav) refresh — page-only
+ * revalidation leaves shared `(site)` layout segments stale for up to `revalidate`.
+ */
 export async function revalidateSite(): Promise<void> {
-  const paths = [
-    "/",
-    "/about",
-    "/products",
-    "/manufacturing",
-    "/certifications",
-    "/private-label",
-    "/faq",
-    "/contact",
-  ];
-  for (const path of paths) {
-    revalidatePath(path);
+  console.log("[revalidateSite] Busting page + layout cache for site routes");
+
+  revalidatePath("/", "layout");
+
+  for (const path of SITE_PAGE_PATHS) {
+    revalidatePath(path, "page");
   }
+
   revalidatePath("/products/[slug]", "page");
 }

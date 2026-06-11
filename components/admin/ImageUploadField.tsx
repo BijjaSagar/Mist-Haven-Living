@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getApiData, getApiErrorMessage } from "@/lib/api-response";
+import { cmsImageSrc } from "@/lib/image-props";
 
 type ImageUploadFieldProps = {
   label: string;
@@ -47,6 +48,7 @@ export function ImageUploadField({
         setError("Upload failed");
         return;
       }
+      console.log("[ImageUploadField] upload success", { url, uploadFolder });
       onChange(url);
     } catch {
       setError("Upload failed");
@@ -69,7 +71,7 @@ export function ImageUploadField({
         <div className="mt-2 overflow-hidden rounded-md border border-hairline bg-oat/40 p-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={value}
+            src={cmsImageSrc(value)}
             alt=""
             className="max-h-24 max-w-full object-contain"
           />

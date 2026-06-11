@@ -32,6 +32,7 @@ export function ProductCard({
     >
       <HoverScaleImage
         src={category.cardImage}
+        cacheVersion={category.updatedAt}
         alt={category.name}
         fill
         containerClassName={cn(

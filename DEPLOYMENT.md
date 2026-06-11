@@ -699,6 +699,8 @@ When the app runs with **`npm run start:standalone`**, Next.js serves static fil
 
 **Always click Save product** after uploading hero, card, or gallery images — uploads only update the URL fields in the admin form until you save.
 
+**Cache / stale images:** Saving settings, pages, or products triggers `revalidateSite()` (page + layout ISR). Upload filenames are always unique; rendered URLs include a `?v=` cache-bust param. `/uploads/*` responses use `Cache-Control: public, max-age=3600, must-revalidate` (see `next.config.ts`). If the live site still shows an old hero or logo after save, restart the Node app and purge Hostinger CDN cache once.
+
 **Persistence:** Uploads are **not** inside `next-build.zip`. `scripts/server-deploy.sh` backs up and restores `.next/standalone/public/uploads/` when redeploying. New uploads after this fix go directly to the standalone public folder.
 
 ### One-time fix: migrate uploads already on the server

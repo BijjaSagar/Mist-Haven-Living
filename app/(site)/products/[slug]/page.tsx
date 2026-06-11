@@ -72,6 +72,7 @@ export default async function ProductCategoryPage({ params }: PageProps) {
           <div className="group relative h-[50vh] min-h-[400px] overflow-hidden bg-oat">
             <HoverScaleImage
               src={category.heroImage}
+              cacheVersion={category.updatedAt}
               alt={category.name}
               fill
               priority
@@ -113,6 +114,7 @@ export default async function ProductCategoryPage({ params }: PageProps) {
                 >
                   <HoverScaleImage
                     src={src}
+                    cacheVersion={category.updatedAt}
                     alt={`${category.name} ${index + 1}`}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"

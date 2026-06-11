@@ -24,6 +24,8 @@ export type ProductCategoryData = {
   idealFor: string[];
   leadTime: string;
   moq: string;
+  /** ISO timestamp — cache-bust card/hero/gallery images after product saves. */
+  updatedAt?: string | null;
 };
 
 export type SiteColors = {
@@ -63,6 +65,8 @@ export type SiteSettingsData = {
     country: string;
     postalCode: string;
   };
+  /** ISO timestamp — used for cache-busting static logo/favicon paths after admin saves. */
+  updatedAt?: string | null;
 };
 
 export type NavigationItemData = {
@@ -121,4 +125,6 @@ export type PageContentData = {
   metaTitle: string | null;
   metaDescription: string | null;
   sections: Record<string, unknown>;
+  /** ISO timestamp — cache-bust page hero/section images after admin saves. */
+  updatedAt?: string | null;
 };

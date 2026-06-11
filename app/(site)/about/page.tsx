@@ -6,7 +6,7 @@ import { StatStrip } from "@/components/StatStrip";
 import { CTABand } from "@/components/CTABand";
 import { ContactEmails } from "@/components/ContactEmails";
 import { FadeUp } from "@/components/motion/FadeUp";
-import { imageOptsForSrc } from "@/lib/image-props";
+import { resolveCmsImage } from "@/lib/image-props";
 import { getStats } from "@/lib/data/stats";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { getPageContent } from "@/lib/data/pages";
@@ -48,13 +48,12 @@ export default async function AboutPage() {
         <section className="relative min-h-[50vh] overflow-hidden pt-28">
           <div className="absolute inset-0">
             <Image
-              src={hero.imageUrl}
               alt=""
               fill
               className="object-cover"
               priority
               sizes="100vw"
-              {...imageOptsForSrc(hero.imageUrl)}
+              {...resolveCmsImage(hero.imageUrl, aboutPage?.updatedAt)}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-pearl/90 via-pearl/75 to-pearl" />
           </div>
@@ -91,12 +90,11 @@ export default async function AboutPage() {
               <div className="relative aspect-[3/4] overflow-hidden bg-oat">
                 {intro.imageUrl ? (
                   <Image
-                    src={intro.imageUrl}
                     alt="Mist & Haven Living team"
                     fill
                     className="object-cover"
                     sizes="(max-width: 1024px) 100vw, 40vw"
-                    {...imageOptsForSrc(intro.imageUrl)}
+                    {...resolveCmsImage(intro.imageUrl, aboutPage?.updatedAt)}
                   />
                 ) : null}
               </div>

@@ -197,6 +197,7 @@ function mergePageWithDefaults(row: {
   metaTitle: string | null;
   metaDescription: string | null;
   sections: unknown;
+  updatedAt: Date;
 }): PageContentData {
   const fallback = STATIC_PAGES[row.slug];
   return {
@@ -213,6 +214,7 @@ function mergePageWithDefaults(row: {
       fallback?.sections as Record<string, unknown> | undefined,
       row.sections,
     ),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 

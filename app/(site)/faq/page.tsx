@@ -2,7 +2,7 @@ import Image from "next/image";
 import { createMetadata, faqJsonLd } from "@/lib/seo";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
-import { imageOptsForSrc } from "@/lib/image-props";
+import { resolveCmsImage } from "@/lib/image-props";
 import {
   Accordion,
   AccordionContent,
@@ -48,13 +48,12 @@ export default async function FaqPage() {
         <section className="relative min-h-[50vh] overflow-hidden pt-28">
           <div className="absolute inset-0">
             <Image
-              src={hero.imageUrl}
               alt=""
               fill
               className="object-cover"
               priority
               sizes="100vw"
-              {...imageOptsForSrc(hero.imageUrl)}
+              {...resolveCmsImage(hero.imageUrl, page?.updatedAt)}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-pearl/90 via-pearl/75 to-pearl" />
           </div>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { imageOptsForSrc } from "@/lib/image-props";
+import { resolveCmsImage, type CacheVersion } from "@/lib/image-props";
 import { cn } from "@/lib/utils";
 
 const LOGO_WIDTH = 1024;
@@ -15,6 +15,8 @@ type LogoProps = {
   logoUrl?: string;
   logoLightUrl?: string;
   siteName?: string;
+  /** DB updatedAt — busts cache for static `/logo.png` paths after settings save. */
+  logoCacheVersion?: CacheVersion;
 };
 
 export function Logo({
@@ -25,9 +27,11 @@ export function Logo({
   logoUrl = "/logo.png",
   logoLightUrl = "/logo-light.png",
   siteName = "Mist & Haven Living",
+  logoCacheVersion,
 }: LogoProps) {
   const src = variant === "light" ? logoLightUrl : logoUrl;
   const alt = `${siteName} — Luxury in Every Thread`;
+  const imageProps = resolveCmsImage(src, logoCacheVersion);
 
   return (
     <Link
@@ -39,12 +43,11 @@ export function Logo({
       )}
     >
       <Image
-        src={src}
         alt={alt}
         width={LOGO_WIDTH}
         height={LOGO_HEIGHT}
         priority={priority}
-        {...imageOptsForSrc(src)}
+        {...imageProps}
         className="h-auto w-[96px] sm:w-[108px] md:w-[118px]"
       />
     </Link>

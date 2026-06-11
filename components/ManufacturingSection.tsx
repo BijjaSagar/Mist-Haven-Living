@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { SectionHeading } from "@/components/SectionHeading";
-import { imageOptsForSrc } from "@/lib/image-props";
+import { resolveCmsImage, type CacheVersion } from "@/lib/image-props";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
@@ -15,11 +15,13 @@ type Step = {
 type ManufacturingSectionProps = {
   steps: Step[];
   imageUrl?: string;
+  imageCacheVersion?: CacheVersion;
 };
 
 export function ManufacturingSection({
   steps,
   imageUrl,
+  imageCacheVersion,
 }: ManufacturingSectionProps) {
   return (
     <div
@@ -32,12 +34,11 @@ export function ManufacturingSection({
         <FadeUp>
           <div className="relative aspect-[5/4] overflow-hidden border border-hairline bg-oat">
             <Image
-              src={imageUrl}
               alt="Mist & Haven Living manufacturing facility in Solapur"
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
-              {...imageOptsForSrc(imageUrl)}
+              {...resolveCmsImage(imageUrl, imageCacheVersion)}
             />
           </div>
         </FadeUp>

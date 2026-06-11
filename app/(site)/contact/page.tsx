@@ -5,7 +5,7 @@ import { MultiStepInquiryForm } from "@/components/MultiStepInquiryForm";
 import { ScheduleDiscussion } from "@/components/ScheduleDiscussion";
 import { CatalogCTA } from "@/components/CatalogGateModal";
 import { FadeUp } from "@/components/motion/FadeUp";
-import { imageOptsForSrc } from "@/lib/image-props";
+import { resolveCmsImage } from "@/lib/image-props";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { getProductInterestOptions } from "@/lib/data/products";
 import { getPageContent } from "@/lib/data/pages";
@@ -71,13 +71,12 @@ export default async function ContactPage() {
         <section className="relative min-h-[50vh] overflow-hidden pt-28">
           <div className="absolute inset-0">
             <Image
-              src={hero.imageUrl}
               alt=""
               fill
               className="object-cover"
               priority
               sizes="100vw"
-              {...imageOptsForSrc(hero.imageUrl)}
+              {...resolveCmsImage(hero.imageUrl, page?.updatedAt)}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-pearl/90 via-pearl/75 to-pearl" />
           </div>

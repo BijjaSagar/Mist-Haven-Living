@@ -59,6 +59,7 @@ export default async function HomePage() {
           "Premium cotton towels, hotel linen & private-label manufacturing — crafted in Solapur, India, and delivered with export-grade reliability across North America."
         }
         slides={hero.slides}
+        imageCacheVersion={homePage?.updatedAt}
       />
 
       <TrustStrip certifications={certifications} />
@@ -170,6 +171,7 @@ export default async function HomePage() {
           <ManufacturingSection
             steps={manufacturingHighlights}
             imageUrl={manufacturingSection.imageUrl}
+            imageCacheVersion={homePage?.updatedAt}
           />
         </div>
       </section>

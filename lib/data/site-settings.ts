@@ -88,6 +88,7 @@ function mapSettings(row: SiteSettings): SiteSettingsData {
       country: row.addressCountry,
       postalCode: row.addressPostalCode,
     },
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 

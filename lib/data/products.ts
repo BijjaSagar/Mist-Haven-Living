@@ -57,6 +57,7 @@ function mapProduct(row: ProductCategory): ProductCategoryData {
     idealFor: row.idealFor as string[],
     leadTime: row.leadTime,
     moq: row.moq,
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 

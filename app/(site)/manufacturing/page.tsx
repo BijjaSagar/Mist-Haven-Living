@@ -5,7 +5,7 @@ import { ProcessSteps } from "@/components/ProcessSteps";
 import { StatStrip } from "@/components/StatStrip";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
-import { imageOptsForSrc } from "@/lib/image-props";
+import { resolveCmsImage } from "@/lib/image-props";
 import { manufacturingSteps } from "@/data/products";
 import { getPageContent } from "@/lib/data/pages";
 import { getStats } from "@/lib/data/stats";
@@ -56,13 +56,12 @@ export default async function ManufacturingPage() {
         <section className="relative min-h-[50vh] overflow-hidden pt-28">
           <div className="absolute inset-0">
             <Image
-              src={hero.imageUrl}
               alt=""
               fill
               className="object-cover"
               priority
               sizes="100vw"
-              {...imageOptsForSrc(hero.imageUrl)}
+              {...resolveCmsImage(hero.imageUrl, page?.updatedAt)}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-pearl/90 via-pearl/75 to-pearl" />
           </div>
@@ -105,12 +104,11 @@ export default async function ManufacturingPage() {
           <div className="mx-auto max-w-container px-6 md:px-8">
             <div className="relative aspect-[21/9] overflow-hidden bg-oat">
               <Image
-                src={facility.imageUrl}
                 alt="Manufacturing floor"
                 fill
                 className="object-cover"
                 sizes="100vw"
-                {...imageOptsForSrc(facility.imageUrl)}
+                {...resolveCmsImage(facility.imageUrl, page?.updatedAt)}
               />
             </div>
           </div>

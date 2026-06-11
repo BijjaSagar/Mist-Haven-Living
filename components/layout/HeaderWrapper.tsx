@@ -17,6 +17,7 @@ export async function HeaderWrapper() {
       logoUrl={settings.logoUrl}
       logoLightUrl={settings.logoLightUrl}
       siteName={settings.siteName}
+      logoCacheVersion={settings.updatedAt}
     />
   );
 }

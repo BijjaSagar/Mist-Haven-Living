@@ -39,6 +39,7 @@ export function Footer({
                 variant="light"
                 logoLightUrl={logoLightUrl}
                 siteName={siteName}
+                logoCacheVersion={settings.updatedAt}
               />
             ) : (
               <BrandLogo variant="footer" />

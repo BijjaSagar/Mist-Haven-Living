@@ -22,6 +22,7 @@ type HeaderProps = {
   logoUrl?: string;
   logoLightUrl?: string;
   siteName?: string;
+  logoCacheVersion?: string | null;
 };
 
 export function Header({
@@ -30,6 +31,7 @@ export function Header({
   logoUrl,
   logoLightUrl,
   siteName,
+  logoCacheVersion,
 }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -74,6 +76,7 @@ export function Header({
             logoUrl={logoUrl}
             logoLightUrl={logoLightUrl}
             siteName={siteName}
+            logoCacheVersion={logoCacheVersion}
           />
         ) : (
           <BrandLogo variant="header" />
@@ -168,6 +171,7 @@ export function Header({
                   logoUrl={logoUrl}
                   logoLightUrl={logoLightUrl}
                   siteName={siteName}
+                  logoCacheVersion={logoCacheVersion}
                 />
               ) : (
                 <BrandLogo

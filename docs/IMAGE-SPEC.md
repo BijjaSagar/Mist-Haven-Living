@@ -1,10 +1,29 @@
 # CMS Image Specification — Mist & Haven Living
 
+> **Quick reference:** [IMAGE-SPEC-QUICK.md](IMAGE-SPEC-QUICK.md) (one-page tables) · **[IMAGE-SPEC.pdf](IMAGE-SPEC.pdf)** (printable PDF)
+
 Reference for every backend/CMS-managed image on the site: where to upload in admin, recommended dimensions, upload limits, and where each asset appears on the public site.
 
 **Upload storage:** Files are written to `public/uploads/…` (or `.next/standalone/public/uploads/…` in standalone deploys) and served at `/uploads/…`.
 
 **Save reminder:** After uploading in admin, click **Save** on the page/product/settings form so the URL is persisted to the database.
+
+---
+
+## Cache behavior (public site)
+
+After **Save**, admin APIs call `revalidateSite()` so ISR pages and the shared site layout (header/footer logos) refresh immediately — you should not need to clear browser cache for new CMS images.
+
+| Layer | Behavior |
+|-------|----------|
+| **ISR** | Public pages use `revalidate = 86400`; `revalidateSite()` busts page + root layout cache on every settings/pages/products save. |
+| **Upload filenames** | Always unique: `{timestamp}-{random}.{ext}` under `/uploads/…` — new uploads never overwrite the same URL. |
+| **Render URLs** | `cmsImageSrc()` appends `?v=` from DB `updatedAt` (logos, heroes) or the filename timestamp (uploads). |
+| **HTTP headers** | `/uploads/*`, `/catalog/*`, `/certificates/*`: `Cache-Control: public, max-age=3600, must-revalidate`. Default `/logo.png` paths: `max-age=0, must-revalidate`. |
+| **Next.js Image** | `/uploads/*` uses `unoptimized` (no optimizer disk cache in standalone). |
+| **Hostinger CDN** | If HTML still looks stale after save, purge **hPanel → Performance / CDN → Clear cache** once (see `DEPLOYMENT.md`). |
+
+Upload alone (before Save) does not change the public site — only the admin form field updates until the DB row is saved.
 
 ---
 

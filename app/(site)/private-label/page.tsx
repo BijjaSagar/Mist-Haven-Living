@@ -8,7 +8,7 @@ import { ProcessSteps } from "@/components/ProcessSteps";
 import { CTABand } from "@/components/CTABand";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { Button } from "@/components/ui/button";
-import { imageOptsForSrc } from "@/lib/image-props";
+import { resolveCmsImage } from "@/lib/image-props";
 import { getCategoryBySlug } from "@/lib/data/products";
 import { getPageContent } from "@/lib/data/pages";
 
@@ -139,13 +139,12 @@ export default async function PrivateLabelPage() {
         {hero.imageUrl ? (
           <div className="absolute inset-0">
             <Image
-              src={hero.imageUrl}
               alt="Private label textile manufacturing"
               fill
               className="object-cover"
               priority
               sizes="100vw"
-              {...imageOptsForSrc(hero.imageUrl)}
+              {...resolveCmsImage(hero.imageUrl, page?.updatedAt)}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-pearl/95 via-pearl/85 to-pearl/50" />
           </div>
@@ -218,12 +217,11 @@ export default async function PrivateLabelPage() {
               <div className="relative aspect-square overflow-hidden bg-oat">
                 {packaging.imageUrl ? (
                   <Image
-                    src={packaging.imageUrl}
                     alt="Private label packaging"
                     fill
                     className="object-cover"
                     sizes="(max-width: 1024px) 100vw, 50vw"
-                    {...imageOptsForSrc(packaging.imageUrl)}
+                    {...resolveCmsImage(packaging.imageUrl, page?.updatedAt)}
                   />
                 ) : null}
               </div>

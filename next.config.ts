@@ -32,6 +32,43 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    const cmsAssetCache = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=3600, must-revalidate",
+      },
+    ];
+    const staticBrandCache = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=0, must-revalidate",
+      },
+    ];
+
+    return [
+      {
+        source: "/uploads/:path*",
+        headers: cmsAssetCache,
+      },
+      {
+        source: "/catalog/:path*",
+        headers: cmsAssetCache,
+      },
+      {
+        source: "/certificates/:path*",
+        headers: cmsAssetCache,
+      },
+      {
+        source: "/logo.png",
+        headers: staticBrandCache,
+      },
+      {
+        source: "/logo-light.png",
+        headers: staticBrandCache,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

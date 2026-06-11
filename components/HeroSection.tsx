@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { imageOptsForSrc } from "@/lib/image-props";
+import { resolveCmsImage, type CacheVersion } from "@/lib/image-props";
 import { FadeUp } from "@/components/motion/FadeUp";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,8 @@ type HeroSectionProps = {
   title?: string;
   subtitle?: string;
   slides?: HeroSlide[];
+  /** Page `updatedAt` — cache-bust hero slide images after admin save. */
+  imageCacheVersion?: CacheVersion;
 };
 
 const SLIDE_INTERVAL_MS = 5500;
@@ -24,6 +26,7 @@ export function HeroSection({
   title = "Luxury in Every Thread.",
   subtitle = "Premium cotton towels, hotel linen & private-label manufacturing — crafted in Solapur, India, and delivered with export-grade reliability across North America.",
   slides = [],
+  imageCacheVersion,
 }: HeroSectionProps) {
   const titleParts = title.match(/^(.+?)\s+(in)\s+(.+)$/i);
   const shouldReduceMotion = useReducedMotion();
@@ -123,10 +126,9 @@ export function HeroSection({
                   aria-hidden={index !== activeSlide}
                 >
                   <Image
-                    src={slide.imageUrl}
                     alt={slide.caption}
                     fill
-                    {...imageOptsForSrc(slide.imageUrl)}
+                    {...resolveCmsImage(slide.imageUrl, imageCacheVersion)}
                     className="object-cover"
                     priority={index === 0}
                     sizes="(max-width: 1024px) 90vw, 45vw"

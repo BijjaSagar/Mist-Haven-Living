@@ -2,27 +2,29 @@
 
 import Image, { type ImageProps } from "next/image";
 import { useReducedMotion } from "framer-motion";
-import { imageOptsForSrc } from "@/lib/image-props";
+import { resolveCmsImage, type CacheVersion } from "@/lib/image-props";
 import { cn } from "@/lib/utils";
 
 type HoverScaleImageProps = ImageProps & {
   containerClassName?: string;
+  cacheVersion?: CacheVersion;
 };
 
 export function HoverScaleImage({
   containerClassName,
   className,
   src,
+  cacheVersion,
   ...imageProps
 }: HoverScaleImageProps) {
   const shouldReduceMotion = useReducedMotion();
-  const srcString = typeof src === "string" ? src : "";
+  const resolved =
+    typeof src === "string" ? resolveCmsImage(src, cacheVersion) : { src };
 
   return (
     <div className={cn("relative overflow-hidden", containerClassName)}>
       <Image
-        src={src}
-        {...imageOptsForSrc(srcString)}
+        {...resolved}
         {...imageProps}
         className={cn(
           "object-cover",

@@ -54,7 +54,9 @@ export const POST = withApiHandler(async (request: NextRequest) => {
     const filename = safeFilename(file.name, "pdf");
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(diskPath, filename), buffer);
-    return apiSuccess({ url: `${publicPrefix}/${filename}` });
+    const url = `${publicPrefix}/${filename}`;
+    console.log("[admin/upload] wrote PDF", { url, size: file.size });
+    return apiSuccess({ url });
   }
 
   if (
@@ -75,5 +77,8 @@ export const POST = withApiHandler(async (request: NextRequest) => {
   const buffer = Buffer.from(await file.arrayBuffer());
   await writeFile(path.join(diskPath, filename), buffer);
 
-  return apiSuccess({ url: `${publicPrefix}/${filename}` });
+  const url = `${publicPrefix}/${filename}`;
+  console.log("[admin/upload] wrote file", { url, diskPath: path.join(diskPath, filename), size: file.size });
+
+  return apiSuccess({ url });
 });
