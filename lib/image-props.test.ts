@@ -5,6 +5,7 @@ import {
   resolveCmsImage,
   resolveProductCardImage,
   sanitizeCmsImagePath,
+  staleCardImageUpgrade,
 } from "./image-props";
 
 describe("resolveProductCardImage", () => {
@@ -73,6 +74,32 @@ describe("coalesceCardImageForSave", () => {
         galleryImages: ["/uploads/products/bath-towels/1781203583220-gallery.jpeg"],
       }),
     ).toBe(card);
+  });
+});
+
+describe("staleCardImageUpgrade", () => {
+  it("returns gallery upload when cardImage is still picsum", () => {
+    expect(
+      staleCardImageUpgrade({
+        cardImage: "https://picsum.photos/seed/bath-towels-card/800/600",
+        heroImage: "https://picsum.photos/seed/bath-towels/1400/900",
+        galleryImages: [
+          "/uploads/products/bath-towels/1781203583220-qc8z5zylep.jpeg",
+        ],
+      }),
+    ).toBe("/uploads/products/bath-towels/1781203583220-qc8z5zylep.jpeg");
+  });
+
+  it("returns null when cardImage is already an upload", () => {
+    expect(
+      staleCardImageUpgrade({
+        cardImage: "/uploads/products/bath-towels/1781184477170-card.jpeg",
+        heroImage: "https://picsum.photos/seed/bath-towels/1400/900",
+        galleryImages: [
+          "/uploads/products/bath-towels/1781203583220-gallery.jpeg",
+        ],
+      }),
+    ).toBeNull();
   });
 });
 

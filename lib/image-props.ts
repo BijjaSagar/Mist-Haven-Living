@@ -73,6 +73,25 @@ export function coalesceCardImageForSave(fields: ProductImageFields): string {
   return card;
 }
 
+/**
+ * When gallery/hero uploads exist but `cardImage` is still a seed placeholder,
+ * return the upgraded path so callers can persist it once (read-time backfill).
+ */
+export function staleCardImageUpgrade(
+  fields: ProductImageFields,
+): string | null {
+  const current = fields.cardImage?.trim() ?? "";
+  const upgraded = coalesceCardImageForSave(fields);
+  if (upgraded !== current && isUploadedAsset(upgraded)) {
+    console.log("[staleCardImageUpgrade] picsum card can be upgraded", {
+      from: current || "(empty)",
+      to: upgraded,
+    });
+    return upgraded;
+  }
+  return null;
+}
+
 /** Timestamp embedded in upload filenames: `/uploads/.../1718123456789-abc123.png` */
 const UPLOAD_FILENAME_TS_RE = /\/(\d{13})-[a-z0-9]+\.[a-z0-9]+$/i;
 

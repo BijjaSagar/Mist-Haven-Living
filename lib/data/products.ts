@@ -6,7 +6,10 @@ import {
   getCategoryBySlug as staticGetBySlug,
   getAllCategorySlugs as staticGetAllSlugs,
 } from "@/data/products";
-import { resolveProductCardImage } from "@/lib/image-props";
+import {
+  resolveProductCardImage,
+  staleCardImageUpgrade,
+} from "@/lib/image-props";
 import type { ProductCategoryData } from "@/lib/types/cms";
 
 function normalizeGalleryImages(value: unknown): string[] {
@@ -49,6 +52,41 @@ function withSeoFields(
     galleryImages,
     cardImage,
   };
+}
+
+/** Persist gallery→card backfill once when DB still has picsum cardImage. */
+async function upgradeStaleCardImageRow(
+  row: ProductCategory,
+): Promise<ProductCategory> {
+  const galleryImages = normalizeGalleryImages(row.galleryImages);
+  const upgraded = staleCardImageUpgrade({
+    cardImage: row.cardImage,
+    heroImage: row.heroImage,
+    galleryImages,
+  });
+
+  if (!upgraded) {
+    return row;
+  }
+
+  console.log("[upgradeStaleCardImageRow] persisting cardImage backfill", {
+    slug: row.slug,
+    from: row.cardImage,
+    to: upgraded,
+  });
+
+  try {
+    return await prisma.productCategory.update({
+      where: { slug: row.slug },
+      data: { cardImage: upgraded },
+    });
+  } catch (error) {
+    console.error(
+      "[upgradeStaleCardImageRow] persist failed — runtime resolve only",
+      { slug: row.slug, error },
+    );
+    return { ...row, cardImage: upgraded };
+  }
 }
 
 function mapProduct(row: ProductCategory): ProductCategoryData {
@@ -109,7 +147,8 @@ export async function getProductCategories(): Promise<ProductCategoryData[]> {
       console.log("[getProductCategories] empty DB — static fallback");
       return staticCategories.map(withSeoFields);
     }
-    return rows.map(mapProduct);
+    const upgraded = await Promise.all(rows.map(upgradeStaleCardImageRow));
+    return upgraded.map(mapProduct);
   } catch (error) {
     console.error("[getProductCategories] query failed — static fallback", error);
     return staticCategories.map(withSeoFields);
@@ -146,7 +185,7 @@ export async function getCategoryBySlug(
       const category = staticGetBySlug(slug);
       return category ? withSeoFields(category) : undefined;
     }
-    return mapProduct(row);
+    return mapProduct(await upgradeStaleCardImageRow(row));
   } catch {
     const category = staticGetBySlug(slug);
     return category ? withSeoFields(category) : undefined;
@@ -167,7 +206,7 @@ export async function getCategoryBySlugAdmin(
       const category = staticGetBySlug(slug);
       return category ? withSeoFields(category) : undefined;
     }
-    return mapProduct(row);
+    return mapProduct(await upgradeStaleCardImageRow(row));
   } catch {
     const category = staticGetBySlug(slug);
     return category ? withSeoFields(category) : undefined;

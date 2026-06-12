@@ -23,7 +23,8 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "admin:reset": "tsx scripts/reset-admin.ts",
-    "fix:branding": "tsx scripts/fix-deepam-content.ts"
+    "fix:branding": "tsx scripts/fix-deepam-content.ts",
+    "backfill:product-cards": "tsx scripts/backfill-product-card-images.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
