@@ -1,4 +1,10 @@
 /** User-uploaded assets under /public/uploads — skip Next image optimizer (standalone-safe). */
+function logCmsImage(...args: unknown[]): void {
+  if (process.env.NODE_ENV === "development") {
+    console.log(...args);
+  }
+}
+
 export function isUploadedAsset(src: string): boolean {
   return (
     src.startsWith("/uploads/") ||
@@ -110,7 +116,7 @@ function normalizeCacheVersion(version: CacheVersion): string | null {
   if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
     const ms = Date.parse(raw);
     if (!Number.isNaN(ms)) {
-      console.log("[cmsImageSrc] normalized ISO cacheVersion to epoch ms", {
+      logCmsImage("[cmsImageSrc] normalized ISO cacheVersion to epoch ms", {
         raw,
         ms,
       });
@@ -127,7 +133,7 @@ export function sanitizeCmsImagePath(src: string): string {
 
   if (CORRUPTED_PATH_TS_RE.test(pathname)) {
     const cleaned = pathname.replace(CORRUPTED_PATH_TS_RE, "");
-    console.log("[cmsImageSrc] stripped corrupted path suffix", {
+    logCmsImage("[cmsImageSrc] stripped corrupted path suffix", {
       before: pathname,
       after: cleaned,
     });
@@ -165,7 +171,7 @@ export function cmsImageSrc(src: string, cacheVersion?: CacheVersion): string {
       params.set("v", normalized);
     }
     const query = params.toString();
-    console.log("[cmsImageSrc] existing v= param", { pathname, query });
+    logCmsImage("[cmsImageSrc] existing v= param", { pathname, query });
     return query ? `${pathname}?${query}` : pathname;
   }
 
@@ -176,13 +182,13 @@ export function cmsImageSrc(src: string, cacheVersion?: CacheVersion): string {
     null;
 
   if (!version) {
-    console.log("[cmsImageSrc] no cache version", { pathname });
+    logCmsImage("[cmsImageSrc] no cache version", { pathname });
     return pathname;
   }
 
   params.set("v", version);
   const out = `${pathname}?${params.toString()}`;
-  console.log("[cmsImageSrc] appended v=", { pathname, version, out });
+  logCmsImage("[cmsImageSrc] appended v=", { pathname, version, out });
   return out;
 }
 

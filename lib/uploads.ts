@@ -25,15 +25,38 @@ export function isFlatStandaloneDeploy(cwd = process.cwd()): boolean {
 
 /** Pre-built standalone bundle (flat or nested) — production Hostinger deploy. */
 export function isStandaloneDeploy(cwd = process.cwd()): boolean {
+  const appRoot = resolveAppRoot(cwd);
   return (
-    isFlatStandaloneDeploy(cwd) ||
-    existsSync(path.join(cwd, ".next", "standalone", "server.js"))
+    isFlatStandaloneDeploy(appRoot) ||
+    existsSync(path.join(appRoot, ".next", "standalone", "server.js"))
   );
 }
 
+/**
+ * Hostinger may run `node .next/standalone/server.js` with cwd inside standalone;
+ * walk up to the real app root (package.json or nested standalone marker).
+ */
+export function resolveAppRoot(cwd = process.cwd()): string {
+  let dir = path.resolve(cwd);
+  for (let depth = 0; depth < 8; depth++) {
+    if (
+      existsSync(path.join(dir, "package.json")) ||
+      existsSync(path.join(dir, ".next", "standalone", "server.js"))
+    ) {
+      console.log("[uploads] resolveAppRoot", { cwd, appRoot: dir, depth });
+      return dir;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  console.log("[uploads] resolveAppRoot fallback to cwd", { cwd });
+  return cwd;
+}
+
 /** Default persistent dir: sibling of app root, e.g. ~/domains/mistandhaven.com/uploads-data */
-export function defaultPersistentUploadsDir(cwd = process.cwd()): string {
-  return path.resolve(cwd, "..", "uploads-data");
+export function defaultPersistentUploadsDir(appRoot = resolveAppRoot()): string {
+  return path.resolve(appRoot, "..", "uploads-data");
 }
 
 /**
@@ -43,6 +66,7 @@ export function defaultPersistentUploadsDir(cwd = process.cwd()): string {
  */
 export function resolvePublicDir(): string {
   const cwd = process.cwd();
+  const appRoot = resolveAppRoot(cwd);
 
   if (process.env.PUBLIC_DIR?.trim()) {
     const dir = process.env.PUBLIC_DIR.trim();
@@ -50,22 +74,22 @@ export function resolvePublicDir(): string {
     return dir;
   }
 
-  const standaloneMarker = path.join(cwd, ".next", "standalone", "server.js");
+  const standaloneMarker = path.join(appRoot, ".next", "standalone", "server.js");
   if (existsSync(standaloneMarker)) {
-    const dir = path.join(cwd, ".next", "standalone", "public");
-    console.log("[uploads] resolvePublicDir standalone (app root cwd)", { cwd, dir });
+    const dir = path.join(appRoot, ".next", "standalone", "public");
+    console.log("[uploads] resolvePublicDir standalone", { cwd, appRoot, dir });
     return dir;
   }
 
   // Flat standalone bundle (server.js at app root next to public/)
-  if (isFlatStandaloneDeploy(cwd)) {
-    const dir = path.join(cwd, "public");
-    console.log("[uploads] resolvePublicDir flat standalone cwd", { cwd, dir });
+  if (isFlatStandaloneDeploy(appRoot)) {
+    const dir = path.join(appRoot, "public");
+    console.log("[uploads] resolvePublicDir flat standalone", { cwd, appRoot, dir });
     return dir;
   }
 
-  const dir = path.join(cwd, "public");
-  console.log("[uploads] resolvePublicDir default public/", { cwd, dir });
+  const dir = path.join(appRoot, "public");
+  console.log("[uploads] resolvePublicDir default public/", { cwd, appRoot, dir });
   return dir;
 }
 
@@ -86,11 +110,15 @@ export function resolveUploadsStorageDir(): string {
   }
 
   const cwd = process.cwd();
+  const appRoot = resolveAppRoot(cwd);
   const publicDir = resolvePublicDir();
-  const publicUploads = path.join(publicDir, "uploads");
-  const flatPublicUploads = path.join(cwd, "public", "uploads");
+  const symlinkCandidates = [
+    path.join(publicDir, "uploads"),
+    path.join(appRoot, "public", "uploads"),
+    path.join(appRoot, ".next", "standalone", "public", "uploads"),
+  ];
 
-  for (const candidate of [publicUploads, flatPublicUploads]) {
+  for (const candidate of symlinkCandidates) {
     if (!existsSync(candidate)) continue;
     try {
       const stat = lstatSync(candidate);
@@ -99,6 +127,8 @@ export function resolveUploadsStorageDir(): string {
         console.log("[uploads] resolveUploadsStorageDir via public/uploads symlink", {
           candidate,
           target,
+          cwd,
+          appRoot,
         });
         return target;
       }
@@ -110,20 +140,22 @@ export function resolveUploadsStorageDir(): string {
     }
   }
 
-  if (isStandaloneDeploy(cwd)) {
-    const persistent = defaultPersistentUploadsDir(cwd);
+  if (isStandaloneDeploy(appRoot)) {
+    const persistent = defaultPersistentUploadsDir(appRoot);
     console.log("[uploads] resolveUploadsStorageDir standalone default (outside deploy dir)", {
       cwd,
+      appRoot,
       persistent,
-      layout: isFlatStandaloneDeploy(cwd) ? "flat" : "nested",
+      layout: isFlatStandaloneDeploy(appRoot) ? "flat" : "nested",
     });
     return persistent;
   }
 
+  const devPublicUploads = path.join(publicDir, "uploads");
   console.log("[uploads] resolveUploadsStorageDir dev public/uploads", {
-    publicUploads,
+    devPublicUploads,
   });
-  return publicUploads;
+  return devPublicUploads;
 }
 
 /** Resolve upload directory from a folder like `products/bath-towels`. */

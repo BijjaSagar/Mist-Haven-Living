@@ -4,6 +4,7 @@ import {
   defaultPersistentUploadsDir,
   isFlatStandaloneDeploy,
   isStandaloneDeploy,
+  resolveAppRoot,
   resolveUploadsStorageDir,
   resolveUploadDir,
   sanitizeUploadSegment,
@@ -47,8 +48,13 @@ describe("resolveUploadsStorageDir", () => {
     );
   });
 
+  it("resolveAppRoot walks up from nested standalone cwd to app root", () => {
+    const appRoot = "/home/user/domains/mistandhaven.com/nodejs";
+    expect(resolveAppRoot(appRoot)).toBe(appRoot);
+  });
+
   it("detects non-standalone dev cwd", () => {
-    const tmp = path.join(process.cwd(), ".vitest-flat-standalone");
+    const tmp = "/tmp/mist-vitest-non-standalone-cwd";
     expect(isFlatStandaloneDeploy(tmp)).toBe(false);
     expect(isStandaloneDeploy(tmp)).toBe(false);
   });
