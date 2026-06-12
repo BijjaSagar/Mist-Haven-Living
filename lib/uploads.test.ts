@@ -1,7 +1,9 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import path from "path";
 import {
+  defaultPersistentUploadsDir,
   isFlatStandaloneDeploy,
+  isStandaloneDeploy,
   resolveUploadsStorageDir,
   resolveUploadDir,
   sanitizeUploadSegment,
@@ -38,9 +40,17 @@ describe("resolveUploadsStorageDir", () => {
     expect(resolveUploadsStorageDir()).toBe("/data/uploads");
   });
 
-  it("uses flat-standalone default ../uploads-data when server.js at cwd", () => {
+  it("defaults persistent dir to sibling uploads-data for standalone deploys", () => {
+    const cwd = "/home/user/domains/mistandhaven.com/nodejs";
+    expect(defaultPersistentUploadsDir(cwd)).toBe(
+      "/home/user/domains/mistandhaven.com/uploads-data",
+    );
+  });
+
+  it("detects non-standalone dev cwd", () => {
     const tmp = path.join(process.cwd(), ".vitest-flat-standalone");
     expect(isFlatStandaloneDeploy(tmp)).toBe(false);
+    expect(isStandaloneDeploy(tmp)).toBe(false);
   });
 });
 

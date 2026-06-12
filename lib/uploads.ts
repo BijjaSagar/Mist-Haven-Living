@@ -23,6 +23,19 @@ export function isFlatStandaloneDeploy(cwd = process.cwd()): boolean {
   );
 }
 
+/** Pre-built standalone bundle (flat or nested) — production Hostinger deploy. */
+export function isStandaloneDeploy(cwd = process.cwd()): boolean {
+  return (
+    isFlatStandaloneDeploy(cwd) ||
+    existsSync(path.join(cwd, ".next", "standalone", "server.js"))
+  );
+}
+
+/** Default persistent dir: sibling of app root, e.g. ~/domains/mistandhaven.com/uploads-data */
+export function defaultPersistentUploadsDir(cwd = process.cwd()): string {
+  return path.resolve(cwd, "..", "uploads-data");
+}
+
 /**
  * Directory Next.js serves as `/public`.
  * Standalone deploys (`npm run start:standalone`) read static files from
@@ -72,32 +85,37 @@ export function resolveUploadsStorageDir(): string {
     return resolved;
   }
 
+  const cwd = process.cwd();
   const publicDir = resolvePublicDir();
   const publicUploads = path.join(publicDir, "uploads");
+  const flatPublicUploads = path.join(cwd, "public", "uploads");
 
-  if (existsSync(publicUploads)) {
+  for (const candidate of [publicUploads, flatPublicUploads]) {
+    if (!existsSync(candidate)) continue;
     try {
-      const stat = lstatSync(publicUploads);
+      const stat = lstatSync(candidate);
       if (stat.isSymbolicLink()) {
-        const target = realpathSync(publicUploads);
+        const target = realpathSync(candidate);
         console.log("[uploads] resolveUploadsStorageDir via public/uploads symlink", {
-          publicUploads,
+          candidate,
           target,
         });
         return target;
       }
     } catch (error) {
       console.error("[uploads] resolveUploadsStorageDir symlink read failed", {
-        publicUploads,
+        candidate,
         error,
       });
     }
   }
 
-  if (isFlatStandaloneDeploy()) {
-    const persistent = path.resolve(publicDir, "..", "uploads-data");
-    console.log("[uploads] resolveUploadsStorageDir flat standalone default", {
+  if (isStandaloneDeploy(cwd)) {
+    const persistent = defaultPersistentUploadsDir(cwd);
+    console.log("[uploads] resolveUploadsStorageDir standalone default (outside deploy dir)", {
+      cwd,
       persistent,
+      layout: isFlatStandaloneDeploy(cwd) ? "flat" : "nested",
     });
     return persistent;
   }

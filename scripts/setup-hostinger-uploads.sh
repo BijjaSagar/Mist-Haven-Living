@@ -8,18 +8,15 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+# shellcheck source=scripts/lib/hostinger-paths.sh
+source "$ROOT/scripts/lib/hostinger-paths.sh"
 
-DOMAIN_DIR="$(cd "$ROOT/.." && pwd)"
-PERSISTENT="${PERSISTENT_UPLOADS_PATH:-${UPLOADS_DIR:-$DOMAIN_DIR/uploads-data}}"
+DOMAIN_DIR="$(hostinger_domain_dir "$ROOT")"
+PERSISTENT="$(hostinger_persistent_uploads "$ROOT")"
+STANDALONE_PUBLIC="$(hostinger_public_dir "$ROOT")"
 
-# Flat layout (server.js at app root) or nested (.next/standalone/public).
-if [[ -f "$ROOT/server.js" ]] && [[ -d "$ROOT/public" ]]; then
-  STANDALONE_PUBLIC="$ROOT/public"
-  echo "→ setup-hostinger-uploads: flat layout public/"
-else
-  STANDALONE_PUBLIC="$ROOT/.next/standalone/public"
-  echo "→ setup-hostinger-uploads: nested layout .next/standalone/public/"
-fi
+echo "→ setup-hostinger-uploads: app root $ROOT"
+echo "→ setup-hostinger-uploads: public dir $STANDALONE_PUBLIC"
 
 LEGACY_UPLOADS="$ROOT/public/uploads"
 TARGET_LINK="$STANDALONE_PUBLIC/uploads"
@@ -64,7 +61,7 @@ else
   fi
 fi
 
-FILE_COUNT="$(find "$PERSISTENT" -type f 2>/dev/null | wc -l | tr -d ' ')"
+FILE_COUNT="$(hostinger_count_upload_files "$PERSISTENT")"
 echo "→ Persistent uploads: $FILE_COUNT files in $PERSISTENT"
 
 # Hostinger: symlink public_html/uploads so Apache can serve CMS files before Node proxy.

@@ -41,17 +41,17 @@ jobs:
         with:
           name: next-build
 
-      - name: Upload zip to Hostinger
+      - name: Upload zip and deploy scripts to Hostinger
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOSTINGER_SSH_HOST }}
           username: ${{ secrets.HOSTINGER_SSH_USER }}
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.HOSTINGER_SSH_PORT || 65002 }}
-          source: next-build.zip
-          target: ${{ secrets.HOSTINGER_APP_PATH || '~/domains/mistandhaven.com/app' }}
+          source: "next-build.zip,scripts/server-deploy.sh,scripts/setup-hostinger-uploads.sh,scripts/setup-hostinger-static.sh,scripts/health-check-uploads.sh,scripts/lib/hostinger-paths.sh"
+          target: ${{ secrets.HOSTINGER_APP_PATH || '~/domains/mistandhaven.com/nodejs' }}
 
-      - name: Extract bundle on server
+      - name: Extract bundle on server (persistent uploads)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOSTINGER_SSH_HOST }}
@@ -59,55 +59,32 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.HOSTINGER_SSH_PORT || 65002 }}
           script: |
-            set -e
-            APP="${{ secrets.HOSTINGER_APP_PATH || '~/domains/mistandhaven.com/app' }}"
+            set -euo pipefail
+            APP="${{ secrets.HOSTINGER_APP_PATH || '~/domains/mistandhaven.com/nodejs' }}"
             cd "$APP"
-            git pull origin main || true
-            if [[ -f scripts/server-deploy.sh ]]; then
-              bash scripts/server-deploy.sh next-build.zip
-            else
-              echo "WARN: scripts/server-deploy.sh missing — inline deploy with upload backup"
-              if [[ -f server.js ]] && [[ -d public ]]; then
-                STANDALONE="."
-                echo "→ Flat standalone layout"
-              else
-                STANDALONE=".next/standalone"
+
+            # scp-action may place scripts at app root or under scripts/ — normalize layout.
+            mkdir -p scripts/lib
+            for f in server-deploy.sh setup-hostinger-uploads.sh setup-hostinger-static.sh health-check-uploads.sh; do
+              if [[ -f "$f" ]] && [[ ! -f "scripts/$f" ]]; then
+                mv "$f" "scripts/$f"
               fi
-              BACKUP=""
-              for dir in "$STANDALONE/public/uploads" public/uploads nodejs/public/uploads; do
-                if [[ -d "$dir" ]] && [[ -n "$(ls -A "$dir" 2>/dev/null || true)" ]]; then
-                  if [[ -z "$BACKUP" ]]; then BACKUP="$(mktemp -d)"; fi
-                  cp -an "$dir/." "$BACKUP/" 2>/dev/null || cp -a "$dir/." "$BACKUP/"
-                  echo "→ Backed up $dir"
-                fi
-              done
-              mkdir -p "$STANDALONE"
-              unzip -o next-build.zip -d "$STANDALONE/"
-              if [[ -n "$BACKUP" ]]; then
-                mkdir -p "$STANDALONE/public/uploads"
-                cp -an "$BACKUP/." "$STANDALONE/public/uploads/" 2>/dev/null || cp -a "$BACKUP/." "$STANDALONE/public/uploads/"
-                rm -rf "$BACKUP"
-                echo "→ Restored public/uploads"
-              fi
-              mkdir -p "$STANDALONE/public/uploads"
-              if [[ -d public/uploads ]] && [[ "$STANDALONE" != "." ]]; then
-                cp -an public/uploads/. "$STANDALONE/public/uploads/" 2>/dev/null || cp -a public/uploads/. "$STANDALONE/public/uploads/" 2>/dev/null || true
-              fi
-              PUBLIC_HTML="${PUBLIC_HTML:-}"
-              if [[ -z "$PUBLIC_HTML" ]] && [[ -d ../public_html ]]; then
-                PUBLIC_HTML="$(cd .. && pwd)/public_html"
-              elif [[ -z "$PUBLIC_HTML" ]] && [[ -d ~/public_html ]]; then
-                PUBLIC_HTML="$HOME/public_html"
-              fi
-              if [[ -n "$PUBLIC_HTML" ]] && [[ -d "$PUBLIC_HTML" ]]; then
-                UPLOADS_TARGET="$(cd "$STANDALONE/public/uploads" && pwd)"
-                mkdir -p "$PUBLIC_HTML"
-                rm -rf "$PUBLIC_HTML/uploads"
-                ln -sfn "$UPLOADS_TARGET" "$PUBLIC_HTML/uploads"
-                echo "→ Symlink $PUBLIC_HTML/uploads → $UPLOADS_TARGET"
-                mkdir -p "$PUBLIC_HTML/_next"
-                rm -rf "$PUBLIC_HTML/_next/static"
-                ln -sfn "$(pwd)/$STANDALONE/.next/static" "$PUBLIC_HTML/_next/static"
-              fi
+            done
+            if [[ -f hostinger-paths.sh ]] && [[ ! -f scripts/lib/hostinger-paths.sh ]]; then
+              mv hostinger-paths.sh scripts/lib/hostinger-paths.sh
             fi
+            chmod +x scripts/*.sh 2>/dev/null || true
+
+            if [[ ! -f scripts/server-deploy.sh ]]; then
+              echo "ERROR: scripts/server-deploy.sh missing after upload — cannot deploy safely" >&2
+              exit 1
+            fi
+
+            # Optional: refresh other repo files when app root is a git clone.
+            if [[ -d .git ]]; then
+              git pull origin main || true
+            fi
+
+            bash scripts/server-deploy.sh next-build.zip
+
             echo "Done. Restart Node.js app in hPanel if the site does not update."

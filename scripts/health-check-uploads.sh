@@ -3,12 +3,52 @@
 # Usage:
 #   bash scripts/health-check-uploads.sh [SITE_URL]
 #   bash scripts/health-check-uploads.sh https://mistandhaven.com
+#   bash scripts/health-check-uploads.sh --local-disk   # server-side only (no HTTP)
 set -euo pipefail
 
-SITE_URL="${1:-${SITE_URL:-https://mistandhaven.com}}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=scripts/lib/hostinger-paths.sh
+source "$ROOT/scripts/lib/hostinger-paths.sh"
+
+SITE_URL="${SITE_URL:-https://mistandhaven.com}"
+LOCAL_DISK_ONLY=0
+if [[ "${1:-}" == "--local-disk" ]]; then
+  LOCAL_DISK_ONLY=1
+  shift
+fi
+SITE_URL="${1:-$SITE_URL}"
 fail=0
 
-echo "=== Upload health check ($SITE_URL) ==="
+PERSISTENT="$(hostinger_persistent_uploads "$ROOT")"
+DISK_COUNT="$(hostinger_count_upload_files "$PERSISTENT")"
+UPLOADS_LINK="$(hostinger_public_dir "$ROOT")/uploads"
+
+echo "=== Upload health check ==="
+echo "→ App root: $ROOT"
+echo "→ Persistent dir: $PERSISTENT ($DISK_COUNT files)"
+if [[ -L "$UPLOADS_LINK" ]]; then
+  echo "→ public/uploads symlink: $(readlink -f "$UPLOADS_LINK" 2>/dev/null || readlink "$UPLOADS_LINK")"
+elif [[ -d "$UPLOADS_LINK" ]]; then
+  echo "FAIL: public/uploads is a real directory inside deploy dir — will be wiped on next deploy" >&2
+  fail=1
+else
+  echo "WARN: public/uploads missing — Node route handler may still serve files if persistent dir has data" >&2
+fi
+
+if [[ "$DISK_COUNT" -eq 0 ]]; then
+  echo "WARN: No files in persistent uploads dir — CMS images will 404 until re-uploaded" >&2
+  fail=1
+fi
+
+if [[ "$LOCAL_DISK_ONLY" -eq 1 ]]; then
+  if [[ "$fail" -ne 0 ]]; then
+    exit 1
+  fi
+  echo "Local disk checks passed."
+  exit 0
+fi
+
+echo "=== Live HTTP probes ($SITE_URL) ==="
 
 check_page() {
   local path="$1"

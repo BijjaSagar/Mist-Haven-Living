@@ -3,24 +3,24 @@
 # Hostinger often resolves /_next/static from public_html before proxying to Node — files on
 # disk under app/.next/standalone/ then 404 even when HTML hash matches.
 #
-# Usage (from app root, e.g. ~/domains/mistandhaven.com/app):
+# Usage (from app root, e.g. ~/domains/mistandhaven.com/nodejs):
 #   bash scripts/setup-hostinger-static.sh
 #   bash scripts/setup-hostinger-static.sh ~/domains/mistandhaven.com/public_html
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+# shellcheck source=scripts/lib/hostinger-paths.sh
+source "$ROOT/scripts/lib/hostinger-paths.sh"
 
-STANDALONE_STATIC="$ROOT/.next/standalone/.next/static"
+STANDALONE_STATIC="$(hostinger_static_dir "$ROOT")"
 PUBLIC_HTML="${1:-${PUBLIC_HTML:-}}"
 
 if [[ -z "$PUBLIC_HTML" ]]; then
-  # app/ and public_html/ are siblings under domains/<domain>/
-  DOMAIN_DIR="$(cd "$ROOT/.." && pwd)"
+  DOMAIN_DIR="$(hostinger_domain_dir "$ROOT")"
   if [[ -d "$DOMAIN_DIR/public_html" ]]; then
     PUBLIC_HTML="$DOMAIN_DIR/public_html"
   elif [[ -d "$HOME/domains" ]]; then
-    # Fallback: first public_html under ~/domains (single-site accounts)
     PUBLIC_HTML="$(find "$HOME/domains" -maxdepth 2 -type d -name public_html 2>/dev/null | head -1 || true)"
   fi
 fi

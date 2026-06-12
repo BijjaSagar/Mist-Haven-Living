@@ -283,7 +283,7 @@ GitHub builds and uploads the zip to your server over SSH, then runs `scripts/se
    | `HOSTINGER_SSH_USER` | SSH username |
    | `HOSTINGER_SSH_KEY` | Full private key file contents (`~/.ssh/hostinger_deploy`) |
    | `HOSTINGER_SSH_PORT` | `65002` (optional if default works) |
-   | `HOSTINGER_APP_PATH` | `~/nodejs` **or** `~/domains/mistandhaven.com/app` — must match hPanel Application root (see section 0) |
+   | `HOSTINGER_APP_PATH` | **`~/domains/mistandhaven.com/nodejs`** (mistandhaven.com) — must match hPanel Application root exactly (see section 0) |
 
 5. **Enable auto-deploy** — same page → **Variables** tab → **New repository variable**:
    - Name: `HOSTINGER_AUTO_DEPLOY`
@@ -355,6 +355,8 @@ Set these in the Hostinger Node.js app panel **Environment variables**, or in a 
 
 \* Prefer **Admin → Settings** for leads inbox, WhatsApp, Calendly, and public contact email. After deploy, run `npx prisma migrate deploy`, then open `/admin/settings` and set **Leads inbox email** (or ensure public contact email is set) plus enable inquiries.
 | `PORT` | Optional | Hostinger may set this automatically; defaults to `3000` |
+| `PERSISTENT_UPLOADS_PATH` | Recommended | Absolute path to `uploads-data` outside deploy dir (e.g. `~/domains/mistandhaven.com/uploads-data`) |
+| `PUBLIC_DIR` | Optional | Override public dir for flat standalone (`~/domains/.../nodejs/public`) |
 | `ADMIN_SECRET` | Recommended | JWT signing secret (falls back to `ADMIN_PASSWORD`; required in production if `ADMIN_PASSWORD` is unset) |
 
 Copy from `.env.example` as a starting point.
@@ -781,17 +783,34 @@ When the app runs with **`npm run start:standalone`**, Next.js serves static fil
 
 **Persistence:** Uploads are **not** inside `next-build.zip`. They live in **`../uploads-data`** (sibling of the app root, e.g. `~/domains/mistandhaven.com/uploads-data`) — **outside** the deploy folder so every push cannot wipe CMS files. `scripts/server-deploy.sh` symlinks `public/uploads` → `../uploads-data` after each deploy.
 
-**One-time server setup (SSH from app root, e.g. `~/domains/mistandhaven.com/nodejs`):**
+**One-time server setup (SSH — run once, then every GitHub deploy runs this automatically via `server-deploy.sh`):**
 
 ```bash
-cd ~/domains/mistandhaven.com/nodejs   # your hPanel Application root
+cd ~/domains/mistandhaven.com/nodejs   # hPanel Application root (must match HOSTINGER_APP_PATH)
+
+# 1. Create persistent storage OUTSIDE deploy dir + symlinks
 bash scripts/setup-hostinger-uploads.sh
-# Creates ../uploads-data, symlinks public/uploads + public_html/uploads
-# Restart Node.js app in hPanel
+
+# 2. Verify disk (no HTTP needed)
+bash scripts/health-check-uploads.sh --local-disk
+
+# 3. Restart Node.js app in hPanel → Node.js Web Apps → Restart
+
+# 4. Verify live URLs
 bash scripts/health-check-uploads.sh https://mistandhaven.com
 ```
 
-Optional env override in hPanel: `PERSISTENT_UPLOADS_PATH=/home/uXXXX/domains/mistandhaven.com/uploads-data`
+**hPanel environment variables (Node.js Web Apps → Environment):**
+
+| Variable | Example | Required |
+|---|---|---|
+| `DATABASE_URL` | `mysql://USER:PASS@srvXXX.hstgr.io:3306/u618910819_misthaven` | Yes — product cards + CMS |
+| `PERSISTENT_UPLOADS_PATH` | `/home/u618910819/domains/mistandhaven.com/uploads-data` | Recommended — pins upload path across restarts |
+| `PUBLIC_DIR` | `/home/u618910819/domains/mistandhaven.com/nodejs/public` | Optional — flat standalone only |
+
+Use the **MySQL host from hPanel** (often `srvXXX.hstgr.io`), not `127.0.0.1`, in `DATABASE_URL` for the Node.js app. `127.0.0.1` only works from SSH on the same machine, not from the managed Node process.
+
+**Why deploys used to wipe images:** The deploy zip contains only `public/uploads/.gitkeep`. Without `scripts/server-deploy.sh` on the server (common when `HOSTINGER_APP_PATH` pointed at `app/` while hPanel used `nodejs/`), the old CI fallback restored uploads into the deploy folder itself — wiped on the next unzip. Uploads must live in `../uploads-data` with `public/uploads` symlinked to that path.
 
 **Critical:** `DATABASE_URL` must be set in hPanel Node.js environment variables. Without it, `/products` falls back to picsum placeholder cards even when uploads exist on disk.
 
